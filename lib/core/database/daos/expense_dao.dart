@@ -20,7 +20,8 @@ class ExpenseDao extends DatabaseAccessor<AppDatabase> with _$ExpenseDaoMixin {
     return (select(expenses)..where((t) => t.isPaid.equals(false))).get();
   }
 
-  Future<void> insertExpense(ExpensesCompanion entry) => into(expenses).insert(entry);
+  Future<void> insertExpense(ExpensesCompanion entry) =>
+      into(expenses).insert(entry);
 
   Future<void> updateExpense(String id, ExpensesCompanion entry) {
     return (update(expenses)..where((t) => t.id.equals(id))).write(entry);
@@ -31,7 +32,8 @@ class ExpenseDao extends DatabaseAccessor<AppDatabase> with _$ExpenseDaoMixin {
   }
 
   Future<void> markPaid(String id) {
-    return (update(expenses)..where((t) => t.id.equals(id)))
-        .write(const ExpensesCompanion(isPaid: Value(true)));
+    return (update(expenses)..where((t) => t.id.equals(id))).write(
+      const ExpensesCompanion(isPaid: Value(true)),
+    );
   }
 }
