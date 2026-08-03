@@ -5,12 +5,14 @@ import '../tables/tables.dart';
 part 'settings_dao.g.dart';
 
 @DriftAccessor(tables: [AppSettings])
-class SettingsDao extends DatabaseAccessor<AppDatabase> with _$SettingsDaoMixin {
+class SettingsDao extends DatabaseAccessor<AppDatabase>
+    with _$SettingsDaoMixin {
   SettingsDao(super.db);
 
   Future<String?> getValue(String key) async {
-    final row = await (select(appSettings)..where((t) => t.key.equals(key)))
-        .getSingleOrNull();
+    final row = await (select(
+      appSettings,
+    )..where((t) => t.key.equals(key))).getSingleOrNull();
     return row?.value;
   }
 
