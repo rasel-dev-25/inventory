@@ -11,13 +11,27 @@ class UnitConversion {
     'dozen': 12,
   };
 
-  static const List<String> units = ['pcs', 'kg', 'box', 'pack', 'litre', 'pair', 'set', 'roll', 'dozen'];
+  static const List<String> units = [
+    'pcs',
+    'kg',
+    'box',
+    'pack',
+    'litre',
+    'pair',
+    'set',
+    'roll',
+    'dozen',
+  ];
 
   static double factorFor(String unit) => factors[unit] ?? 1;
 
   /// Convert buy price per buy-unit to price per sell-unit.
   /// e.g. buy at 2000/litre, sell per ml → 2000/1000 = 2 per ml
-  static double buyPricePerSellUnit(double buyPrice, String buyUnit, String sellUnit) {
+  static double buyPricePerSellUnit(
+    double buyPrice,
+    String buyUnit,
+    String sellUnit,
+  ) {
     final buyFactor = factorFor(buyUnit);
     final sellFactor = factorFor(sellUnit);
     if (sellFactor == 0) return buyPrice;
