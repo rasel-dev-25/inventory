@@ -11,7 +11,8 @@ class RentalDao extends DatabaseAccessor<AppDatabase> with _$RentalDaoMixin {
   // Rent Books
   Future<List<RentBook>> getBooks() => select(rentBooks).get();
 
-  Future<void> addBook(RentBooksCompanion entry) => into(rentBooks).insert(entry);
+  Future<void> addBook(RentBooksCompanion entry) =>
+      into(rentBooks).insert(entry);
 
   Future<void> deleteBook(String id) {
     return (delete(rentBooks)..where((t) => t.id.equals(id))).go();
@@ -24,7 +25,8 @@ class RentalDao extends DatabaseAccessor<AppDatabase> with _$RentalDaoMixin {
     return (select(bookRentals)..where((t) => t.dateReturned.equals(''))).get();
   }
 
-  Future<void> addRental(BookRentalsCompanion entry) => into(bookRentals).insert(entry);
+  Future<void> addRental(BookRentalsCompanion entry) =>
+      into(bookRentals).insert(entry);
 
   Future<void> updateRental(String id, BookRentalsCompanion entry) {
     return (update(bookRentals)..where((t) => t.id.equals(id))).write(entry);
@@ -35,12 +37,14 @@ class RentalDao extends DatabaseAccessor<AppDatabase> with _$RentalDaoMixin {
   }
 
   Future<void> markReturned(String id, String dateReturned) {
-    return (update(bookRentals)..where((t) => t.id.equals(id)))
-        .write(BookRentalsCompanion(dateReturned: Value(dateReturned)));
+    return (update(bookRentals)..where((t) => t.id.equals(id))).write(
+      BookRentalsCompanion(dateReturned: Value(dateReturned)),
+    );
   }
 
   Future<void> markPaid(String id) {
-    return (update(bookRentals)..where((t) => t.id.equals(id)))
-        .write(const BookRentalsCompanion(isPaid: Value(true)));
+    return (update(bookRentals)..where((t) => t.id.equals(id))).write(
+      const BookRentalsCompanion(isPaid: Value(true)),
+    );
   }
 }

@@ -35,7 +35,10 @@ class SummaryCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       label,
-                      style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade600,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),

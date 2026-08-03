@@ -29,14 +29,30 @@ class _CaptureCardState extends State<CaptureCard> {
     IconData icon;
     Color color;
     switch (source) {
-      case 'Customer': icon = Iconsax.people; color = Colors.teal;
-      case 'Dues': icon = Iconsax.book; color = Colors.orange;
-      case 'Product': icon = Iconsax.box; color = Colors.blue;
-      case 'Asset': icon = Iconsax.buildings; color = Colors.purple;
-      case 'Expense': icon = Iconsax.receipt; color = Colors.red;
-      case 'Purchase': icon = Iconsax.shopping_cart; color = Colors.indigo;
-      case 'Repayment': icon = Iconsax.money; color = Colors.green;
-      default: icon = Iconsax.bookmark; color = Colors.grey;
+      case 'Customer':
+        icon = Iconsax.people;
+        color = Colors.teal;
+      case 'Dues':
+        icon = Iconsax.book;
+        color = Colors.orange;
+      case 'Product':
+        icon = Iconsax.box;
+        color = Colors.blue;
+      case 'Asset':
+        icon = Iconsax.buildings;
+        color = Colors.purple;
+      case 'Expense':
+        icon = Iconsax.receipt;
+        color = Colors.red;
+      case 'Purchase':
+        icon = Iconsax.shopping_cart;
+        color = Colors.indigo;
+      case 'Repayment':
+        icon = Iconsax.money;
+        color = Colors.green;
+      default:
+        icon = Iconsax.bookmark;
+        color = Colors.grey;
     }
     return Container(
       padding: const EdgeInsets.all(4),
@@ -76,7 +92,12 @@ class _CaptureCardState extends State<CaptureCard> {
                   if (widget.hasImage)
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.file(File(c.imagePath), width: 48, height: 48, fit: BoxFit.cover),
+                      child: Image.file(
+                        File(c.imagePath),
+                        width: 48,
+                        height: 48,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   if (widget.hasImage) const SizedBox(width: 10),
                   Expanded(
@@ -87,7 +108,15 @@ class _CaptureCardState extends State<CaptureCard> {
                           children: [
                             _sourceIcon(source),
                             const SizedBox(width: 6),
-                            Expanded(child: Text(timeStr, style: TextStyle(color: Colors.grey.shade500, fontSize: 11))),
+                            Expanded(
+                              child: Text(
+                                timeStr,
+                                style: TextStyle(
+                                  color: Colors.grey.shade500,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ),
                             IconButton(
                               icon: const Icon(Iconsax.trash, size: 18),
                               color: Colors.red.shade300,
@@ -98,18 +127,34 @@ class _CaptureCardState extends State<CaptureCard> {
                           ],
                         ),
                         const SizedBox(height: 4),
-                        Text(_expanded ? note : noteShort,
+                        Text(
+                          _expanded ? note : noteShort,
                           style: TextStyle(
                             fontSize: 13,
-                            color: note.isEmpty ? Colors.grey.shade400 : Colors.black87,
-                            fontStyle: note.isEmpty ? FontStyle.italic : FontStyle.normal,
-                          )),
+                            color: note.isEmpty
+                                ? Colors.grey.shade400
+                                : Colors.black87,
+                            fontStyle: note.isEmpty
+                                ? FontStyle.italic
+                                : FontStyle.normal,
+                          ),
+                        ),
                         if (_expanded && source.isNotEmpty) ...[
                           const SizedBox(height: 6),
                           Row(
                             children: [
-                              Icon(Iconsax.arrow_right, size: 14, color: Colors.grey.shade400),
-                              Text('${'fromLabel'.tr}$source', style: TextStyle(color: Colors.grey.shade500, fontSize: 11)),
+                              Icon(
+                                Iconsax.arrow_right,
+                                size: 14,
+                                color: Colors.grey.shade400,
+                              ),
+                              Text(
+                                '${'fromLabel'.tr}$source',
+                                style: TextStyle(
+                                  color: Colors.grey.shade500,
+                                  fontSize: 11,
+                                ),
+                              ),
                             ],
                           ),
                         ],
