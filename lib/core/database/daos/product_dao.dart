@@ -24,7 +24,8 @@ class ProductDao extends DatabaseAccessor<AppDatabase> with _$ProductDaoMixin {
     return (select(products)..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
-  Future<void> insertProduct(ProductsCompanion entry) => into(products).insert(entry);
+  Future<void> insertProduct(ProductsCompanion entry) =>
+      into(products).insert(entry);
 
   Future<void> updateProduct(String id, ProductsCompanion entry) {
     return (update(products)..where((t) => t.id.equals(id))).write(entry);
@@ -35,8 +36,9 @@ class ProductDao extends DatabaseAccessor<AppDatabase> with _$ProductDaoMixin {
   }
 
   Future<void> updateQty(String id, double newQty) {
-    return (update(products)..where((t) => t.id.equals(id)))
-        .write(ProductsCompanion(qty: Value(newQty)));
+    return (update(products)..where((t) => t.id.equals(id))).write(
+      ProductsCompanion(qty: Value(newQty)),
+    );
   }
 
   // Categories
