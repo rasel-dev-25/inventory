@@ -1,48 +1,62 @@
 name: inventory
-description: "A new Flutter project."
-# The following line prevents the package from being accidentally published to
-# pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+description: "AL ASHAB — offline-first shop inventory, sales and accounting."
+publish_to: 'none'
 
-# The following defines the version and build number for your application.
-# A version number is three numbers separated by dots, like 1.2.43
-# followed by an optional build number separated by a +.
-# Both the version and the builder number may be overridden in flutter
-# build by specifying --build-name and --build-number, respectively.
-# In Android, build-name is used as versionName while build-number used as versionCode.
-# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
-# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
-# Read more about iOS versioning at
-# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-# In Windows, build-name is used as the major, minor, and patch parts
-# of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+1
+# M0 note: version bumped to 2.0.0 to mark the start of the v2 rewrite
+# described in notes/business_logic.md and ARCHITECTURE.md. Build number
+# reset since this is a clean local-schema reset, not an upgrade path.
+version: 2.0.0+1
 
 environment:
   sdk: ^3.11.0
 
-# Dependencies specify other packages that your package needs in order to work.
-# To automatically upgrade your package dependencies to the latest versions
-# consider running `flutter pub upgrade --major-versions`. Alternatively,
-# dependencies can be manually updated by changing the version numbers below to
-# the latest version available on pub.dev. To see which dependencies have newer
-# versions available, run `flutter pub outdated`.
 dependencies:
   flutter:
     sdk: flutter
 
-  cupertino_icons: ^1.0.8
+  # --- State management, routing, i18n (kept from v1; the 378-key
+  # en/bn translation investment and GetX familiarity are both real and
+  # worth keeping — see ARCHITECTURE.md "Why GetX stays") ---
   get: ^4.7.3
+
+  # --- Local persistence ---
   drift: ^2.26.0
   drift_flutter: ^0.2.4
+  # Bundles the native sqlite3 library for Android/Windows/macOS/Linux so
+  # Drift has a consistent engine across every non-web target.
+  sqlite3_flutter_libs: ^0.5.28
   path: ^1.9.1
   path_provider: ^2.1.6
+
+  # --- Identity, correctness ---
+  # UUIDv7 client-generated primary keys (RFC 9562) so offline inserts on
+  # different devices never collide and stay roughly time-sortable — see
+  # ARCHITECTURE.md / SYNC.md.
+  uuid: ^4.5.1
+
+  # --- Supabase backend + connectivity awareness for the sync engine ---
+  supabase_flutter: ^2.16.0
+  connectivity_plus: ^6.1.5
+  flutter_secure_storage: ^9.2.4
+
+  # --- Images ---
+  # Native-encoder compression (fast enough for camera-resolution photos,
+  # unlike the pure-Dart `image` package) for the two-tier thumbnail/full
+  # pipeline. Mobile/desktop only for now — see the Web caveat in
+  # ARCHITECTURE.md's platform capability matrix.
+  flutter_image_compress: ^2.5.1
   image_picker: ^1.2.3
+  # Cross-platform file picker used as the Windows/Web fallback wherever
+  # camera capture isn't available (see lib/core/platform/capabilities.dart).
+  file_selector: ^1.0.3
+
+  # --- Existing feature dependencies kept through the transition ---
   intl: ^0.20.3
   speech_to_text: ^7.4.0
   google_fonts: ^8.2.0
   iconsax: ^0.0.8
   share_plus: ^13.3.0
+  cupertino_icons: ^1.0.8
 
 dev_dependencies:
   flutter_test:
@@ -50,43 +64,12 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   drift_dev: ^2.26.0
   build_runner: ^2.5.4
+  # Test doubles for repository/use-case tests in M1 onward — avoids hand
+  # writing a fake implementation of every repository interface.
+  mocktail: ^1.0.4
 
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
-
-# The following section is specific to Flutter packages.
 flutter:
-
-  # The following line ensures that the Material Icons font is
-  # included with your application, so that you can use the icons in
-  # the material Icons class.
   uses-material-design: true
 
   assets:
     - assets/shop_logo.jpeg
-
-  # An image asset can refer to one or more resolution-specific "variants", see
-  # https://flutter.dev/to/resolution-aware-images
-
-  # For details regarding adding assets from package dependencies, see
-  # https://flutter.dev/to/asset-from-package
-
-  # To add custom fonts to your application, add a fonts section here,
-  # in this "flutter" section. Each entry in this list should have a
-  # "family" key with the font family name, and a "fonts" key with a
-  # list giving the asset and other descriptors for the font. For
-  # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
-  #
-  # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/to/font-from-package
