@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+# Cancel in-progress runs on the same ref so a fast-follow push doesn't
+# queue behind an already-running job.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────
+  # 1. Pure-Dart core: format + layer-boundary check + dart test
+  #    Runs against the Dart SDK only — no Flutter, no emulators needed.
+  # ─────────────────────────────────────────────────────────────────────
+  dart-core:
+    name: "Dart core (format · boundaries · tests)"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          # Keep in sync with the lower bound in pubspec.yaml `sdk: ^3.11.0`
+          sdk: "3.11.0"
+
+      - name: dart pub get
+        run: dart pub get
+
+      - name: dart format --set-exit-if-changed
+        run: dart format --set-exit-if-changed lib/ test/
+
+      - name: Layer boundary check
+        run: bash tool/check_layer_boundaries.sh
+
+      - name: dart test (pure-Dart core)
+        run: dart test test/core/ --reporter=expanded
+
+  # ─────────────────────────────────────────────────────────────────────
+  # 2. Full Flutter: analyze + test + debug build for every target
+  #    Uses the stable channel matching the Dart SDK constraint above.
+  # ─────────────────────────────────────────────────────────────────────
+  flutter:
+    name: "Flutter (${{ matrix.target }})"
+    needs: dart-core
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: android
+            os: ubuntu-latest
+          - target: web
+            os: ubuntu-latest
+          - target: windows
+            os: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          # stable channel; Flutter 3.32+ ships Dart ≥3.11 which satisfies
+          # the `sdk: ^3.11.0` lower bound in pubspec.yaml.
+          channel: stable
+          cache: true
+
+      - name: flutter pub get
+        run: flutter pub get
+
+      # analyze only once (on the android/ubuntu runner) — it's
+      # platform-independent so running it three times is just noise.
+      - name: flutter analyze
+        if: matrix.target == 'android'
+        run: flutter analyze --no-fatal-infos
+        # NOTE: --fatal-infos is intentionally omitted here.
+        # The v1 feature screens still emit info-level hints; those will be
+        # resolved module-by-module through M1–M3. Tracked as M4 hardening.
+
+      - name: flutter test
+        if: matrix.target == 'android'
+        run: flutter test --reporter=expanded
+
+      # ── Android ─────────────────────────────────────────────────────
+      - name: Setup Java (Android build)
+        if: matrix.target == 'android'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: flutter build apk --debug (Android)
+        if: matrix.target == 'android'
+        run: flutter build apk --debug
+
+      # ── Web ─────────────────────────────────────────────────────────
+      - name: flutter build web --profile (Web)
+        if: matrix.target == 'web'
+        # --profile is cheaper than --release but still exercises the
+        # dart2wasm / dart2js pipeline fully enough to catch import errors.
+        run: flutter build web --profile
+
+      # ── Windows ─────────────────────────────────────────────────────
+      - name: flutter build windows --debug (Windows)
+        if: matrix.target == 'windows'
+        run: flutter build windows --debug
