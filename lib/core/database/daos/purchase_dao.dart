@@ -5,7 +5,8 @@ import '../tables/tables.dart';
 part 'purchase_dao.g.dart';
 
 @DriftAccessor(tables: [Purchases, PurchaseItems, TransportCosts, OtherCosts])
-class PurchaseDao extends DatabaseAccessor<AppDatabase> with _$PurchaseDaoMixin {
+class PurchaseDao extends DatabaseAccessor<AppDatabase>
+    with _$PurchaseDaoMixin {
   PurchaseDao(super.db);
 
   Future<List<Purchase>> getAll() => select(purchases).get();
@@ -16,7 +17,8 @@ class PurchaseDao extends DatabaseAccessor<AppDatabase> with _$PurchaseDaoMixin 
     return (select(purchases)..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
-  Future<void> insertPurchase(PurchasesCompanion entry) => into(purchases).insert(entry);
+  Future<void> insertPurchase(PurchasesCompanion entry) =>
+      into(purchases).insert(entry);
 
   Future<void> updatePurchase(String id, PurchasesCompanion entry) {
     return (update(purchases)..where((t) => t.id.equals(id))).write(entry);
@@ -31,22 +33,31 @@ class PurchaseDao extends DatabaseAccessor<AppDatabase> with _$PurchaseDaoMixin 
 
   // Items
   Future<List<PurchaseItem>> getItems(String purchaseId) {
-    return (select(purchaseItems)..where((t) => t.purchaseId.equals(purchaseId))).get();
+    return (select(
+      purchaseItems,
+    )..where((t) => t.purchaseId.equals(purchaseId))).get();
   }
 
-  Future<void> addItem(PurchaseItemsCompanion entry) => into(purchaseItems).insert(entry);
+  Future<void> addItem(PurchaseItemsCompanion entry) =>
+      into(purchaseItems).insert(entry);
 
   // Transport
   Future<List<TransportCost>> getTransport(String purchaseId) {
-    return (select(transportCosts)..where((t) => t.purchaseId.equals(purchaseId))).get();
+    return (select(
+      transportCosts,
+    )..where((t) => t.purchaseId.equals(purchaseId))).get();
   }
 
-  Future<void> addTransport(TransportCostsCompanion entry) => into(transportCosts).insert(entry);
+  Future<void> addTransport(TransportCostsCompanion entry) =>
+      into(transportCosts).insert(entry);
 
   // Other costs
   Future<List<OtherCost>> getOtherCosts(String purchaseId) {
-    return (select(otherCosts)..where((t) => t.purchaseId.equals(purchaseId))).get();
+    return (select(
+      otherCosts,
+    )..where((t) => t.purchaseId.equals(purchaseId))).get();
   }
 
-  Future<void> addOtherCost(OtherCostsCompanion entry) => into(otherCosts).insert(entry);
+  Future<void> addOtherCost(OtherCostsCompanion entry) =>
+      into(otherCosts).insert(entry);
 }
