@@ -161,9 +161,68 @@ Turning that on today would fail the build on the still-untouched v1
 becomes the real gate once that tree is migrated/replaced module by module
 through M1–M3 — tracked as an M4 hardening task, not dropped.
 
+## The v2 local schema (`lib/data/local/`)
+
+Every table from `notes/business_logic.md` plus the sync/audit/ledger
+infrastructure lives in `lib/data/local/tables/`, wired up in
+`app_database.dart`. A few cross-cutting rules run through all of it:
+
+**Append-only tables** (`CashLedgerEntries`, `StockMovements`,
+`InvestorRepayments`, `DuePayments`, `AuditLogEntries`): no `updatedAt`, no
+`deletedAt`, and no update/delete method is ever called on them from Dart.
+These are the tables Total Cash, the payment-method sub-balances, and
+`Products.qty`'s ground truth are derived from. A mistaken entry gets a
+reversal row, never an edit — see `tables/ledger.dart`'s doc comment for
+the full reasoning, which is a direct fix for the v1 dashboard's ad hoc,
+wrong Total Cash formula.
+
+**Mutable entities** (`Products`, `Customers`, `Investors`, `Sales`,
+`PurchaseTrips`, ...): normal rows with `updatedAt`/`deletedAt`, resolved
+by guarded last-write-wins during sync (see `SYNC.md`, M1).
+
+**When a cached column is and isn't justified.** `Products.qty` and
+`Dues.paidAmountMinor`/`status` are stored, denormalized values — which is
+exactly the pattern that caused v1's investor-totals bug (cached figures
+recomputed by *some* code paths and forgotten by others, so they silently
+drifted). The difference here: each of these is written by exactly *one*
+disciplined use case, in the *same transaction* as the append-only row it's
+derived from (`Products.qty` alongside a `StockMovements` insert;
+`Dues.paidAmountMinor` alongside a `DuePayments` insert) — and each is
+always mechanically re-derivable by summing its source table if it's ever
+suspected of drifting. That combination (single writer, same transaction,
+rebuildable) is what makes a cache safe. `RentTransactions`' "available
+copies" deliberately has *no* cached column at all — it's a cheap indexed
+`COUNT`, cheap enough that caching it would only add drift risk for no
+real performance win. When adding a new derived figure, default to
+computing it on read; only cache it once there's a *measured* reason to,
+and only behind the single-writer-same-transaction rule above.
+
+**Polymorphic references** (`Dues.sourceId` → a `Sales.id` or a
+`RentTransactions.id`; `CashLedgerEntries.sourceId`/`StockMovements.sourceId`
+→ whichever table caused the entry): Drift cannot express a conditional
+foreign key, so these are plain `text()` columns, and the correct target
+table is enforced by whichever use case writes them — not by the schema.
+
+**Enums are real Dart enums, stored via Drift's `textEnum<T>()`** (not a
+free-text column compared by string literal, which is what let the v1
+schema's `Sale.type`/`Customer.type`/`Investors.contractType` drift into
+inconsistency). Every enum used this way lives in
+`lib/domain/entities/enums.dart` and must be imported directly into
+`app_database.dart` itself — Dart imports are not transitive, so a table
+file importing `enums.dart` does not make those types visible to the
+generated `database.g.dart` part file; only `app_database.dart`'s own
+imports do.
+
+**Verification note:** this schema was checked against real Drift codegen
+(`dart run build_runner build`) and a runtime smoke test against an
+in-memory SQLite database — including an actual foreign-key-violation
+check — before being committed, not just written and hoped. `dart analyze`
+was clean and `REFERENCES` constraints were confirmed present in the
+generated SQL. DAOs, repositories, and the `onCreate` seed migration are
+the next PR; this one is schema-only.
+
 ## What's deliberately not here yet
 
-This document covers the M0 foundation only. Drift schema v2 (UUID keys,
-ledger/movement tables, sync tables), the Supabase schema and RLS policies,
+Repositories/DAOs over this schema, the Supabase schema and RLS policies,
 the outbox/puller sync engine, and the feature screens land in M1 onward,
 each with its own PR and its own addition to this document.
