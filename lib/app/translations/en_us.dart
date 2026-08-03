@@ -80,8 +80,10 @@ const Map<String, String> enUS = {
   'assetList': 'Asset List',
   'noAssets': 'No assets added',
   'dateLabel': 'Date: ',
-  'outstandingInfo': 'Outstanding balance = sum of all "due" ledger entries - sum of all "payment" entries. Positive means customer owes money.',
-  'ledgerInfo': 'Shows every transaction for this customer. "Due" entries increase the balance, "payment" entries decrease it.',
+  'outstandingInfo':
+      'Outstanding balance = sum of all "due" ledger entries - sum of all "payment" entries. Positive means customer owes money.',
+  'ledgerInfo':
+      'Shows every transaction for this customer. "Due" entries increase the balance, "payment" entries decrease it.',
   'paymentAmount': 'Payment Amount',
   'close': 'Close',
   'receivePayment': 'Receive Payment',
@@ -334,18 +336,24 @@ const Map<String, String> enUS = {
   'clearAll': 'Clear all',
   'captureDeleted': 'Capture deleted',
   'noCaptures': 'No captures yet',
-  'captureHint': 'Use the buttons above to capture\nphotos, notes, or voice memos',
+  'captureHint':
+      'Use the buttons above to capture\nphotos, notes, or voice memos',
   'fromLabel': 'From: ',
   'buyers': 'Buyers',
   'orderGivers': 'Order Givers',
   'renters': 'Renters',
   'dueTakers': 'Due Takers',
   'prospective': 'Prospective',
-  'hintPurchases': 'Products bought by this customer. Each entry records product name, price, and date.',
-  'hintOrders': 'Pre-orders given by this customer. Shows status: pending → fulfilled → cancelled. Colour coded by days remaining.',
-  'hintRentals': 'Books currently or previously rented. Cost = rate per period × periods. Overdue items are highlighted in red.',
-  'hintDue': 'Outstanding balance = sum of all due entries minus payments received.',
-  'hintLedger': 'Full transaction history. Each "due" adds to balance, each "payment" reduces it.',
+  'hintPurchases':
+      'Products bought by this customer. Each entry records product name, price, and date.',
+  'hintOrders':
+      'Pre-orders given by this customer. Shows status: pending → fulfilled → cancelled. Colour coded by days remaining.',
+  'hintRentals':
+      'Books currently or previously rented. Cost = rate per period × periods. Overdue items are highlighted in red.',
+  'hintDue':
+      'Outstanding balance = sum of all due entries minus payments received.',
+  'hintLedger':
+      'Full transaction history. Each "due" adds to balance, each "payment" reduces it.',
   'dateDdMmYyyy': 'Date (dd-MM-yyyy)',
   'cannotBeUndone': 'This cannot be undone',
   'given': 'Given',
