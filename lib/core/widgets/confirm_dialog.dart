@@ -18,9 +18,14 @@ Future<bool> showConfirmDialog({
           child: Text(cancelLabel ?? 'cancel'.tr),
         ),
         ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: confirmColor ?? Colors.red),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: confirmColor ?? Colors.red,
+          ),
           onPressed: () => Get.back(result: true),
-          child: Text(confirmLabel ?? 'delete'.tr, style: const TextStyle(color: Colors.white)),
+          child: Text(
+            confirmLabel ?? 'delete'.tr,
+            style: const TextStyle(color: Colors.white),
+          ),
         ),
       ],
     ),
