@@ -4,8 +4,17 @@ import '../tables/tables.dart';
 
 part 'customer_dao.g.dart';
 
-@DriftAccessor(tables: [Customers, LedgerEntries, CustomerPurchases, CustomerOrders, CustomerTypes])
-class CustomerDao extends DatabaseAccessor<AppDatabase> with _$CustomerDaoMixin {
+@DriftAccessor(
+  tables: [
+    Customers,
+    LedgerEntries,
+    CustomerPurchases,
+    CustomerOrders,
+    CustomerTypes,
+  ],
+)
+class CustomerDao extends DatabaseAccessor<AppDatabase>
+    with _$CustomerDaoMixin {
   CustomerDao(super.db);
 
   Future<List<Customer>> getAll() => select(customers).get();
@@ -20,7 +29,8 @@ class CustomerDao extends DatabaseAccessor<AppDatabase> with _$CustomerDaoMixin 
     return (select(customers)..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
-  Future<void> insertCustomer(CustomersCompanion entry) => into(customers).insert(entry);
+  Future<void> insertCustomer(CustomersCompanion entry) =>
+      into(customers).insert(entry);
 
   Future<void> updateCustomer(String id, CustomersCompanion entry) {
     return (update(customers)..where((t) => t.id.equals(id))).write(entry);
@@ -28,14 +38,18 @@ class CustomerDao extends DatabaseAccessor<AppDatabase> with _$CustomerDaoMixin 
 
   Future<void> deleteCustomer(String id) async {
     await (delete(ledgerEntries)..where((t) => t.customerId.equals(id))).go();
-    await (delete(customerPurchases)..where((t) => t.customerId.equals(id))).go();
+    await (delete(
+      customerPurchases,
+    )..where((t) => t.customerId.equals(id))).go();
     await (delete(customerOrders)..where((t) => t.customerId.equals(id))).go();
     await (delete(customers)..where((t) => t.id.equals(id))).go();
   }
 
   // Ledger
   Future<List<LedgerEntry>> getLedger(String customerId) {
-    return (select(ledgerEntries)..where((t) => t.customerId.equals(customerId))).get();
+    return (select(
+      ledgerEntries,
+    )..where((t) => t.customerId.equals(customerId))).get();
   }
 
   Future<void> addLedgerEntry(LedgerEntriesCompanion entry) =>
@@ -43,7 +57,9 @@ class CustomerDao extends DatabaseAccessor<AppDatabase> with _$CustomerDaoMixin 
 
   // Purchases
   Future<List<CustomerPurchase>> getPurchases(String customerId) {
-    return (select(customerPurchases)..where((t) => t.customerId.equals(customerId))).get();
+    return (select(
+      customerPurchases,
+    )..where((t) => t.customerId.equals(customerId))).get();
   }
 
   Future<void> addPurchase(CustomerPurchasesCompanion entry) =>
@@ -51,7 +67,9 @@ class CustomerDao extends DatabaseAccessor<AppDatabase> with _$CustomerDaoMixin 
 
   // Orders
   Future<List<CustomerOrder>> getOrders(String customerId) {
-    return (select(customerOrders)..where((t) => t.customerId.equals(customerId))).get();
+    return (select(
+      customerOrders,
+    )..where((t) => t.customerId.equals(customerId))).get();
   }
 
   Future<void> addOrder(CustomerOrdersCompanion entry) =>
