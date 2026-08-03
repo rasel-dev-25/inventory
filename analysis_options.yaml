@@ -1,28 +1,63 @@
-# This file configures the analyzer, which statically analyzes Dart code to
-# check for errors, warnings, and lints.
+# Analyzer configuration for the v2 rewrite.
 #
-# The issues identified by the analyzer are surfaced in the UI of Dart-enabled
-# IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
-# invoked from the command line by running `flutter analyze`.
+# This project deliberately runs a stricter rule set than the Flutter
+# default. The v1 audit found silent `catch (Object e)` blocks swallowing
+# real failures, `double.parse` calls with no error handling, and money
+# arithmetic done directly on primitives — this file makes each of those a
+# build-time error instead of something a reviewer has to catch by eye.
 
-# The following line activates a set of recommended lints for Flutter apps,
-# packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
-linter:
-  # The lint rules applied to this project can be customized in the
-  # section below to disable rules from the `package:flutter_lints/flutter.yaml`
-  # included above or to enable additional rules. A list of all available lints
-  # and their documentation is published at https://dart.dev/lints.
-  #
-  # Instead of disabling a lint rule for the entire project in the
-  # section below, it can also be suppressed for a single line of code
-  # or a specific dart file by using the `// ignore: name_of_lint` and
-  # `// ignore_for_file: name_of_lint` syntax on the line or in the file
-  # producing the lint.
-  rules:
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
+analyzer:
+  errors:
+    # Treat "no non-null return on every branch" etc. as errors, not hints —
+    # this is exactly the class of bug that produced the unguarded
+    # `double.parse` crash found in the old asset screens.
+    missing_return: error
+    dead_code: warning
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "build/**"
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+linter:
+  rules:
+    # --- Error prevention (promoted from hint/none to enforced) ---
+    always_declare_return_types: true
+    avoid_dynamic_calls: true
+    avoid_returning_null_for_void: true
+    avoid_slow_async_io: true
+    avoid_type_to_string: true
+    cancel_subscriptions: true
+    close_sinks: true
+    control_flow_in_finally: true
+    empty_catches: true
+    no_adjacent_strings_in_list: true
+    prefer_relative_imports: true
+    test_types_in_equals: true
+    throw_in_finally: true
+    unnecessary_statements: true
+    valid_regexps: true
+
+    # --- Style, kept but not exhaustive — the goal is defect prevention,
+    # not bikeshedding every screen into an identical shape ---
+    always_put_required_named_parameters_first: true
+    avoid_bool_literals_in_conditional_expressions: true
+    avoid_field_initializers_in_const_classes: true
+    avoid_multiple_declarations_per_line: true
+    avoid_unused_constructor_parameters: true
+    directives_ordering: true
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    prefer_final_locals: true
+    prefer_single_quotes: true
+    sort_child_properties_last: true
+    unawaited_futures: true
+    unnecessary_await_in_return: true
+    use_key_in_widget_constructors: true
+
+# Import-boundary rules between architectural layers (domain must not import
+# Flutter or Drift; data must not import Flutter widgets; features must not
+# reach into another feature's internals) are NOT expressible in
+# analysis_options.yaml with the vanilla analyzer, so they are checked in CI
+# by `tool/check_layer_boundaries.sh` instead — see ARCHITECTURE.md.
