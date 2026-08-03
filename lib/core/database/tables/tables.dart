@@ -12,7 +12,8 @@ class Products extends Table {
   RealColumn get sellPrice => real().withDefault(const Constant(0))();
   RealColumn get qty => real().withDefault(const Constant(0))();
   RealColumn get buyConversionFactor => real().withDefault(const Constant(1))();
-  RealColumn get sellConversionFactor => real().withDefault(const Constant(1))();
+  RealColumn get sellConversionFactor =>
+      real().withDefault(const Constant(1))();
   TextColumn get date => text()();
   TextColumn get imagePath => text().withDefault(const Constant(''))();
   @override
@@ -137,7 +138,8 @@ class Investors extends Table {
   RealColumn get profitPercentage => real().withDefault(const Constant(0))();
   RealColumn get dailyEarnings => real().withDefault(const Constant(0))();
   RealColumn get monthlyEarnings => real().withDefault(const Constant(0))();
-  TextColumn get contractType => text().withDefault(const Constant('profitShare'))();
+  TextColumn get contractType =>
+      text().withDefault(const Constant('profitShare'))();
   TextColumn get investmentType => text().withDefault(const Constant('cash'))();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
   TextColumn get startDate => text().withDefault(const Constant(''))();
