@@ -77,6 +77,10 @@ class AppDrawer extends GetView<ShellController> {
             Navigator.pop(context);
             Get.toNamed(AppRoutes.duesV2);
           }),
+          _tile(Iconsax.people, '${'customers'.tr} (v2)', () {
+            Navigator.pop(context);
+            Get.toNamed(AppRoutes.customersV2);
+          }),
           _tile(Iconsax.user, 'account'.tr, () {
             Navigator.pop(context);
             Get.toNamed(AppRoutes.accountSettings);

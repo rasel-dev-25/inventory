@@ -37,6 +37,11 @@ import '../../features/daily_sales_v2/view/daily_sales_screen.dart' as v2_sales;
 // DuesScreen (imported above) share these exact names.
 import '../../features/dues_v2/controller/dues_controller.dart' as v2_dues;
 import '../../features/dues_v2/view/dues_screen.dart' as v2_dues;
+// Same aliasing reason again — v1's CustomersController/CustomersScreen
+// (imported above) share these exact names.
+import '../../features/customers_v2/controller/customers_controller.dart'
+    as v2_customers;
+import '../../features/customers_v2/view/customers_screen.dart' as v2_customers;
 
 abstract class AppPages {
   static final pages = [
@@ -156,6 +161,15 @@ abstract class AppPages {
       page: () => const v2_dues.DuesScreen(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => v2_dues.DuesController(Get.find<AppDatabaseV2>()));
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.customersV2,
+      page: () => const v2_customers.CustomersScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(
+          () => v2_customers.CustomersController(Get.find<AppDatabaseV2>()),
+        );
       }),
     ),
   ];
