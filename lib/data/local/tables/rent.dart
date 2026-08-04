@@ -46,6 +46,13 @@ class RentTransactions extends Table {
   DateTimeColumn get dueDate => dateTime()();
   IntColumn get depositMinor => integer().withDefault(const Constant(0))();
 
+  /// The agreed basic rental price at issue time — tier-suggested or
+  /// manually overridden per `notes/business_logic.md` §জ's "ম্যানুয়াল
+  /// ওভাররাইড করা যাবে". Unlike [extraDayChargeMinor]/[damageChargeMinor]
+  /// (only known at return time), this is always known the moment a
+  /// rental is issued, so it is not nullable.
+  IntColumn get rentPriceMinor => integer().withDefault(const Constant(0))();
+
   IntColumn get extraDayChargeMinor => integer().nullable()();
   IntColumn get damageChargeMinor => integer().nullable()();
 

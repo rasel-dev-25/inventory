@@ -474,4 +474,23 @@ const Map<String, String> bnBD = {
   'monthlyRent': 'মাসিক ভাড়া',
   'dailyOther': 'দৈনিক / অন্যান্য',
   'noExpensesYet': 'এখনো কোনো খরচ নেই',
+
+  // ── Rent (M3 v2 screen) ─────────────────────────────────────────────
+  'issueRent': 'ভাড়া ইস্যু করুন',
+  'returnBook': 'বই ফেরত',
+  'deposit': 'জামানত',
+  'extraDayCharge': 'অতিরিক্ত দিনের চার্জ',
+  'damageCharge': 'ক্ষতির চার্জ',
+  'markStolen': 'চুরি হিসেবে চিহ্নিত করুন',
+  'rentHistory': 'ভাড়ার ইতিহাস',
+  'availableCopies': 'উপলব্ধ কপি',
+  'rentPriceLabel': 'ভাড়ার মূল্য',
+  'noRentalsYet': 'এখনো কোনো ভাড়া নেই',
+  'pageCount': 'পৃষ্ঠা সংখ্যা',
+  'refundOwed': 'কাস্টমারকে ফেরত দিতে হবে',
+  'netAmountOwed': 'প্রদেয় পরিমাণ',
+  'depositLabel': 'জামানত রাখা আছে',
+  'confirmMarkStolen':
+      'এই ভাড়াটি চুরি হিসেবে চিহ্নিত করে কাস্টমারকে ব্লক করবেন?',
+  'dueDate': 'ফেরতের তারিখ',
 };

@@ -144,6 +144,7 @@ class CatalogController extends GetxController {
     bool isRentable = false,
     String? barcode,
     String? sku,
+    int? pageCount,
   }) async {
     try {
       final product = Product(
@@ -157,6 +158,7 @@ class CatalogController extends GetxController {
         isRentable: isRentable,
         barcode: barcode,
         sku: sku,
+        pageCount: pageCount,
       );
       await _productUseCases.create(
         product,
@@ -184,6 +186,7 @@ class CatalogController extends GetxController {
     bool? isRentable,
     String? barcode,
     String? sku,
+    int? pageCount,
   }) async {
     try {
       final updated = existing.copyWith(
@@ -195,6 +198,7 @@ class CatalogController extends GetxController {
         isRentable: isRentable,
         barcode: barcode,
         sku: sku,
+        pageCount: pageCount,
       );
       await _productUseCases.update(
         updated,

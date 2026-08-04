@@ -35,6 +35,12 @@ class Product {
   final String? barcode;
   final String? sku;
 
+  /// Only meaningful when [isRentable] is true — see this field's own
+  /// column doc comment in `lib/data/local/tables/products.dart` for why
+  /// it's a plain nullable field rather than restricted to a "Book"
+  /// category check.
+  final int? pageCount;
+
   const Product({
     required this.id,
     required this.name,
@@ -46,6 +52,7 @@ class Product {
     this.isRentable = false,
     this.barcode,
     this.sku,
+    this.pageCount,
   });
 
   Product copyWith({
@@ -58,6 +65,7 @@ class Product {
     bool? isRentable,
     String? barcode,
     String? sku,
+    int? pageCount,
   }) {
     return Product(
       id: id,
@@ -70,6 +78,7 @@ class Product {
       isRentable: isRentable ?? this.isRentable,
       barcode: barcode ?? this.barcode,
       sku: sku ?? this.sku,
+      pageCount: pageCount ?? this.pageCount,
     );
   }
 }

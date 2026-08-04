@@ -475,4 +475,22 @@ const Map<String, String> enUS = {
   'monthlyRent': 'Monthly Rent',
   'dailyOther': 'Daily / Other',
   'noExpensesYet': 'No expenses yet',
+
+  // ── Rent (M3 v2 screen) ─────────────────────────────────────────────
+  'issueRent': 'Issue Rental',
+  'returnBook': 'Return Book',
+  'deposit': 'Deposit',
+  'extraDayCharge': 'Extra Day Charge',
+  'damageCharge': 'Damage Charge',
+  'markStolen': 'Mark as Stolen',
+  'rentHistory': 'Rent History',
+  'availableCopies': 'Available copies',
+  'rentPriceLabel': 'Rental Price',
+  'noRentalsYet': 'No rentals yet',
+  'pageCount': 'Page Count',
+  'refundOwed': 'Refund owed to customer',
+  'netAmountOwed': 'Amount owed',
+  'depositLabel': 'Deposit held',
+  'confirmMarkStolen': 'Mark this rental as stolen and block the customer?',
+  'dueDate': 'Due Date',
 };

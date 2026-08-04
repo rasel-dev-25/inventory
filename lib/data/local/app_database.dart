@@ -14,6 +14,7 @@ import 'daos/investor_dao.dart';
 import 'daos/ledger_dao.dart';
 import 'daos/product_dao.dart';
 import 'daos/purchase_dao.dart';
+import 'daos/rent_dao.dart';
 import 'daos/sale_dao.dart';
 import 'daos/sync_metadata_dao.dart';
 import 'default_shop.dart';
@@ -106,6 +107,7 @@ part 'app_database.g.dart';
     SaleDao,
     DueDao,
     ExpenseDao,
+    RentDao,
   ],
 )
 class AppDatabaseV2 extends _$AppDatabaseV2 {

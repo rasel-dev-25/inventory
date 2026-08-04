@@ -28,6 +28,7 @@ extension _ProductRowMapping on ProductRow {
       isRentable: isRentable,
       barcode: barcode,
       sku: sku,
+      pageCount: pageCount,
     );
   }
 }
@@ -145,6 +146,7 @@ class ProductDao extends DatabaseAccessor<AppDatabaseV2>
       isRentable: Value(product.isRentable),
       barcode: Value(product.barcode),
       sku: Value(product.sku),
+      pageCount: Value(product.pageCount),
       createdAt: now,
       updatedAt: now,
       syncedAt: now,

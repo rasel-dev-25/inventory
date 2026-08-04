@@ -72,6 +72,7 @@ class ProductUseCases {
       'is_rentable': product.isRentable,
       'barcode': product.barcode,
       'sku': product.sku,
+      'page_count': product.pageCount,
     };
   }
 }

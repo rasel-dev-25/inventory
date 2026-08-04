@@ -61,6 +61,9 @@ import '../../features/investor_v2/view/investor_screen.dart' as v2_investor;
 // equivalent tab is FinanceController/FinanceScreen, a different name).
 import '../../features/expense_v2/controller/expense_controller.dart';
 import '../../features/expense_v2/view/expense_screen.dart';
+// No aliasing needed — v1 has no rent feature at all.
+import '../../features/rent_v2/controller/rent_controller.dart';
+import '../../features/rent_v2/view/rent_screen.dart';
 
 abstract class AppPages {
   static final pages = [
@@ -221,6 +224,13 @@ abstract class AppPages {
       page: () => const ExpenseScreen(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => ExpenseController(Get.find<AppDatabaseV2>()));
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.rentV2,
+      page: () => const RentScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => RentController(Get.find<AppDatabaseV2>()));
       }),
     ),
   ];

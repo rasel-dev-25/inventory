@@ -19,6 +19,7 @@ class ProductFormResult {
   final bool isRentable;
   final String? barcode;
   final String? sku;
+  final int? pageCount;
 
   const ProductFormResult({
     required this.name,
@@ -29,6 +30,7 @@ class ProductFormResult {
     required this.isRentable,
     this.barcode,
     this.sku,
+    this.pageCount,
   });
 }
 
@@ -71,6 +73,9 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
     text: widget.existing?.barcode,
   );
   late final _skuController = TextEditingController(text: widget.existing?.sku);
+  late final _pageCountController = TextEditingController(
+    text: widget.existing?.pageCount?.toString(),
+  );
 
   late String? _category =
       widget.existing?.category ?? (widget.categories.firstOrNull);
@@ -171,6 +176,17 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
                 value: _isRentable,
                 onChanged: (v) => setState(() => _isRentable = v),
               ),
+              if (_isRentable) ...[
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  controller: _pageCountController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(labelText: 'pageCount'.tr),
+                  validator: (v) => (v != null && v.trim().isNotEmpty)
+                      ? (int.tryParse(v) == null ? 'invalidQty'.tr : null)
+                      : null,
+                ),
+              ],
               const SizedBox(height: AppSpacing.md),
               TextFormField(
                 controller: _barcodeController,
@@ -216,6 +232,7 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
             ? null
             : _barcodeController.text,
         sku: _skuController.text.isEmpty ? null : _skuController.text,
+        pageCount: _isRentable ? int.tryParse(_pageCountController.text) : null,
       ),
     );
   }

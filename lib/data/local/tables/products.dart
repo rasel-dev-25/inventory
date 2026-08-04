@@ -38,6 +38,13 @@ class Products extends Table {
   TextColumn get barcode => text().nullable()();
   TextColumn get sku => text().nullable()();
 
+  /// Only meaningful when [isRentable] is true — the tier lookup at
+  /// rent-issue time (`notes/business_logic.md` §জ) is keyed by this.
+  /// Nullable for the same reason [isRentable] is a general flag rather
+  /// than a category-restricted column: most products never rent, so
+  /// most rows never set this.
+  IntColumn get pageCount => integer().nullable()();
+
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
