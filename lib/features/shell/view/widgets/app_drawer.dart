@@ -57,6 +57,23 @@ class AppDrawer extends GetView<ShellController> {
             Get.toNamed(AppRoutes.assets);
           }),
           const Divider(),
+          // ── M1 v2 preview — reads/writes the new synced database, kept
+          // clearly separate from the v1 tabs above until the rest of the
+          // app is migrated too (see CatalogScreen's doc comment).
+          _sectionHeader('New (v2 preview)'),
+          _tile(Iconsax.category_2, 'products'.tr, () {
+            Navigator.pop(context);
+            Get.toNamed(AppRoutes.catalogV2);
+          }),
+          _tile(Iconsax.truck, 'purchaseEntry'.tr, () {
+            Navigator.pop(context);
+            Get.toNamed(AppRoutes.purchaseEntryV2);
+          }),
+          _tile(Iconsax.user, 'account'.tr, () {
+            Navigator.pop(context);
+            Get.toNamed(AppRoutes.accountSettings);
+          }),
+          const Divider(),
           _sectionHeader('data'.tr),
           _tile(Iconsax.export_1, 'exportData'.tr, () {
             Navigator.pop(context);
