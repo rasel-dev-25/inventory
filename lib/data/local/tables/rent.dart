@@ -12,6 +12,7 @@ import 'shared.dart';
 /// (`((pageCount-1)~/100+1)*10.0`) did not match the spec's tier table at
 /// all — this table is what makes the tier lookup actually configurable,
 /// as the spec asks for explicitly.
+@DataClassName('RentPricingTierRow')
 class RentPricingTiers extends Table {
   TextColumn get id => text()();
   TextColumn get shopId => text().references(Shops, #id)();
@@ -34,6 +35,7 @@ class RentPricingTiers extends Table {
 /// is a small, fast aggregate while qty is read on every list row; see
 /// ARCHITECTURE.md for the general rule of when a cache is and isn't
 /// justified.
+@DataClassName('RentTransactionRow')
 class RentTransactions extends Table {
   TextColumn get id => text()();
   TextColumn get shopId => text().references(Shops, #id)();
