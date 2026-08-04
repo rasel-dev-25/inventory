@@ -15,6 +15,7 @@ import 'shared.dart';
 /// **Needs a retention policy before this ships to real users** (tracked
 /// as an M4 task) — on a phone, an unbounded audit log is the single
 /// fastest-growing table in the database.
+@DataClassName('AuditLogEntryRow')
 class AuditLogEntries extends Table {
   TextColumn get id => text()();
   TextColumn get shopId => text().references(Shops, #id)();
