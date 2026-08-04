@@ -8,6 +8,7 @@ import 'shared.dart';
 /// into a real Sale/PurchaseTrip/Expense — the v1 schema had no conversion
 /// tracking at all (create/list/delete only), so this is new, not a
 /// rename of an existing column.
+@DataClassName('QuickCaptureRow')
 class QuickCaptures extends Table {
   TextColumn get id => text()();
   TextColumn get shopId => text().references(Shops, #id)();
