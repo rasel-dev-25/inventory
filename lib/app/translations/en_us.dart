@@ -506,4 +506,14 @@ const Map<String, String> enUS = {
   'directPurchase': 'Direct Purchase',
   'noAssetsYet': 'No fixed assets yet',
   'quantityToConvert': 'Quantity to convert',
+
+  // ── Quick Capture (M3 v2 screen) ────────────────────────────────────
+  'voiceNote': 'Voice Note',
+  'photoNote': 'Photo Note',
+  'convertTo': 'Convert To',
+  'noPendingCaptures': 'No pending captures',
+  'noConvertedCaptures': 'No converted captures yet',
+  'writeQuickNote': 'Quick note',
+  'shopNameLabel': 'Shop Name',
+  'converted': 'Converted',
 };

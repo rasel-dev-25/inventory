@@ -73,6 +73,13 @@ import '../../features/order_v2/view/order_screen.dart';
 // FixedAssetController/FixedAssetScreen.
 import '../../features/fixed_asset_v2/controller/fixed_asset_controller.dart';
 import '../../features/fixed_asset_v2/view/fixed_asset_screen.dart';
+// Same aliasing reason as daily_sales_v2/dues_v2/etc. above — v1's
+// QuickCaptureController/QuickCaptureScreen (imported above) share
+// these exact names.
+import '../../features/quick_capture_v2/controller/quick_capture_controller.dart'
+    as v2_quick_capture;
+import '../../features/quick_capture_v2/view/quick_capture_screen.dart'
+    as v2_quick_capture;
 
 abstract class AppPages {
   static final pages = [
@@ -254,6 +261,17 @@ abstract class AppPages {
       page: () => const FixedAssetScreen(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => FixedAssetController(Get.find<AppDatabaseV2>()));
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.quickCaptureV2,
+      page: () => const v2_quick_capture.QuickCaptureScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(
+          () => v2_quick_capture.QuickCaptureController(
+            Get.find<AppDatabaseV2>(),
+          ),
+        );
       }),
     ),
   ];
