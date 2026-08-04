@@ -463,12 +463,16 @@ const Map<String, String> enUS = {
   'allTimeView': 'All-time',
   'totalSale': 'Total sale',
   'totalPurchase': 'Total purchase',
-  'netProfitFootnote':
-      'Gross profit only until the Expense module lands — see PR notes.',
 
   // ── Investor (M1 v2 screen) ─────────────────────────────────────────
   'currentStockValue': 'Current Stock Value',
   'profitShareAmount': 'Profit Share',
   'capitalReturn': 'Capital Return',
   'perContract': 'Per Contract',
+
+  // ── Expense (M1 v2 screen) ──────────────────────────────────────────
+  'addExpense': 'Add Expense',
+  'monthlyRent': 'Monthly Rent',
+  'dailyOther': 'Daily / Other',
+  'noExpensesYet': 'No expenses yet',
 };

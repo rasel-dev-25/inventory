@@ -462,12 +462,16 @@ const Map<String, String> bnBD = {
   'allTimeView': 'সর্বমোট',
   'totalSale': 'মোট বিক্রি',
   'totalPurchase': 'মোট কেনা',
-  'netProfitFootnote':
-      'এখন পর্যন্ত শুধু গ্রস প্রফিট — Expense মডিউল যোগ হলে আপডেট হবে।',
 
   // ── Investor (M1 v2 screen) ─────────────────────────────────────────
   'currentStockValue': 'বর্তমান স্টক মূল্য',
   'profitShareAmount': 'লাভের ভাগ',
   'capitalReturn': 'মূলধন ফেরত',
   'perContract': 'চুক্তি অনুযায়ী',
+
+  // ── Expense (M1 v2 screen) ──────────────────────────────────────────
+  'addExpense': 'খরচ যোগ করুন',
+  'monthlyRent': 'মাসিক ভাড়া',
+  'dailyOther': 'দৈনিক / অন্যান্য',
+  'noExpensesYet': 'এখনো কোনো খরচ নেই',
 };

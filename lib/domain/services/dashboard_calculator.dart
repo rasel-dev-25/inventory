@@ -20,20 +20,19 @@
 /// **totalCash is exact** — it is literally `calculateCashBalances`'s
 /// total over whatever [CashLedgerEntry] rows are in range, and every
 /// cash-moving event this app can record today (a sale's cash portion, a
-/// due payment, a purchase trip's cash-out) already writes one. It will
-/// automatically pick up rent income, expenses, and investor repayments
-/// too, with no change to this function, the moment those v2 use cases
-/// exist and start writing their own ledger entries — see
+/// due payment, a purchase trip's cash-out, an expense, an investor
+/// repayment) already writes one. It will automatically pick up rent
+/// income too, with no change to this function, the moment that v2 use
+/// case exists (M3) and starts writing its own ledger entries — see
 /// `lib/data/local/tables/ledger.dart`'s doc comment for why this table
 /// is deliberately the one place that can never happen.
 ///
-/// **netProfit is currently gross-profit-only** — [expensesInRange] is
-/// always `[]` until the Expense module (M2) exists in v2, so this
-/// silently equals total gross profit for now, not true net profit. Not
-/// hidden: `DashboardController`/`DashboardScreen` label the card
-/// accordingly and this gap is tracked in the working plan, the same way
-/// `SavePurchaseTripUseCase`'s hardcoded cash payment method is flagged
-/// rather than silently assumed complete.
+/// **netProfit is now true net profit** — [expensesInRange] is populated
+/// from `ExpenseDao.watchAll` by `DashboardController`. It used to always
+/// be `[]` (gross-profit-only) before the Expense module existed; kept
+/// as its own parameter rather than folded into the ledger sum because
+/// `calculateShopNetProfit` needs the raw expense amounts, not their
+/// already-negated cash-ledger form.
 library;
 
 import '../../core/money/money.dart';

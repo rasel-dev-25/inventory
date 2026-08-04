@@ -57,6 +57,10 @@ import '../../features/dashboard_v2/view/dashboard_screen.dart' as v2_dashboard;
 import '../../features/investor_v2/controller/investor_controller.dart'
     as v2_investor;
 import '../../features/investor_v2/view/investor_screen.dart' as v2_investor;
+// No aliasing needed — v1 has no "Expense" feature by this name (its
+// equivalent tab is FinanceController/FinanceScreen, a different name).
+import '../../features/expense_v2/controller/expense_controller.dart';
+import '../../features/expense_v2/view/expense_screen.dart';
 
 abstract class AppPages {
   static final pages = [
@@ -210,6 +214,13 @@ abstract class AppPages {
         Get.lazyPut(
           () => v2_investor.InvestorController(Get.find<AppDatabaseV2>()),
         );
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.expenseV2,
+      page: () => const ExpenseScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => ExpenseController(Get.find<AppDatabaseV2>()));
       }),
     ),
   ];
