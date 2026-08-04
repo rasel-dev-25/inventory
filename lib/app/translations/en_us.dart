@@ -497,4 +497,13 @@ const Map<String, String> enUS = {
   // ── Order (M3 v2 screen) ────────────────────────────────────────────
   'noOrdersYet': 'No orders yet',
   'itemDescription': 'What do they want?',
+
+  // ── Fixed Asset (M3 v2 screen) ───────────────────────────────────────
+  'addAsset': 'Add Asset',
+  'assetValue': 'Value',
+  'dateAcquired': 'Date Acquired',
+  'convertFromStock': 'Convert From Stock',
+  'directPurchase': 'Direct Purchase',
+  'noAssetsYet': 'No fixed assets yet',
+  'quantityToConvert': 'Quantity to convert',
 };
