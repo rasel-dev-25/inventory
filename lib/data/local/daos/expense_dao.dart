@@ -26,9 +26,11 @@ extension _ExpenseRowMapping on ExpenseRow {
 /// `cash_ledger_entries` write: editing the amount/category/payment
 /// method after the fact would leave the ledger entry it was recorded
 /// alongside silently wrong, since `CashLedgerEntries` is append-only and
-/// cannot be corrected in place. A mistaken expense is deleted (see
-/// [softDelete]'s own doc comment for the one gap that leaves), not
-/// edited.
+/// cannot be corrected in place. A mistaken expense is deleted, not
+/// edited — `ExpenseUseCases.softDelete` (not this DAO method directly)
+/// also reverses the ledger entry via `ledger_reversal.dart`, so this
+/// method alone (hides the row, no reversal) should only ever be called
+/// from there, never on its own.
 @DriftAccessor(tables: [Expenses])
 class ExpenseDao extends DatabaseAccessor<AppDatabaseV2>
     with _$ExpenseDaoMixin {
@@ -69,13 +71,11 @@ class ExpenseDao extends DatabaseAccessor<AppDatabaseV2>
     );
   }
 
-  /// Same known gap `PurchaseDao.softDeleteTrip` already has: this hides
-  /// the expense from every read (`watchAll`/`getById`), but does **not**
-  /// insert a reversal `cash_ledger_entries` row, so Total Cash still
-  /// reflects the deleted expense until a matching reversal is added by
-  /// hand. Not fixed here because the fix belongs in one shared place for
-  /// every soft-deletable, ledger-paired row, not duplicated per entity —
-  /// tracked in the working plan alongside `PurchaseDao`'s identical gap.
+  /// Only hides the expense from every read (`watchAll`/`getById`) — does
+  /// **not** touch `CashLedgerEntries`. `ExpenseUseCases.softDelete` pairs
+  /// this with a ledger reversal in the same transaction; calling this
+  /// method directly (bypassing that use case) would reproduce the gap
+  /// its own doc comment describes.
   Future<void> softDelete(String id, DateTime now) {
     return (update(expenses)..where((e) => e.id.equals(id))).write(
       ExpensesCompanion(deletedAt: Value(now), updatedAt: Value(now)),
