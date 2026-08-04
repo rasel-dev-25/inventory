@@ -50,6 +50,19 @@ class LedgerDao extends DatabaseAccessor<AppDatabaseV2> with _$LedgerDaoMixin {
     );
   }
 
+  /// Every `sale`-sourced [StockMovements] row for [shopId] — the raw data
+  /// the v2 Stock screen's "বেশি বিক্রি হওয়া বনাম কমে যাওয়া পণ্য" (top
+  /// sellers vs. slow movers) view is aggregated from client-side, per
+  /// `notes/business_logic.md` §খ. Deliberately returns the raw rows
+  /// rather than a pre-aggregated sum: `StockController` also needs to
+  /// group by the screen's live category/investor filter, which this DAO
+  /// has no knowledge of.
+  Stream<List<StockMovementRow>> watchSaleMovements(String shopId) {
+    final query = select(stockMovements)
+      ..where((m) => m.shopId.equals(shopId) & m.sourceType.equals('sale'));
+    return query.watch();
+  }
+
   Future<void> recordStockMovement({
     required String id,
     required String shopId,

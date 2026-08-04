@@ -42,6 +42,10 @@ import '../../features/dues_v2/view/dues_screen.dart' as v2_dues;
 import '../../features/customers_v2/controller/customers_controller.dart'
     as v2_customers;
 import '../../features/customers_v2/view/customers_screen.dart' as v2_customers;
+// No aliasing needed — v1 has no "stock" feature (its equivalent tab is
+// InventoryController/InventoryScreen, a different name entirely).
+import '../../features/stock_v2/controller/stock_controller.dart';
+import '../../features/stock_v2/view/stock_screen.dart';
 
 abstract class AppPages {
   static final pages = [
@@ -170,6 +174,13 @@ abstract class AppPages {
         Get.lazyPut(
           () => v2_customers.CustomersController(Get.find<AppDatabaseV2>()),
         );
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.stockV2,
+      page: () => const StockScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => StockController(Get.find<AppDatabaseV2>()));
       }),
     ),
   ];
