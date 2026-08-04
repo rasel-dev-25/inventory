@@ -448,4 +448,13 @@ const Map<String, String> enUS = {
   'showFlaggedOnly': 'Show flagged only',
   'suspicionFlag': 'Suspicious',
   'isBlockedLabel': 'Blocked',
+
+  // ── Stock (M1 v2 screen) ────────────────────────────────────────────
+  'allCategories': 'All categories',
+  'allInvestors': 'All investors',
+  'totalCostValue': 'Total cost value',
+  'potentialSaleValue': 'Potential sale value',
+  'potentialProfit': 'Potential profit',
+  'topSellers': 'Top sellers',
+  'slowMovers': 'Slow movers',
 };

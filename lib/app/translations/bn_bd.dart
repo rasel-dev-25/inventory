@@ -447,4 +447,13 @@ const Map<String, String> bnBD = {
   'showFlaggedOnly': 'শুধু ফ্ল্যাগড দেখান',
   'suspicionFlag': 'সন্দেহজনক',
   'isBlockedLabel': 'ব্লকড',
+
+  // ── Stock (M1 v2 screen) ────────────────────────────────────────────
+  'allCategories': 'সব ক্যাটাগরি',
+  'allInvestors': 'সব ইনভেস্টর',
+  'totalCostValue': 'মোট cost value',
+  'potentialSaleValue': 'সম্ভাব্য sale value',
+  'potentialProfit': 'সম্ভাব্য profit',
+  'topSellers': 'বেশি বিক্রি হওয়া পণ্য',
+  'slowMovers': 'কম বিক্রি হওয়া পণ্য',
 };
