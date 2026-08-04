@@ -7,6 +7,7 @@ import 'shared.dart';
 /// থেকেই দেওয়া হয়" — every expense here reduces Total Cash directly and
 /// never draws from a specific investor's fund. Mirrored into
 /// [CashLedgerEntries] as an outflow when recorded.
+@DataClassName('ExpenseRow')
 class Expenses extends Table {
   TextColumn get id => text()();
   TextColumn get shopId => text().references(Shops, #id)();
