@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../../domain/entities/enums.dart';
 import 'shared.dart';
 
+@DataClassName('InvestorRow')
 class Investors extends Table {
   TextColumn get id => text()();
   TextColumn get shopId => text().references(Shops, #id)();
@@ -35,6 +36,7 @@ class Investors extends Table {
 /// corrected with a reversal row, never an edit or delete — same rule as
 /// [CashLedgerEntries] in `ledger.dart`, since every repayment also mirrors
 /// into that table.
+@DataClassName('InvestorRepaymentRow')
 class InvestorRepayments extends Table {
   TextColumn get id => text()();
   TextColumn get shopId => text().references(Shops, #id)();
@@ -57,6 +59,7 @@ class InvestorRepayments extends Table {
 /// Deliberately outside the normal Purchase/Sale history — it is a single
 /// note, not a stream of transactions, and once `status == settled` the
 /// investor's normal tracking starts fresh from zero.
+@DataClassName('LegacySettlementRow')
 class LegacySettlements extends Table {
   TextColumn get id => text()();
   TextColumn get shopId => text().references(Shops, #id)();
