@@ -21,4 +21,5 @@ abstract class AppRoutes {
   static const customersV2 = '/v2/customers';
   static const stockV2 = '/v2/stock';
   static const dashboardV2 = '/v2/dashboard';
+  static const investorV2 = '/v2/investor';
 }

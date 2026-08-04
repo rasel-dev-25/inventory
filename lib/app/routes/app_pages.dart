@@ -52,6 +52,11 @@ import '../../features/stock_v2/view/stock_screen.dart';
 import '../../features/dashboard_v2/controller/dashboard_controller.dart'
     as v2_dashboard;
 import '../../features/dashboard_v2/view/dashboard_screen.dart' as v2_dashboard;
+// Same aliasing reason again — v1's InvestorController/InvestorScreen
+// (imported above) share these exact names.
+import '../../features/investor_v2/controller/investor_controller.dart'
+    as v2_investor;
+import '../../features/investor_v2/view/investor_screen.dart' as v2_investor;
 
 abstract class AppPages {
   static final pages = [
@@ -195,6 +200,15 @@ abstract class AppPages {
       binding: BindingsBuilder(() {
         Get.lazyPut(
           () => v2_dashboard.DashboardController(Get.find<AppDatabaseV2>()),
+        );
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.investorV2,
+      page: () => const v2_investor.InvestorScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(
+          () => v2_investor.InvestorController(Get.find<AppDatabaseV2>()),
         );
       }),
     ),

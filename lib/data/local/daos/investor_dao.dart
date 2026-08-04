@@ -1,7 +1,9 @@
 import 'package:drift/drift.dart';
 
-import '../app_database.dart';
+import '../../../core/money/money.dart';
 import '../../../domain/entities/investor.dart' as domain;
+import '../../../domain/entities/investor_repayment.dart' as domain;
+import '../app_database.dart';
 import '../tables/investors.dart';
 
 part 'investor_dao.g.dart';
@@ -21,14 +23,30 @@ extension _InvestorRowMapping on InvestorRow {
   }
 }
 
-/// Data access for [Investors]. Deliberately does not compute any
-/// aggregate here (total invested, current stock value, profit share) —
-/// those are the M2 investor-metrics service's job, always computed on
-/// read from [PurchaseItems]/[Sales]/[InvestorRepayments], never cached on
-/// this row. The v1 schema's `Investors.totalBought`/`totalSold`/
-/// `totalProfit`/`remainingBalance` columns are exactly the bug this
-/// avoids repeating — see ARCHITECTURE.md.
-@DriftAccessor(tables: [Investors])
+extension _InvestorRepaymentRowMapping on InvestorRepaymentRow {
+  domain.InvestorRepayment toDomain() {
+    return domain.InvestorRepayment(
+      id: id,
+      investorId: investorId,
+      amount: Money.fromMinor(amountMinor),
+      type: type,
+      paymentMethod: paymentMethod,
+      date: date,
+    );
+  }
+}
+
+/// Data access for [Investors] + [InvestorRepayments] — grouped in one
+/// accessor the same way `DueDao` covers `Dues` + `DuePayments`, since a
+/// repayment is never meaningful without its investor.
+///
+/// Deliberately does not compute any aggregate here (total invested,
+/// current stock value, profit share) — those are `investor_metrics.dart`'s
+/// job, always computed on read from [PurchaseItems]/[Sales]/
+/// [InvestorRepayments], never cached on this row. The v1 schema's
+/// `Investors.totalBought`/`totalSold`/`totalProfit`/`remainingBalance`
+/// columns are exactly the bug this avoids repeating — see ARCHITECTURE.md.
+@DriftAccessor(tables: [Investors, InvestorRepayments])
 class InvestorDao extends DatabaseAccessor<AppDatabaseV2>
     with _$InvestorDaoMixin {
   InvestorDao(super.db);
@@ -96,6 +114,36 @@ class InvestorDao extends DatabaseAccessor<AppDatabaseV2>
       createdAt: now,
       updatedAt: now,
       syncedAt: now,
+    );
+  }
+
+  /// Every repayment ever made to any investor of [shopId] — unfiltered by
+  /// investor on purpose, since `investor_metrics.dart` needs to group
+  /// these itself per investor, the same reasoning `LedgerDao.watchAll`
+  /// documents for why it doesn't pre-aggregate either.
+  Stream<List<domain.InvestorRepayment>> watchAllRepayments(String shopId) {
+    final query = select(investorRepayments)
+      ..where((r) => r.shopId.equals(shopId));
+    return query.watch().map((rows) => rows.map((r) => r.toDomain()).toList());
+  }
+
+  Future<void> recordRepayment(
+    domain.InvestorRepayment repayment, {
+    required String shopId,
+    required DateTime now,
+  }) {
+    return into(investorRepayments).insert(
+      InvestorRepaymentsCompanion.insert(
+        id: repayment.id,
+        shopId: shopId,
+        investorId: repayment.investorId,
+        amountMinor: repayment.amount.minorUnits,
+        type: repayment.type,
+        paymentMethod: repayment.paymentMethod,
+        date: repayment.date,
+        createdAt: now,
+        syncedAt: now,
+      ),
     );
   }
 }

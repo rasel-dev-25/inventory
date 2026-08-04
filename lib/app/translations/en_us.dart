@@ -465,4 +465,10 @@ const Map<String, String> enUS = {
   'totalPurchase': 'Total purchase',
   'netProfitFootnote':
       'Gross profit only until the Expense module lands — see PR notes.',
+
+  // ── Investor (M1 v2 screen) ─────────────────────────────────────────
+  'currentStockValue': 'Current Stock Value',
+  'profitShareAmount': 'Profit Share',
+  'capitalReturn': 'Capital Return',
+  'perContract': 'Per Contract',
 };
