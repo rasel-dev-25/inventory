@@ -1,8 +1,10 @@
 import 'package:drift/drift.dart';
 
 import '../../../core/money/money.dart';
+import '../../../domain/entities/enums.dart';
 import '../../../domain/entities/investor.dart' as domain;
 import '../../../domain/entities/investor_repayment.dart' as domain;
+import '../../../domain/entities/legacy_settlement.dart' as domain;
 import '../app_database.dart';
 import '../tables/investors.dart';
 
@@ -36,9 +38,27 @@ extension _InvestorRepaymentRowMapping on InvestorRepaymentRow {
   }
 }
 
-/// Data access for [Investors] + [InvestorRepayments] — grouped in one
-/// accessor the same way `DueDao` covers `Dues` + `DuePayments`, since a
-/// repayment is never meaningful without its investor.
+extension _LegacySettlementRowMapping on LegacySettlementRow {
+  domain.LegacySettlement toDomain() {
+    return domain.LegacySettlement(
+      id: id,
+      investorId: investorId,
+      totalHistoricalInvestment: Money.fromMinor(
+        totalHistoricalInvestmentMinor,
+      ),
+      totalAlreadyReturned: Money.fromMinor(totalAlreadyReturnedMinor),
+      netSettlementAmount: Money.fromMinor(netSettlementAmountMinor),
+      settlementDate: settlementDate,
+      notes: notes,
+      status: status,
+    );
+  }
+}
+
+/// Data access for [Investors] + [InvestorRepayments] +
+/// [LegacySettlements] — grouped in one accessor the same way `DueDao`
+/// covers `Dues` + `DuePayments`, since a repayment (or a legacy
+/// settlement) is never meaningful without its investor.
 ///
 /// Deliberately does not compute any aggregate here (total invested,
 /// current stock value, profit share) — those are `investor_metrics.dart`'s
@@ -46,7 +66,7 @@ extension _InvestorRepaymentRowMapping on InvestorRepaymentRow {
 /// [InvestorRepayments], never cached on this row. The v1 schema's
 /// `Investors.totalBought`/`totalSold`/`totalProfit`/`remainingBalance`
 /// columns are exactly the bug this avoids repeating — see ARCHITECTURE.md.
-@DriftAccessor(tables: [Investors, InvestorRepayments])
+@DriftAccessor(tables: [Investors, InvestorRepayments, LegacySettlements])
 class InvestorDao extends DatabaseAccessor<AppDatabaseV2>
     with _$InvestorDaoMixin {
   InvestorDao(super.db);
@@ -143,6 +163,65 @@ class InvestorDao extends DatabaseAccessor<AppDatabaseV2>
         date: repayment.date,
         createdAt: now,
         syncedAt: now,
+      ),
+    );
+  }
+
+  /// At most one per investor, by business rule (the spec's "একবারই" —
+  /// "only once") — [LegacySettlementUseCases.create] enforces that by
+  /// checking this before inserting, not a database constraint, since a
+  /// unique index would need to special-case soft-deletes this table
+  /// doesn't have.
+  Future<domain.LegacySettlement?> getSettlementForInvestor(
+    String investorId,
+  ) async {
+    final row = await (select(
+      legacySettlements,
+    )..where((s) => s.investorId.equals(investorId))).getSingleOrNull();
+    return row?.toDomain();
+  }
+
+  Stream<List<domain.LegacySettlement>> watchAllSettlements(String shopId) {
+    final query = select(legacySettlements)
+      ..where((s) => s.shopId.equals(shopId))
+      ..orderBy([(s) => OrderingTerm.desc(s.settlementDate)]);
+    return query.watch().map((rows) => rows.map((r) => r.toDomain()).toList());
+  }
+
+  Future<void> createSettlement(
+    domain.LegacySettlement settlement, {
+    required String shopId,
+    required DateTime now,
+  }) {
+    return into(legacySettlements).insert(
+      LegacySettlementsCompanion.insert(
+        id: settlement.id,
+        shopId: shopId,
+        investorId: settlement.investorId,
+        totalHistoricalInvestmentMinor:
+            settlement.totalHistoricalInvestment.minorUnits,
+        totalAlreadyReturnedMinor: Value(
+          settlement.totalAlreadyReturned.minorUnits,
+        ),
+        netSettlementAmountMinor: settlement.netSettlementAmount.minorUnits,
+        settlementDate: settlement.settlementDate,
+        notes: Value(settlement.notes),
+        status: settlement.status,
+        createdAt: now,
+        updatedAt: now,
+        syncedAt: now,
+      ),
+    );
+  }
+
+  /// No general `update` — every field except [status] is filled in once
+  /// at creation and never edited again (see the class doc comment on
+  /// `LegacySettlement`); this is the only mutation this row ever gets.
+  Future<void> markSettled(String id, DateTime now) {
+    return (update(legacySettlements)..where((s) => s.id.equals(id))).write(
+      LegacySettlementsCompanion(
+        status: const Value(LegacySettlementStatus.settled),
+        updatedAt: Value(now),
       ),
     );
   }

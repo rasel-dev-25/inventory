@@ -5,6 +5,7 @@ import '../../../core/design/tokens.dart';
 import '../../../core/money/money.dart';
 import '../../../domain/entities/enums.dart';
 import '../../../domain/entities/investor.dart';
+import '../../../domain/entities/legacy_settlement.dart';
 import '../controller/investor_controller.dart';
 import 'investor_form_sheet.dart';
 
@@ -48,7 +49,7 @@ class InvestorScreen extends GetView<InvestorController> {
     if (result == null) return;
 
     if (existing == null) {
-      await controller.createInvestor(
+      final newInvestorId = await controller.createInvestor(
         name: result.name,
         contact: result.contact,
         investmentType: result.investmentType,
@@ -57,6 +58,22 @@ class InvestorScreen extends GetView<InvestorController> {
         profitPayoutCycle: result.profitPayoutCycle,
         notes: result.notes,
       );
+      // Only ever set when `InvestorFormSheet`'s "has an old ledger-book
+      // account?" toggle was on — see `LegacySettlementFormResult`'s doc
+      // comment. Created as a second, separate write rather than folded
+      // into `createInvestor` itself, since the investor and its (at
+      // most one) legacy settlement are genuinely different aggregates
+      // with independent validation.
+      final legacy = result.legacySettlement;
+      if (newInvestorId != null && legacy != null) {
+        await controller.createLegacySettlement(
+          investorId: newInvestorId,
+          totalHistoricalInvestment: legacy.totalHistoricalInvestment,
+          totalAlreadyReturned: legacy.totalAlreadyReturned,
+          settlementDate: legacy.settlementDate,
+          notes: legacy.notes,
+        );
+      }
     } else {
       await controller.updateInvestor(
         existing,
@@ -103,6 +120,17 @@ class _InvestorCard extends GetView<InvestorController> {
                     ),
                   ],
                 ),
+                if (controller.settlementFor(investor.id)?.status ==
+                    LegacySettlementStatus.pending) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    'legacySettlementPending'.tr,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.error,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.sm),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -205,6 +233,8 @@ class _InvestorDetailSheet extends GetView<InvestorController> {
                 metrics.remainingBalance,
                 emphasize: true,
               ),
+              if (controller.settlementFor(investor.id) case final settlement?)
+                _LegacySettlementSection(settlement: settlement),
               const SizedBox(height: AppSpacing.lg),
               FilledButton(
                 onPressed: () => _showRepayDialog(context),
@@ -420,5 +450,123 @@ Money? _parseMoneyOrNull(String text) {
     return Money.parse(text);
   } on MoneyException {
     return null;
+  }
+}
+
+/// The read-only §৬ memo for an investor's old ledger-book account, plus
+/// (only while [LegacySettlementStatus.pending]) the one-time "Mark
+/// Settled" action. Never editable after creation — see
+/// `LegacySettlement`'s own class doc comment.
+class _LegacySettlementSection extends GetView<InvestorController> {
+  final LegacySettlement settlement;
+  const _LegacySettlementSection({required this.settlement});
+
+  @override
+  Widget build(BuildContext context) {
+    final isPending = settlement.status == LegacySettlementStatus.pending;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: AppSpacing.lg),
+        const Divider(),
+        Text(
+          'legacySettlementSectionTitle'.tr,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _row(
+          context,
+          'totalHistoricalInvestment'.tr,
+          settlement.totalHistoricalInvestment,
+        ),
+        _row(
+          context,
+          'totalAlreadyReturned'.tr,
+          settlement.totalAlreadyReturned,
+        ),
+        _row(
+          context,
+          'netSettlementAmount'.tr,
+          settlement.netSettlementAmount,
+          emphasize: true,
+        ),
+        if (settlement.notes != null && settlement.notes!.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(settlement.notes!, style: Theme.of(context).textTheme.bodySmall),
+        ],
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          isPending
+              ? 'legacySettlementPending'.tr
+              : 'legacySettlementSettled'.tr,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: isPending
+                ? Theme.of(context).colorScheme.error
+                : Colors.green,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        if (!isPending) ...[
+          const SizedBox(height: 4),
+          Text(
+            'legacySettlementAlreadySettledNote'.tr,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+        if (isPending) ...[
+          const SizedBox(height: AppSpacing.sm),
+          OutlinedButton(
+            onPressed: () => _confirmMarkSettled(context),
+            child: Text('markSettled'.tr),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _row(
+    BuildContext context,
+    String label,
+    Money value, {
+    bool emphasize = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: Theme.of(context).textTheme.bodyMedium),
+          Text(
+            value.format(),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontWeight: emphasize ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmMarkSettled(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('markSettled'.tr),
+        content: Text('confirmMarkSettled'.tr),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text('cancel'.tr),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text('markSettled'.tr),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await controller.markLegacySettlementSettled(settlement.id);
+    }
   }
 }

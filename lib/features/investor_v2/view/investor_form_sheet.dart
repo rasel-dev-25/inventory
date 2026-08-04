@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../core/design/tokens.dart';
+import '../../../core/money/money.dart';
 import '../../../domain/entities/enums.dart';
 import '../../../domain/entities/investor.dart';
 
@@ -9,6 +10,13 @@ import '../../../domain/entities/investor.dart';
 /// whether that means a create or an update, since only it knows whether
 /// [InvestorFormSheet.existing] was passed. Same split of responsibility
 /// as `ProductFormSheet`/`CustomerFormSheet`.
+///
+/// [legacySettlement] is only ever non-null on a *create* result (see
+/// `InvestorFormSheet`'s "has an old ledger-book account?" toggle, which
+/// this form only shows when [InvestorFormSheet.existing] is null) —
+/// `InvestorScreen` creates the investor first, then, only if this is
+/// set, creates the matching [LegacySettlement] against the new
+/// investor's id.
 class InvestorFormResult {
   final String name;
   final String? contact;
@@ -17,6 +25,7 @@ class InvestorFormResult {
   final int? capitalReturnTermDays;
   final ProfitPayoutCycle profitPayoutCycle;
   final String? notes;
+  final LegacySettlementFormResult? legacySettlement;
 
   const InvestorFormResult({
     required this.name,
@@ -25,6 +34,25 @@ class InvestorFormResult {
     required this.profitPayoutCycle,
     this.contact,
     this.capitalReturnTermDays,
+    this.notes,
+    this.legacySettlement,
+  });
+}
+
+/// The one-time §৬ fields, filled in only when the "has an old ledger-book
+/// account?" toggle is on. [netSettlementAmount] is deliberately absent
+/// here — `LegacySettlementUseCases.create` always computes it itself
+/// from these two amounts, never trusts a UI-computed value.
+class LegacySettlementFormResult {
+  final Money totalHistoricalInvestment;
+  final Money totalAlreadyReturned;
+  final DateTime settlementDate;
+  final String? notes;
+
+  const LegacySettlementFormResult({
+    required this.totalHistoricalInvestment,
+    required this.totalAlreadyReturned,
+    required this.settlementDate,
     this.notes,
   });
 }
@@ -64,6 +92,16 @@ class _InvestorFormSheetState extends State<InvestorFormSheet> {
   late ProfitPayoutCycle _profitPayoutCycle =
       widget.existing?.profitPayoutCycle ?? ProfitPayoutCycle.monthly;
 
+  // ── business_logic.md §৬ — only ever shown/used when creating a brand
+  // new investor (see the `if (widget.existing == null)` guard in build()
+  // below); an already-existing investor already went through this
+  // decision once, at their own creation time.
+  bool _hasLegacySettlement = false;
+  final _legacyTotalController = TextEditingController();
+  final _legacyReturnedController = TextEditingController(text: '0');
+  final _legacyNotesController = TextEditingController();
+  DateTime _legacySettlementDate = DateTime.now();
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -71,6 +109,9 @@ class _InvestorFormSheetState extends State<InvestorFormSheet> {
     _profitShareController.dispose();
     _termDaysController.dispose();
     _notesController.dispose();
+    _legacyTotalController.dispose();
+    _legacyReturnedController.dispose();
+    _legacyNotesController.dispose();
     super.dispose();
   }
 
@@ -176,6 +217,70 @@ class _InvestorFormSheetState extends State<InvestorFormSheet> {
                 maxLines: 3,
                 decoration: InputDecoration(labelText: 'notes'.tr),
               ),
+              if (widget.existing == null) ...[
+                const SizedBox(height: AppSpacing.lg),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text('hasLegacySettlement'.tr),
+                  value: _hasLegacySettlement,
+                  onChanged: (v) => setState(() => _hasLegacySettlement = v),
+                ),
+                if (_hasLegacySettlement) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    'legacySettlementSectionTitle'.tr,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _legacyTotalController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'totalHistoricalInvestment'.tr,
+                    ),
+                    validator: (v) => !_hasLegacySettlement
+                        ? null
+                        : (_parseMoneyOrNull(v ?? '') == null
+                              ? 'invalidQty'.tr
+                              : null),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _legacyReturnedController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'totalAlreadyReturned'.tr,
+                    ),
+                    validator: (v) => !_hasLegacySettlement
+                        ? null
+                        : (_parseMoneyOrNull(v ?? '') == null
+                              ? 'invalidQty'.tr
+                              : null),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text('settlementDate'.tr),
+                    subtitle: Text(
+                      _legacySettlementDate.toLocal().toString().split(' ')[0],
+                    ),
+                    trailing: const Icon(Icons.calendar_today),
+                    onTap: _pickSettlementDate,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _legacyNotesController,
+                    maxLines: 2,
+                    decoration: InputDecoration(
+                      labelText: 'legacySettlementNotes'.tr,
+                    ),
+                  ),
+                ],
+              ],
               const SizedBox(height: AppSpacing.lg),
               FilledButton(onPressed: _submit, child: Text('save'.tr)),
             ],
@@ -183,6 +288,18 @@ class _InvestorFormSheetState extends State<InvestorFormSheet> {
         ),
       ),
     );
+  }
+
+  Future<void> _pickSettlementDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _legacySettlementDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      setState(() => _legacySettlementDate = picked);
+    }
   }
 
   void _submit() {
@@ -202,7 +319,33 @@ class _InvestorFormSheetState extends State<InvestorFormSheet> {
         notes: _notesController.text.trim().isEmpty
             ? null
             : _notesController.text.trim(),
+        legacySettlement: !_hasLegacySettlement
+            ? null
+            : LegacySettlementFormResult(
+                totalHistoricalInvestment: _parseMoneyOrNull(
+                  _legacyTotalController.text,
+                )!,
+                totalAlreadyReturned:
+                    _parseMoneyOrNull(_legacyReturnedController.text) ??
+                    Money.zero(),
+                settlementDate: _legacySettlementDate,
+                notes: _legacyNotesController.text.trim().isEmpty
+                    ? null
+                    : _legacyNotesController.text.trim(),
+              ),
       ),
     );
+  }
+}
+
+/// Same pattern as every other live-input `Money` field in the app —
+/// `Money` has no `tryParse`, see `daily_sales_v2`'s doc comment for why
+/// every screen wraps `Money.parse` like this.
+Money? _parseMoneyOrNull(String text) {
+  if (text.trim().isEmpty) return null;
+  try {
+    return Money.parse(text);
+  } on MoneyException {
+    return null;
   }
 }

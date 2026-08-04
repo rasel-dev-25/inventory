@@ -125,15 +125,58 @@ void main() {
   });
 
   test('createInvestor adds a new investor visible to the list', () async {
-    final ok = await controller.createInvestor(
+    final newId = await controller.createInvestor(
       name: 'Auntie Rina',
       investmentType: InvestmentType.cashLoan,
       profitSharePercent: 0,
       profitPayoutCycle: ProfitPayoutCycle.monthly,
     );
-    expect(ok, isTrue);
+    expect(newId, isNotNull);
     await Future<void>.delayed(Duration.zero);
 
     expect(controller.investors.map((i) => i.name), contains('Auntie Rina'));
+  });
+
+  group('legacy settlement (business_logic.md §৬)', () {
+    test('settlementFor is null before any settlement is created', () {
+      expect(controller.settlementFor('investor-1'), isNull);
+    });
+
+    test('createLegacySettlement makes it visible via settlementFor', () async {
+      final ok = await controller.createLegacySettlement(
+        investorId: 'investor-1',
+        totalHistoricalInvestment: Money.fromMinor(50000000),
+        totalAlreadyReturned: Money.fromMinor(10000000),
+        settlementDate: DateTime.utc(2026, 1, 1),
+        notes: 'Old ledger book',
+      );
+      expect(ok, isTrue, reason: controller.errorMessage.value);
+      await Future<void>.delayed(Duration.zero);
+
+      final settlement = controller.settlementFor('investor-1');
+      expect(settlement, isNotNull);
+      expect(settlement!.status, LegacySettlementStatus.pending);
+      expect(settlement.netSettlementAmount, Money.fromMinor(40000000));
+    });
+
+    test('markLegacySettlementSettled flips it to settled', () async {
+      await controller.createLegacySettlement(
+        investorId: 'investor-1',
+        totalHistoricalInvestment: Money.fromMinor(50000000),
+        totalAlreadyReturned: Money.zero(),
+        settlementDate: DateTime.utc(2026, 1, 1),
+      );
+      await Future<void>.delayed(Duration.zero);
+      final settlementId = controller.settlementFor('investor-1')!.id;
+
+      final ok = await controller.markLegacySettlementSettled(settlementId);
+      expect(ok, isTrue, reason: controller.errorMessage.value);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(
+        controller.settlementFor('investor-1')!.status,
+        LegacySettlementStatus.settled,
+      );
+    });
   });
 }
