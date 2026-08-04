@@ -12,6 +12,7 @@ import 'shared.dart';
 /// record right up until the trip's cash effect has been reconciled and
 /// mirrored into [CashLedgerEntries] — that mirrored effect is what's
 /// immutable, not this row.
+@DataClassName('PurchaseTripRow')
 class PurchaseTrips extends Table {
   TextColumn get id => text()();
   TextColumn get shopId => text().references(Shops, #id)();
@@ -35,6 +36,7 @@ class PurchaseTrips extends Table {
 /// `domain/entities/purchase.dart`'s [PurchaseItem] doc comment — the
 /// `fundSourceType`/`fundSourceInvestorId`/`isInKind` combination here is
 /// Data Integrity Rules #1 and #2 made concrete at the storage layer.
+@DataClassName('PurchaseItemRow')
 class PurchaseItems extends Table {
   TextColumn get id => text()();
   TextColumn get purchaseTripId => text().references(PurchaseTrips, #id)();
@@ -61,6 +63,7 @@ class PurchaseItems extends Table {
 /// `otherCosts[]`) — see the "open question" note in
 /// `domain/services/purchase_reconciliation.dart` about why these are not
 /// split per fund source.
+@DataClassName('PurchaseOtherCostRow')
 class PurchaseOtherCosts extends Table {
   TextColumn get id => text()();
   TextColumn get purchaseTripId => text().references(PurchaseTrips, #id)();
