@@ -183,6 +183,7 @@ class _ProductsTab extends GetView<CatalogController> {
         isRentable: result.isRentable,
         barcode: result.barcode,
         sku: result.sku,
+        pageCount: result.pageCount,
       );
     } else {
       await controller.updateProduct(
@@ -195,6 +196,7 @@ class _ProductsTab extends GetView<CatalogController> {
         isRentable: result.isRentable,
         barcode: result.barcode,
         sku: result.sku,
+        pageCount: result.pageCount,
       );
     }
   }
