@@ -21,10 +21,10 @@ dependencies:
 
   # --- Local persistence ---
   drift: ^2.26.0
-  drift_flutter: ^0.2.4
+  drift_flutter: ^0.3.1
   # Bundles the native sqlite3 library for Android/Windows/macOS/Linux so
   # Drift has a consistent engine across every non-web target.
-  sqlite3_flutter_libs: ^0.5.28
+  sqlite3_flutter_libs: ^0.6.0
   path: ^1.9.1
   path_provider: ^2.1.6
 
@@ -37,7 +37,7 @@ dependencies:
   # --- Supabase backend + connectivity awareness for the sync engine ---
   supabase_flutter: ^2.16.0
   connectivity_plus: ^6.1.5
-  flutter_secure_storage: ^9.2.4
+  flutter_secure_storage: ^10.3.1
 
   # --- Images ---
   # Native-encoder compression (fast enough for camera-resolution photos,
@@ -61,6 +61,12 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # Required in addition to flutter_test: CI's "Dart core" job runs plain
+  # `dart test test/core/ test/domain/` (not `flutter test`) so the
+  # pure-Dart domain/core suite can run without a Flutter build — that
+  # command needs package:test resolvable directly, which flutter_test
+  # alone does not provide.
+  test: ^1.25.9
   flutter_lints: ^6.0.0
   drift_dev: ^2.26.0
   build_runner: ^2.5.4
