@@ -20,6 +20,7 @@ import 'shared.dart';
 /// "disciplined single write path" pattern, not the denormalized-counter
 /// antipattern the v1 `Investors` table's cached totals fell into (those
 /// drifted because *multiple* uncoordinated code paths wrote them).
+@DataClassName('ProductRow')
 class Products extends Table {
   TextColumn get id => text()();
   TextColumn get shopId => text().references(Shops, #id)();
@@ -52,6 +53,7 @@ class Products extends Table {
 /// remote) because the two-tier image pipeline (see ARCHITECTURE.md)
 /// captures locally first and uploads later — both may be non-null at
 /// once during the window between capture and successful upload.
+@DataClassName('ProductImageRow')
 class ProductImages extends Table {
   TextColumn get id => text()();
   TextColumn get productId => text().references(Products, #id)();
