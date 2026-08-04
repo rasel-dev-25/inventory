@@ -441,4 +441,11 @@ const Map<String, String> enUS = {
   // ── Dues (M1 v2 screen) ─────────────────────────────────────────────
   'noDuesYet': 'No outstanding dues',
   'total': 'Total',
+
+  // ── Customers (M1 v2 screen) ────────────────────────────────────────
+  'noCustomersYet': 'No customers yet',
+  'search': 'Search',
+  'showFlaggedOnly': 'Show flagged only',
+  'suspicionFlag': 'Suspicious',
+  'isBlockedLabel': 'Blocked',
 };

@@ -440,4 +440,11 @@ const Map<String, String> bnBD = {
   // ── Dues (M1 v2 screen) ─────────────────────────────────────────────
   'noDuesYet': 'এখনো কোনো বকেয়া নেই',
   'total': 'মোট',
+
+  // ── Customers (M1 v2 screen) ────────────────────────────────────────
+  'noCustomersYet': 'এখনো কোনো কাস্টমার নেই',
+  'search': 'খুঁজুন',
+  'showFlaggedOnly': 'শুধু ফ্ল্যাগড দেখান',
+  'suspicionFlag': 'সন্দেহজনক',
+  'isBlockedLabel': 'ব্লকড',
 };
