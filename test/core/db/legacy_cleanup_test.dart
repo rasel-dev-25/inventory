@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:test/test.dart';
-import 'package:verify_core/core/db/legacy_cleanup.dart';
+import 'package:inventory/core/db/legacy_cleanup.dart';
 
 void main() {
   late Directory tempDir;
