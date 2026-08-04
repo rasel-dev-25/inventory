@@ -25,6 +25,7 @@ import 'shared.dart';
 /// Expense, or an InvestorRepayment) — polymorphic, so not a Drift
 /// `.references()` foreign key; enforced by the use case that writes both
 /// rows in the same transaction.
+@DataClassName('CashLedgerEntryRow')
 class CashLedgerEntries extends Table {
   TextColumn get id => text()();
   TextColumn get shopId => text().references(Shops, #id)();
@@ -54,6 +55,7 @@ class CashLedgerEntries extends Table {
 /// **Append-only**, same reasoning as [CashLedgerEntries]. [deltaQty] is
 /// signed: positive = stock in (purchase, rent return), negative = stock
 /// out (sale, rent-out, converted to a fixed asset, manual correction).
+@DataClassName('StockMovementRow')
 class StockMovements extends Table {
   TextColumn get id => text()();
   TextColumn get shopId => text().references(Shops, #id)();
