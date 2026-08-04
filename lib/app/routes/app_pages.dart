@@ -33,6 +33,10 @@ import '../../features/settings/view/account_settings_screen.dart';
 import '../../features/daily_sales_v2/controller/daily_sales_controller.dart'
     as v2_sales;
 import '../../features/daily_sales_v2/view/daily_sales_screen.dart' as v2_sales;
+// Same aliasing reason as daily_sales_v2 above — v1's DuesController/
+// DuesScreen (imported above) share these exact names.
+import '../../features/dues_v2/controller/dues_controller.dart' as v2_dues;
+import '../../features/dues_v2/view/dues_screen.dart' as v2_dues;
 
 abstract class AppPages {
   static final pages = [
@@ -145,6 +149,13 @@ abstract class AppPages {
         Get.lazyPut(
           () => v2_sales.DailySalesController(Get.find<AppDatabaseV2>()),
         );
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.duesV2,
+      page: () => const v2_dues.DuesScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => v2_dues.DuesController(Get.find<AppDatabaseV2>()));
       }),
     ),
   ];

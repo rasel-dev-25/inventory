@@ -437,4 +437,8 @@ const Map<String, String> enUS = {
   'syncPushFailed': '@count event(s) failed to push — will retry next time',
   'syncSucceeded': 'Synced: @pushed sent, @pulled received',
   'pendingSyncCount': '@count pending',
+
+  // ── Dues (M1 v2 screen) ─────────────────────────────────────────────
+  'noDuesYet': 'No outstanding dues',
+  'total': 'Total',
 };
