@@ -19,6 +19,7 @@ import 'shared.dart';
 /// `Sales.id` or a `RentTransactions.id`) — Drift can't express a
 /// conditional foreign key, so this reference is enforced in the
 /// repository layer, not the schema.
+@DataClassName('DueRow')
 class Dues extends Table {
   TextColumn get id => text()();
   TextColumn get shopId => text().references(Shops, #id)();
@@ -43,6 +44,7 @@ class Dues extends Table {
 
 /// One payment against a [Dues] row. Append-only — a due is never "edited"
 /// down, it accumulates payments, same reasoning as [CashLedgerEntries].
+@DataClassName('DuePaymentRow')
 class DuePayments extends Table {
   TextColumn get id => text()();
   TextColumn get dueId => text().references(Dues, #id)();
