@@ -8,6 +8,7 @@ import 'shared.dart';
 /// Mirrors `domain/entities/sale.dart`'s [Sale] — see that file for why
 /// [costPriceMinorAtSale] is copied at sale time rather than looked up
 /// live from [Products].
+@DataClassName('SaleRow')
 class Sales extends Table {
   TextColumn get id => text()();
   TextColumn get shopId => text().references(Shops, #id)();
