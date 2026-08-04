@@ -15,7 +15,10 @@ concurrency:
 jobs:
   # ─────────────────────────────────────────────────────────────────────
   # 1. Pure-Dart core: format + layer-boundary check + dart test
-  #    Runs against the Dart SDK only — no Flutter, no emulators needed.
+  #    Uses the Flutter SDK to resolve pubspec.yaml (which declares
+  #    `flutter: sdk: flutter`), but only exercises pure-Dart code:
+  #    dart format, tool/check_layer_boundaries.sh, and dart test on
+  #    test/core/ + test/domain/ — no widgets, no emulators.
   #    M1 extends this to also cover test/domain/ (pure-Dart profit-
   #    calculator and purchase-reconciliation tests).
   # ─────────────────────────────────────────────────────────────────────
@@ -26,13 +29,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dart-lang/setup-dart@v1
+      - uses: subosito/flutter-action@v2
         with:
-          # Keep in sync with the lower bound in pubspec.yaml `sdk: ^3.11.0`
-          sdk: "3.11.0"
+          # Flutter SDK is required to resolve pubspec.yaml — the pubspec
+          # declares `flutter: sdk: flutter`, so a plain `dart pub get` (with
+          # dart-lang/setup-dart) can never succeed. dart format and dart test
+          # still work fine once Flutter's bundled Dart SDK is on the PATH.
+          channel: stable
+          cache: true
 
-      - name: dart pub get
-        run: dart pub get
+      - name: flutter pub get
+        run: flutter pub get
 
       - name: dart format --set-exit-if-changed
         run: dart format --set-exit-if-changed lib/ test/
