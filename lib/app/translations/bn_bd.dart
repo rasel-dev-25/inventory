@@ -456,4 +456,12 @@ const Map<String, String> bnBD = {
   'potentialProfit': 'সম্ভাব্য profit',
   'topSellers': 'বেশি বিক্রি হওয়া পণ্য',
   'slowMovers': 'কম বিক্রি হওয়া পণ্য',
+
+  // ── Dashboard (M1 v2 screen) ────────────────────────────────────────
+  'dayView': 'আজ',
+  'allTimeView': 'সর্বমোট',
+  'totalSale': 'মোট বিক্রি',
+  'totalPurchase': 'মোট কেনা',
+  'netProfitFootnote':
+      'এখন পর্যন্ত শুধু গ্রস প্রফিট — Expense মডিউল যোগ হলে আপডেট হবে।',
 };

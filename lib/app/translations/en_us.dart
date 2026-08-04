@@ -457,4 +457,12 @@ const Map<String, String> enUS = {
   'potentialProfit': 'Potential profit',
   'topSellers': 'Top sellers',
   'slowMovers': 'Slow movers',
+
+  // ── Dashboard (M1 v2 screen) ────────────────────────────────────────
+  'dayView': 'Today',
+  'allTimeView': 'All-time',
+  'totalSale': 'Total sale',
+  'totalPurchase': 'Total purchase',
+  'netProfitFootnote':
+      'Gross profit only until the Expense module lands — see PR notes.',
 };

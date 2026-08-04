@@ -1,10 +1,26 @@
 import 'package:drift/drift.dart';
 
+import '../../../core/money/money.dart';
+import '../../../domain/entities/cash_ledger_entry.dart' as domain;
 import '../../../domain/entities/enums.dart';
 import '../app_database.dart';
 import '../tables/ledger.dart';
 
 part 'ledger_dao.g.dart';
+
+extension _CashLedgerEntryRowMapping on CashLedgerEntryRow {
+  domain.CashLedgerEntry toDomain() {
+    return domain.CashLedgerEntry(
+      id: id,
+      amount: Money.fromMinor(amountMinor),
+      paymentMethod: paymentMethod,
+      sourceType: sourceType,
+      sourceId: sourceId,
+      description: description,
+      date: date,
+    );
+  }
+}
 
 /// Data access for the two append-only ledger tables —
 /// [CashLedgerEntries] and [StockMovements]. Insert-only by design (see
@@ -50,6 +66,19 @@ class LedgerDao extends DatabaseAccessor<AppDatabaseV2> with _$LedgerDaoMixin {
     );
   }
 
+  /// Every [CashLedgerEntries] row for [shopId], unfiltered — the raw
+  /// input to `calculateCashBalances`/`computeDashboardTotals`. The v2
+  /// Dashboard screen filters this itself by `DateRange` for its Day vs.
+  /// All-time toggle (see `notes/business_logic.md` §ঝ's explicit "same
+  /// function, different input" instruction) rather than this DAO
+  /// accepting a date parameter — matches `StockController`'s reasoning
+  /// for why `watchSaleMovements` also returns unfiltered rows.
+  Stream<List<domain.CashLedgerEntry>> watchAll(String shopId) {
+    final query = select(cashLedgerEntries)
+      ..where((e) => e.shopId.equals(shopId));
+    return query.watch().map((rows) => rows.map((r) => r.toDomain()).toList());
+  }
+
   /// Every `sale`-sourced [StockMovements] row for [shopId] — the raw data
   /// the v2 Stock screen's "বেশি বিক্রি হওয়া বনাম কমে যাওয়া পণ্য" (top
   /// sellers vs. slow movers) view is aggregated from client-side, per
@@ -60,6 +89,19 @@ class LedgerDao extends DatabaseAccessor<AppDatabaseV2> with _$LedgerDaoMixin {
   Stream<List<StockMovementRow>> watchSaleMovements(String shopId) {
     final query = select(stockMovements)
       ..where((m) => m.shopId.equals(shopId) & m.sourceType.equals('sale'));
+    return query.watch();
+  }
+
+  /// Every [StockMovements] row for [shopId], any `sourceType` — the raw
+  /// input to `computeDashboardTotals`' stock-value figure, which (unlike
+  /// [watchSaleMovements]) needs both stock-in (purchases) and stock-out
+  /// (sales) movements to compute a net value for the selected
+  /// `DateRange`. See that function's own doc comment for why summing
+  /// `deltaQty × currentCostPrice` over *any* range — including an
+  /// unbounded "all-time" one — is the same formula as today's on-hand
+  /// stock value, not a second, divergent calculation.
+  Stream<List<StockMovementRow>> watchAllStockMovements(String shopId) {
+    final query = select(stockMovements)..where((m) => m.shopId.equals(shopId));
     return query.watch();
   }
 
