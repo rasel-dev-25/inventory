@@ -7,6 +7,7 @@ import 'shared.dart';
 /// A customer pre-order, per `notes/business_logic.md` §Order. The
 /// "অর্ডার দাতা" tab on the Customer screen is a filtered view over this
 /// table joined with [Customers] — see `customers.dart`'s doc comment.
+@DataClassName('OrderRow')
 class Orders extends Table {
   TextColumn get id => text()();
   TextColumn get shopId => text().references(Shops, #id)();
