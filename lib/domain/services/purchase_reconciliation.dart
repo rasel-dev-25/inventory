@@ -12,26 +12,28 @@
 /// change brought back, and that total should be checked against what the
 /// owner actually took out — the spec's own "sanity check" for a trip.
 ///
-/// **Open question, flagged rather than silently assumed:** the spec is
-/// explicit that each *item* has its own fund source, but does not say
-/// whether `transportCost`/`otherCosts`/`cashReturned` — which are
-/// trip-level, not per item — should be split across fund sources too, or
-/// always charged to the shop's own cash. This implementation takes the
-/// conservative, spec-literal reading: [PurchaseTripReconciliation.byFundSource]
-/// only ever contains the *item* totals (which do have an explicit fund
-/// source), while transport/other/returned stay as unattributed trip-level
-/// numbers in the overall total. If trip overhead should sometimes be
-/// billed to a specific investor too, that needs a product decision before
-/// this function's behaviour changes.
+/// **Trip-level cost attribution — resolved:** the spec is explicit that
+/// each *item* has its own fund source, but does not say whether
+/// `transportCost`/`otherCosts`/`cashReturned` — which are trip-level, not
+/// per item — should ever be split across fund sources too. Decision:
+/// trip-level costs are charged to the shop's own fund source, for now.
+/// [byFundSource] therefore always sums exactly to [totalCashOut] — the
+/// shop's entry includes both its own item costs and the full trip
+/// overhead, while an investor's entry is item costs only. If trip
+/// overhead should ever be billable to a specific investor (e.g. they
+/// funded the whole trip, not just some items), that needs a product
+/// decision and a corresponding change here — this function does not
+/// infer that on its own.
 library;
 
 import '../../core/money/money.dart';
 import '../entities/fund_source.dart';
 import '../entities/purchase.dart';
 
-/// The cash total attributable to one fund source, from item costs only
-/// (see the "open question" note above) — excludes in-kind items, which
-/// never contribute cash.
+/// The cash total attributable to one fund source — item costs for every
+/// fund source, plus trip-level overhead (transport/other costs, less
+/// cash returned) for the shop specifically. See the file-level doc
+/// comment for why the shop absorbs trip-level costs.
 class FundSourceCashOut {
   final FundSource fundSource;
   final Money amount;
@@ -62,9 +64,8 @@ class PurchaseTripReconciliation {
   /// the spec's "মোট বের হওয়া টাকা".
   final Money totalCashOut;
 
-  /// Per-fund-source breakdown of [totalItemsCash] only — see the "open
-  /// question" note on this file for why trip-level costs are not split
-  /// here.
+  /// Per-fund-source breakdown that always sums to [totalCashOut] — see
+  /// the file-level doc comment for the shop-absorbs-trip-overhead rule.
   final List<FundSourceCashOut> byFundSource;
 
   /// In-kind contributions, valued but excluded from every cash figure
@@ -105,9 +106,9 @@ PurchaseTripReconciliation reconcilePurchaseTrip(PurchaseTrip trip) {
   );
 
   final otherCostsTotal = trip.otherCostsTotal;
+  final tripOverhead = trip.transportCost + otherCostsTotal - trip.cashReturned;
 
-  final totalCashOut =
-      totalItemsCash + trip.transportCost + otherCostsTotal - trip.cashReturned;
+  final totalCashOut = totalItemsCash + tripOverhead;
 
   final byFundSourceMap = <FundSource, Money>{};
   for (final item in cashItems) {
@@ -117,6 +118,15 @@ PurchaseTripReconciliation reconcilePurchaseTrip(PurchaseTrip trip) {
       ifAbsent: () => item.lineTotal,
     );
   }
+  // Trip-level overhead is charged to the shop, per the resolved decision
+  // above — added on top of whatever shop-funded items already
+  // contributed, so byFundSource always sums to totalCashOut exactly.
+  final shopSource = FundSource.shop();
+  byFundSourceMap.update(
+    shopSource,
+    (existing) => existing + tripOverhead,
+    ifAbsent: () => tripOverhead,
+  );
 
   return PurchaseTripReconciliation(
     totalItemsCash: totalItemsCash,
