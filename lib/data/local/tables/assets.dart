@@ -10,6 +10,7 @@ import 'shared.dart';
 /// the source product's qty via a [StockMovements] row, zero cash effect)
 /// — [sourceProductId] is only set for the latter. The v1 schema had
 /// neither this distinction nor the convert-from-stock path at all.
+@DataClassName('FixedAssetRow')
 class FixedAssets extends Table {
   TextColumn get id => text()();
   TextColumn get shopId => text().references(Shops, #id)();
