@@ -69,3 +69,13 @@ enum FixedAssetSource { shopCashPurchase, convertedFromStock }
 
 /// Lifecycle of a [LegacySettlement] — see business_logic.md §৬.
 enum LegacySettlementStatus { pending, settled }
+
+/// A signed-in user's permission level on a shop, per the working plan's
+/// M1 decision: owner has full read/write access, staff is view-only,
+/// with no per-table exceptions. Mirrors Postgres's `shop_member_role`
+/// enum (supabase/migrations/0001_foundations.sql) one-for-one — the
+/// server-side RLS policies built from `apply_standard_rls`/
+/// `apply_append_only_rls` are the real enforcement boundary; this enum
+/// only drives client-side UX (which buttons/screens to show), matching
+/// `PermissionFailure`'s own doc comment in lib/core/error/failure.dart.
+enum ShopMemberRole { owner, staff }

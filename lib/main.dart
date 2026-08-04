@@ -1,13 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app/app.dart';
+import 'core/config/supabase_config.dart';
 import 'core/database/app_database.dart';
 import 'data/local/app_database.dart';
+import 'data/remote/supabase_auth_repository.dart';
+import 'domain/repositories/auth_repository.dart';
+import 'features/auth/controller/auth_controller.dart';
 import 'features/settings/controller/settings_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // --- Supabase (M1 sync backend + auth) ---
+  // Must happen before any AuthRepository/AuthController is constructed —
+  // both read Supabase.instance.client, which only exists after this call
+  // resolves. See ARCHITECTURE.md's "Supabase (Postgres) schema" section
+  // for what's actually deployed behind this URL.
+  await Supabase.initialize(
+    url: SupabaseConfig.url,
+    publishableKey: SupabaseConfig.publishableKey,
+  );
+  Get.put<AuthRepository>(SupabaseAuthRepository(), permanent: true);
+  Get.put<AuthController>(
+    AuthController(Get.find<AuthRepository>()),
+    permanent: true,
+  );
 
   // --- v1 Drift init (still what every current screen reads/writes) ---
   final db = AppDatabase();

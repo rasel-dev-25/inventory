@@ -382,4 +382,23 @@ const Map<String, String> bnBD = {
   'transportCosts': 'পরিবহন খরচ',
   'investorProfitSplit': 'বিনিয়োগকারীর মুনাফা বন্টন',
   'rentPaid': 'ভাড়া দেওয়া',
+
+  // ── Auth (M1) ──────────────────────────────────────────────────────
+  'signIn': 'সাইন ইন',
+  'signUp': 'সাইন আপ',
+  'signOut': 'সাইন আউট',
+  'email': 'ইমেইল',
+  'password': 'পাসওয়ার্ড',
+  'confirmPassword': 'পাসওয়ার্ড নিশ্চিত করুন',
+  'noAccountSignUp': 'অ্যাকাউন্ট নেই? সাইন আপ করুন',
+  'haveAccountSignIn': 'আগে থেকেই অ্যাকাউন্ট আছে? সাইন ইন করুন',
+  'passwordsDontMatch': 'পাসওয়ার্ড মিলছে না',
+  'createYourShop': 'আপনার দোকান তৈরি করুন',
+  'shopName': 'দোকানের নাম',
+  'createShop': 'দোকান তৈরি করুন',
+  'waitingForOwnerInvite':
+      'আপনার অ্যাকাউন্ট প্রস্তুত। এই ইমেইল দিয়ে আপনাকে স্টাফ হিসেবে যোগ করতে দোকানের মালিককে বলুন।',
+  'inviteStaffByEmail': 'ইমেইল দিয়ে স্টাফ যুক্ত করুন',
+  'invite': 'যুক্ত করুন',
+  'staffInvitedSuccessfully': 'স্টাফ সফলভাবে যুক্ত হয়েছে',
 };
