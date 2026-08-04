@@ -5,6 +5,7 @@ import 'package:drift/drift.dart';
 /// anchor every other table's `shopId` column points at, and because it is
 /// the row Supabase's `shop_members`/RLS policies key off of once this
 /// device syncs.
+@DataClassName('ShopRow')
 class Shops extends Table {
   TextColumn get id => text()();
   TextColumn get name => text()();
@@ -16,6 +17,7 @@ class Shops extends Table {
 
 /// Stock categories (Book/Date/Attar/Topi/...). Kept as a real table
 /// (matching v1) since the set is user-editable, not a fixed enum.
+@DataClassName('CategoryRow')
 class Categories extends Table {
   TextColumn get id => text()();
   TextColumn get shopId => text().references(Shops, #id)();
@@ -33,6 +35,7 @@ class Categories extends Table {
 /// key/value rather than one column per setting, same shape as v1's
 /// `AppSettings` — most of what an external review proposed as five
 /// separate settings tables belongs here instead; see ARCHITECTURE.md.
+@DataClassName('AppSettingRow')
 class AppSettings extends Table {
   TextColumn get key => text()();
   TextColumn get value => text()();
