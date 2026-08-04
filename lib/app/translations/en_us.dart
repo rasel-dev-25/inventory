@@ -493,4 +493,8 @@ const Map<String, String> enUS = {
   'depositLabel': 'Deposit held',
   'confirmMarkStolen': 'Mark this rental as stolen and block the customer?',
   'dueDate': 'Due Date',
+
+  // ── Order (M3 v2 screen) ────────────────────────────────────────────
+  'noOrdersYet': 'No orders yet',
+  'itemDescription': 'What do they want?',
 };

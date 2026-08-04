@@ -493,4 +493,8 @@ const Map<String, String> bnBD = {
   'confirmMarkStolen':
       'এই ভাড়াটি চুরি হিসেবে চিহ্নিত করে কাস্টমারকে ব্লক করবেন?',
   'dueDate': 'ফেরতের তারিখ',
+
+  // ── Order (M3 v2 screen) ────────────────────────────────────────────
+  'noOrdersYet': 'এখনো কোনো অর্ডার নেই',
+  'itemDescription': 'তারা কী চান?',
 };

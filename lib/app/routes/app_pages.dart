@@ -64,6 +64,10 @@ import '../../features/expense_v2/view/expense_screen.dart';
 // No aliasing needed — v1 has no rent feature at all.
 import '../../features/rent_v2/controller/rent_controller.dart';
 import '../../features/rent_v2/view/rent_screen.dart';
+// No aliasing needed — v1 models order-givers as a tab inside
+// CustomersController/CustomersScreen, not as classes of this name.
+import '../../features/order_v2/controller/order_controller.dart';
+import '../../features/order_v2/view/order_screen.dart';
 
 abstract class AppPages {
   static final pages = [
@@ -231,6 +235,13 @@ abstract class AppPages {
       page: () => const RentScreen(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => RentController(Get.find<AppDatabaseV2>()));
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.orderV2,
+      page: () => const OrderScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => OrderController(Get.find<AppDatabaseV2>()));
       }),
     ),
   ];
