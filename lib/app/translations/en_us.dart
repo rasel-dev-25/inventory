@@ -429,4 +429,12 @@ const Map<String, String> enUS = {
   'noProductsYet': 'No products yet',
   'account': 'Account',
   'signedInAs': 'Signed in as',
+
+  // ── Sync (M1) ────────────────────────────────────────────────────────
+  'syncNow': 'Sync Now',
+  'syncing': 'Syncing…',
+  'syncRequiresShop': 'Finish setting up your shop before syncing',
+  'syncPushFailed': '@count event(s) failed to push — will retry next time',
+  'syncSucceeded': 'Synced: @pushed sent, @pulled received',
+  'pendingSyncCount': '@count pending',
 };

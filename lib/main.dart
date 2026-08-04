@@ -7,9 +7,14 @@ import 'core/config/supabase_config.dart';
 import 'core/database/app_database.dart';
 import 'data/local/app_database.dart';
 import 'data/remote/supabase_auth_repository.dart';
+import 'data/remote/supabase_sync_transport.dart';
+import 'data/sync/sync_pull_service.dart';
+import 'data/sync/sync_push_service.dart';
 import 'domain/repositories/auth_repository.dart';
 import 'features/auth/controller/auth_controller.dart';
 import 'features/settings/controller/settings_controller.dart';
+import 'features/sync/controller/sync_controller.dart';
+import 'data/local/local_row_upserter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,6 +50,25 @@ void main() async {
   // depend on that exact file.
   final dbV2 = AppDatabaseV2();
   Get.put<AppDatabaseV2>(dbV2, permanent: true);
+
+  // --- Sync engine (outbox pusher + cursor puller) ---
+  // See SYNC.md for the design. Registered here (not lazily per-screen)
+  // since the "Sync Now" affordance and its pending-outbox-count badge
+  // need to exist app-wide, not just on whichever screen last opened it.
+  final syncTransport = SupabaseSyncTransport();
+  Get.put<SyncController>(
+    SyncController(
+      db: dbV2,
+      pushService: SyncPushService(dbV2.syncMetadataDao, syncTransport),
+      pullService: SyncPullService(
+        dbV2.syncMetadataDao,
+        syncTransport,
+        LocalRowUpserter(dbV2),
+      ),
+      authController: Get.find<AuthController>(),
+    ),
+    permanent: true,
+  );
 
   // --- Settings service ---
   Get.put<SettingsController>(SettingsController(), permanent: true);
