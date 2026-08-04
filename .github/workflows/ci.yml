@@ -16,6 +16,8 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────
   # 1. Pure-Dart core: format + layer-boundary check + dart test
   #    Runs against the Dart SDK only — no Flutter, no emulators needed.
+  #    M1 extends this to also cover test/domain/ (pure-Dart profit-
+  #    calculator and purchase-reconciliation tests).
   # ─────────────────────────────────────────────────────────────────────
   dart-core:
     name: "Dart core (format · boundaries · tests)"
@@ -38,8 +40,12 @@ jobs:
       - name: Layer boundary check
         run: bash tool/check_layer_boundaries.sh
 
-      - name: dart test (pure-Dart core)
-        run: dart test test/core/ --reporter=expanded
+      - name: dart test (pure-Dart core + domain)
+        # M1: test/domain/ contains pure-Dart tests for calculateGrossProfitPerSale,
+        # calculateShopNetProfit, calculateInvestorProfitShare, and
+        # reconcilePurchaseTrip — none of which import Flutter or Drift, so
+        # they run here against the Dart SDK rather than in the flutter job.
+        run: dart test test/core/ test/domain/ --reporter=expanded
 
   # ─────────────────────────────────────────────────────────────────────
   # 2. Full Flutter: analyze + test + debug build for every target
@@ -72,6 +78,13 @@ jobs:
 
       - name: flutter pub get
         run: flutter pub get
+
+      # M1 adds a Drift schema (lib/data/local/app_database.dart) which uses
+      # `part 'database.g.dart'`. The generated file is gitignored, so CI must
+      # run build_runner before any step that compiles or tests Flutter code.
+      # This runs on every matrix leg so each target's build has the file.
+      - name: Drift codegen (build_runner)
+        run: dart run build_runner build --delete-conflicting-outputs
 
       # analyze only once (on the android/ubuntu runner) — it's
       # platform-independent so running it three times is just noise.
