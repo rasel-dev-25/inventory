@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../core/design/tokens.dart';
 import '../../auth/controller/auth_controller.dart';
 import '../../auth/view/sign_in_screen.dart' show errorText;
+import '../../sync/controller/sync_controller.dart';
 
 /// Account/auth settings — sign-out and, for an owner, inviting staff by
 /// email (`AuthController.inviteStaff`, backed by
@@ -43,6 +44,8 @@ class AccountSettingsScreen extends GetView<AuthController> {
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
+            const _SyncSection(),
+            const SizedBox(height: AppSpacing.xl),
             if (session?.isOwner ?? false) ...[
               Text(
                 'inviteStaffByEmail'.tr,
@@ -106,6 +109,76 @@ class _InviteStaffForm extends GetView<AuthController> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Manual push-then-pull, via `SyncController.syncNow()` — see that
+/// class's doc comment for why this is push-then-pull rather than
+/// concurrent, and SYNC.md for the outbox/puller design underneath it.
+class _SyncSection extends StatelessWidget {
+  const _SyncSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final sync = Get.find<SyncController>();
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Obx(
+              () => Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      sync.pendingOutboxCount.value == 0
+                          ? 'syncNow'.tr
+                          : 'pendingSyncCount'.trParams({
+                              'count': '${sync.pendingOutboxCount.value}',
+                            }),
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  FilledButton.tonalIcon(
+                    onPressed: sync.status.value == SyncStatus.syncing
+                        ? null
+                        : sync.syncNow,
+                    icon: sync.status.value == SyncStatus.syncing
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.sync),
+                    label: Text(
+                      sync.status.value == SyncStatus.syncing
+                          ? 'syncing'.tr
+                          : 'syncNow'.tr,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Obx(() {
+              final message = sync.statusMessage.value;
+              if (message == null) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.sm),
+                child: Text(
+                  message,
+                  style: TextStyle(
+                    color: sync.status.value == SyncStatus.failure
+                        ? Theme.of(context).colorScheme.error
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
     );
   }
 }

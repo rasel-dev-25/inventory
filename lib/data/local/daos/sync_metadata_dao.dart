@@ -51,6 +51,15 @@ class SyncMetadataDao extends DatabaseAccessor<AppDatabaseV2>
         .get();
   }
 
+  /// Live count of pending/failed entries — backs the "Sync Now" badge
+  /// (`SyncController.pendingOutboxCount`) so an owner can see there's
+  /// something worth syncing without opening the outbox table itself.
+  Stream<int> watchPendingCount() {
+    final query = select(syncOutboxEntries)
+      ..where((t) => t.status.isIn(['pending', 'failed']));
+    return query.watch().map((rows) => rows.length);
+  }
+
   Future<void> markInFlight(String id, DateTime now) {
     return (update(syncOutboxEntries)..where((t) => t.id.equals(id))).write(
       SyncOutboxEntriesCompanion(

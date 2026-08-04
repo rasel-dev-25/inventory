@@ -426,4 +426,14 @@ const Map<String, String> bnBD = {
   'noProductsYet': 'এখনো কোনো পণ্য নেই',
   'account': 'অ্যাকাউন্ট',
   'signedInAs': 'সাইন ইন করা আছে',
+
+  // ── Sync (M1) ────────────────────────────────────────────────────────
+  'syncNow': 'এখনই সিঙ্ক করুন',
+  'syncing': 'সিঙ্ক হচ্ছে…',
+  'syncRequiresShop': 'সিঙ্ক করার আগে আপনার দোকান তৈরি সম্পন্ন করুন',
+  'syncPushFailed':
+      '@count টি ইভেন্ট পাঠাতে ব্যর্থ হয়েছে — পরেরবার আবার চেষ্টা হবে',
+  'syncSucceeded':
+      'সিঙ্ক সম্পন্ন: @pushed পাঠানো হয়েছে, @pulled গ্রহণ করা হয়েছে',
+  'pendingSyncCount': '@count বাকি আছে',
 };
