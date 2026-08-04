@@ -436,4 +436,8 @@ const Map<String, String> bnBD = {
   'syncSucceeded':
       'সিঙ্ক সম্পন্ন: @pushed পাঠানো হয়েছে, @pulled গ্রহণ করা হয়েছে',
   'pendingSyncCount': '@count বাকি আছে',
+
+  // ── Dues (M1 v2 screen) ─────────────────────────────────────────────
+  'noDuesYet': 'এখনো কোনো বকেয়া নেই',
+  'total': 'মোট',
 };
