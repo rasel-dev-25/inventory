@@ -89,48 +89,90 @@ void main() {
       },
     );
 
-    test(
-      'splits item cash correctly across multiple fund sources in one trip',
-      () {
-        final investorA = FundSource.investor('inv-a');
-        final investorB = FundSource.investor('inv-b');
-        final trip = PurchaseTrip(
-          id: 't3',
-          date: DateTime.utc(2026, 8, 3),
-          transportCost: Money.zero(),
-          cashReturned: Money.zero(),
-          items: [
-            _item(qty: '1', unitPrice: '100'), // shop: 100
-            _item(qty: '1', unitPrice: '200', fundSource: investorA), // A: 200
-            _item(
-              qty: '1',
-              unitPrice: '50',
-              fundSource: investorA,
-            ), // A: +50 = 250
-            _item(qty: '1', unitPrice: '300', fundSource: investorB), // B: 300
-          ],
-        );
+    test('splits item cash correctly across multiple fund sources in one trip '
+        '(no trip-level overhead in this case)', () {
+      final investorA = FundSource.investor('inv-a');
+      final investorB = FundSource.investor('inv-b');
+      final trip = PurchaseTrip(
+        id: 't3',
+        date: DateTime.utc(2026, 8, 3),
+        transportCost: Money.zero(),
+        cashReturned: Money.zero(),
+        items: [
+          _item(qty: '1', unitPrice: '100'), // shop: 100
+          _item(qty: '1', unitPrice: '200', fundSource: investorA), // A: 200
+          _item(
+            qty: '1',
+            unitPrice: '50',
+            fundSource: investorA,
+          ), // A: +50 = 250
+          _item(qty: '1', unitPrice: '300', fundSource: investorB), // B: 300
+        ],
+      );
 
-        final result = reconcilePurchaseTrip(trip);
+      final result = reconcilePurchaseTrip(trip);
 
-        expect(result.totalItemsCash, Money.parse('650'));
-        final byFundSourceMap = {
-          for (final f in result.byFundSource) f.fundSource: f.amount,
-        };
-        expect(byFundSourceMap[FundSource.shop()], Money.parse('100'));
-        expect(byFundSourceMap[investorA], Money.parse('250'));
-        expect(byFundSourceMap[investorB], Money.parse('300'));
+      expect(result.totalItemsCash, Money.parse('650'));
+      final byFundSourceMap = {
+        for (final f in result.byFundSource) f.fundSource: f.amount,
+      };
+      expect(byFundSourceMap[FundSource.shop()], Money.parse('100'));
+      expect(byFundSourceMap[investorA], Money.parse('250'));
+      expect(byFundSourceMap[investorB], Money.parse('300'));
 
-        // The per-fund-source item totals must sum back to the trip total —
-        // no leakage, same guarantee Money.allocate provides for percentage
-        // splits.
-        final sum = result.byFundSource.fold(
-          Money.zero(),
-          (s, f) => s + f.amount,
-        );
-        expect(sum, result.totalItemsCash);
-      },
-    );
+      // The per-fund-source item totals must sum back to the trip total —
+      // no leakage, same guarantee Money.allocate provides for percentage
+      // splits.
+      final sum = result.byFundSource.fold(
+        Money.zero(),
+        (s, f) => s + f.amount,
+      );
+      expect(sum, result.totalItemsCash);
+    });
+
+    test('trip-level overhead (transport + other costs − cash returned) is '
+        'charged to the shop, not split across investors — the resolved '
+        'decision replacing the old open question', () {
+      final investorA = FundSource.investor('inv-a');
+      final trip = PurchaseTrip(
+        id: 't3b',
+        date: DateTime.utc(2026, 8, 3),
+        transportCost: Money.parse('80'),
+        otherCosts: [
+          OtherCost(description: 'loading', amount: Money.parse('20')),
+        ],
+        cashReturned: Money.parse('30'),
+        items: [
+          _item(qty: '1', unitPrice: '100'), // shop: 100
+          _item(qty: '1', unitPrice: '400', fundSource: investorA), // A: 400
+        ],
+      );
+
+      final result = reconcilePurchaseTrip(trip);
+
+      // tripOverhead = 80 + 20 - 30 = 70, charged entirely to the shop.
+      final byFundSourceMap = {
+        for (final f in result.byFundSource) f.fundSource: f.amount,
+      };
+      expect(
+        byFundSourceMap[FundSource.shop()],
+        Money.parse('170'),
+      ); // 100 + 70
+      expect(byFundSourceMap[investorA], Money.parse('400')); // untouched
+
+      // byFundSource must always sum to exactly totalCashOut once trip
+      // overhead is included — this is the whole point of resolving the
+      // attribution question rather than leaving overhead unattributed.
+      final sum = result.byFundSource.fold(
+        Money.zero(),
+        (s, f) => s + f.amount,
+      );
+      expect(sum, result.totalCashOut);
+      expect(
+        result.totalCashOut,
+        Money.parse('570'),
+      ); // 500 items + 70 overhead
+    });
 
     test(
       'a trip with only in-kind items has zero cash out but still reconciles at zero',
