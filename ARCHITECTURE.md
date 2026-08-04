@@ -221,8 +221,85 @@ was clean and `REFERENCES` constraints were confirmed present in the
 generated SQL. DAOs, repositories, and the `onCreate` seed migration are
 the next PR; this one is schema-only.
 
+## The Supabase (Postgres) schema (`supabase/migrations/`)
+
+Mirrors `lib/data/local/tables/` table-for-table, with three differences
+that follow directly from being the multi-device server side rather than
+a single local file:
+
+- **`shops` + `shop_members(shop_id, user_id, role)` are new** — a local
+  device only needs to know its own role, but Postgres needs the full
+  membership list to enforce RLS for every member. `role` is `owner` or
+  `staff`; per the confirmed permission model, this is deliberately a
+  single flat rule with no per-table exceptions (see the RLS paragraph
+  below), not a capability matrix.
+- **The three sync-infrastructure tables are *not* mirrored**
+  (`SyncOutboxEntries`, `SyncPendingUploads`, `SyncCursors` stay local-only)
+  — they are the client's own bookkeeping for what it has and hasn't
+  pushed/pulled yet, not business data with anything to sync *to*.
+- **Types are Postgres-native equivalents of the same concepts**: `uuid`
+  primary keys (still client-generated UUIDv7, never server-assigned),
+  `bigint` minor-unit money (never `numeric` or `money` — see the
+  original sync research), `timestamptz` for every date, and native
+  Postgres `enum` types matching `lib/domain/entities/enums.dart`
+  one-for-one (e.g. `payment_method`, `fund_source_type`) rather than
+  free text — the same reasoning as the local schema's `textEnum<T>()`.
+
+**RLS: one rule, applied identically everywhere.** Owner gets full
+`SELECT`/`INSERT`/`UPDATE`/`DELETE` scoped to their shop; staff gets
+`SELECT`-only scoped to their shop. No table has an exception. This is
+enforced by two stored procedures defined once in migration `0001`
+(`apply_standard_rls` for mutable tables, `apply_append_only_rls` for the
+ledger/audit tables) and then *called* — never hand-copied — against
+every table, so the policy can't drift table-to-table the way a
+hand-written copy-pasted policy set eventually would. Child tables with no
+`shop_id` of their own (`product_images`, `purchase_items`,
+`purchase_other_costs`, `due_payments`) get a bespoke policy that scopes
+through their parent instead — documented inline at each one.
+
+**Append-only tables get defense in depth, not just one guard.** The same
+five tables that are append-only locally
+(`cash_ledger_entries`/`stock_movements`/`investor_repayments`/
+`due_payments`/`audit_log_entries`) get *two* independent enforcements in
+Postgres: `apply_append_only_rls` creates no `UPDATE`/`DELETE` policy at
+all (Postgres RLS defaults to deny when no policy exists for an
+operation), and a `forbid_update_or_delete` trigger raises an exception
+if either is somehow attempted anyway. Verified for real, not just
+written: inserted a live row, attempted an `UPDATE` and a `DELETE`
+against it directly on the deployed project, and confirmed both were
+rejected and the row was unchanged.
+
+**`updated_at` is server-authoritative**, via a `set_updated_at` trigger
+using `clock_timestamp()` (wall-clock at execution) rather than `now()`
+(fixed at transaction start) — a slow transaction must not appear to
+predate a fast one that committed after it started — with a
+`GREATEST(old + 1µs, clock_timestamp())` guard for per-row monotonicity
+under clock skew. Every syncable table has a `(shop_id, synced_at, id)`
+index for the pull-since-cursor query the outbox/puller design (still to
+come) will use.
+
+**Known open item, flagged rather than silently resolved:** the
+`shop_members` bootstrap policy (a fresh shop's first member becomes its
+owner) is a reasonable MVP rule for a single-shop app, but the real
+owner-onboarding flow doesn't exist yet (auth screens are a later M1
+task). Revisit `supabase/migrations/0002_shops_and_members_rls.sql` once
+that flow is built — shop creation and the first membership row may need
+to move into an Edge Function so they happen atomically instead of as two
+separate client-issued statements.
+
+**Verified against the real project**, not a local simulation — this
+schema was applied directly to the live (previously empty) Supabase
+project via `apply_migration`, then checked with `list_tables` (confirming
+RLS enabled on all 25 tables) and hand-written `execute_sql` checks: a
+live insert/attempted-update/attempted-delete proving the immutability
+guarantee, a `check` constraint rejecting an investor fund source with no
+investor id, and a foreign key rejecting a reference to a nonexistent
+shop. Test rows were then removed with `TRUNCATE ... CASCADE` (which does
+not fire the per-row immutability trigger) to leave the project clean.
+
 ## What's deliberately not here yet
 
-Repositories/DAOs over this schema, the Supabase schema and RLS policies,
-the outbox/puller sync engine, and the feature screens land in M1 onward,
-each with its own PR and its own addition to this document.
+The outbox pusher, the cursor-based puller, conflict resolution, Supabase
+Auth wiring (sign-in, owner onboarding, staff invitation), and every
+feature screen land in M1 onward, each with its own PR and its own
+addition to this document.
