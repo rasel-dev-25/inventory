@@ -26,6 +26,13 @@ import '../../features/catalog/controller/catalog_controller.dart';
 import '../../features/purchase_entry/view/purchase_entry_screen.dart';
 import '../../features/purchase_entry/controller/purchase_entry_controller.dart';
 import '../../features/settings/view/account_settings_screen.dart';
+// Aliased: this feature's DailySalesController/DailySalesScreen share a
+// name with the v1 classes imported above (both are literally named the
+// same thing, matching v1 convention) — see CatalogScreen's doc comment
+// for why this is a separate v2 screen/database, not a replacement.
+import '../../features/daily_sales_v2/controller/daily_sales_controller.dart'
+    as v2_sales;
+import '../../features/daily_sales_v2/view/daily_sales_screen.dart' as v2_sales;
 
 abstract class AppPages {
   static final pages = [
@@ -130,6 +137,15 @@ abstract class AppPages {
     GetPage(
       name: AppRoutes.accountSettings,
       page: () => const AccountSettingsScreen(),
+    ),
+    GetPage(
+      name: AppRoutes.dailySalesV2,
+      page: () => const v2_sales.DailySalesScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(
+          () => v2_sales.DailySalesController(Get.find<AppDatabaseV2>()),
+        );
+      }),
     ),
   ];
 }
