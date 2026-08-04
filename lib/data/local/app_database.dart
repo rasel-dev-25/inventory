@@ -6,8 +6,10 @@ import 'package:drift_flutter/drift_flutter.dart';
 // used as a textEnum<T>() type argument anywhere in tables/*.dart must also
 // be imported directly here, or codegen produces a part file that
 // references an undefined type.
+import 'daos/category_dao.dart';
 import 'daos/customer_dao.dart';
 import 'daos/investor_dao.dart';
+import 'daos/ledger_dao.dart';
 import 'daos/product_dao.dart';
 import 'daos/purchase_dao.dart';
 import 'daos/sync_metadata_dao.dart';
@@ -90,7 +92,15 @@ part 'app_database.g.dart';
     SyncPendingUploads,
     SyncCursors,
   ],
-  daos: [ProductDao, CustomerDao, InvestorDao, PurchaseDao, SyncMetadataDao],
+  daos: [
+    ProductDao,
+    CustomerDao,
+    InvestorDao,
+    PurchaseDao,
+    SyncMetadataDao,
+    CategoryDao,
+    LedgerDao,
+  ],
 )
 class AppDatabaseV2 extends _$AppDatabaseV2 {
   AppDatabaseV2() : super(_openConnection());

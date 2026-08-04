@@ -9,4 +9,11 @@ abstract class AppRoutes {
   static const customers = '/customers';
   static const assets = '/assets';
   static const quickCapture = '/quick-capture';
+
+  // ── M1 v2 screens (read/write AppDatabaseV2, not v1's AppDatabase —
+  // see CatalogScreen's doc comment for why these are separate routes
+  // rather than replacing an existing v1 tab) ──────────────────────────
+  static const catalogV2 = '/v2/catalog';
+  static const purchaseEntryV2 = '/v2/purchase-entry';
+  static const accountSettings = '/v2/account';
 }

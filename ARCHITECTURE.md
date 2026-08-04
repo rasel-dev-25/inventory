@@ -161,6 +161,25 @@ Turning that on today would fail the build on the still-untouched v1
 becomes the real gate once that tree is migrated/replaced module by module
 through M1–M3 — tracked as an M4 hardening task, not dropped.
 
+**A real environment limitation, found and confirmed, not assumed:** a
+`testWidgets` test that keeps an active `AppDatabaseV2` `.watch()` stream
+subscription alive across a `pumpWidget`/`pump` call deadlocks in this
+sandbox's `flutter test` runner — reproduced in isolation (a listener on
+`CategoryDao.watchAll` fires once correctly, then the very next
+`pumpWidget` call never returns), and confirmed it is specifically the
+active Drift stream subscription at fault, not the widget tree, GetX, or
+the query itself (a `pumpWidget` with the same database merely held open,
+no active listener, completes normally). Because of this, screens backed
+by a live `watch()` stream (`CatalogScreen`, `PurchaseEntryScreen`, and
+any future one built the same way) are verified via `flutter analyze`
+plus real-database tests of the controller/use-case layer underneath them
+(`test/data/usecases/`, `test/data/sync/`) — never via a `testWidgets`
+test that pumps the screen itself against a real `AppDatabaseV2`.
+`test/features/auth/auth_gate_test.dart` already established the
+alternative that does work: a hand-rolled fake stream
+(`StreamController`) standing in for the real one, which is what any new
+widget test for a database-backed screen should do too.
+
 ## The v2 local schema (`lib/data/local/`)
 
 Every table from `notes/business_logic.md` plus the sync/audit/ledger

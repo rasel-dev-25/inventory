@@ -20,6 +20,12 @@ import '../../features/daily_sales/view/daily_sales_screen.dart';
 import '../../features/daily_sales/controller/daily_sales_controller.dart';
 import '../../features/dashboard/view/dashboard_screen.dart';
 import '../../features/dashboard/controller/dashboard_controller.dart';
+import '../../data/local/app_database.dart' show AppDatabaseV2;
+import '../../features/catalog/view/catalog_screen.dart';
+import '../../features/catalog/controller/catalog_controller.dart';
+import '../../features/purchase_entry/view/purchase_entry_screen.dart';
+import '../../features/purchase_entry/controller/purchase_entry_controller.dart';
+import '../../features/settings/view/account_settings_screen.dart';
 
 abstract class AppPages {
   static final pages = [
@@ -104,6 +110,26 @@ abstract class AppPages {
       binding: BindingsBuilder(() {
         Get.lazyPut(() => DashboardController());
       }),
+    ),
+    // ── M1 v2 screens — see CatalogScreen's doc comment for why these
+    // are separate routes rather than folding into the shell above ────
+    GetPage(
+      name: AppRoutes.catalogV2,
+      page: () => const CatalogScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => CatalogController(Get.find<AppDatabaseV2>()));
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.purchaseEntryV2,
+      page: () => const PurchaseEntryScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => PurchaseEntryController(Get.find<AppDatabaseV2>()));
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.accountSettings,
+      page: () => const AccountSettingsScreen(),
     ),
   ];
 }
