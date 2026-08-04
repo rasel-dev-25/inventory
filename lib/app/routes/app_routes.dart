@@ -25,4 +25,5 @@ abstract class AppRoutes {
   static const expenseV2 = '/v2/expense';
   static const rentV2 = '/v2/rent';
   static const orderV2 = '/v2/order';
+  static const fixedAssetV2 = '/v2/fixed-asset';
 }

@@ -10,6 +10,7 @@ import 'daos/category_dao.dart';
 import 'daos/customer_dao.dart';
 import 'daos/due_dao.dart';
 import 'daos/expense_dao.dart';
+import 'daos/fixed_asset_dao.dart';
 import 'daos/investor_dao.dart';
 import 'daos/ledger_dao.dart';
 import 'daos/order_dao.dart';
@@ -110,6 +111,7 @@ part 'app_database.g.dart';
     ExpenseDao,
     RentDao,
     OrderDao,
+    FixedAssetDao,
   ],
 )
 class AppDatabaseV2 extends _$AppDatabaseV2 {

@@ -68,6 +68,11 @@ import '../../features/rent_v2/view/rent_screen.dart';
 // CustomersController/CustomersScreen, not as classes of this name.
 import '../../features/order_v2/controller/order_controller.dart';
 import '../../features/order_v2/view/order_screen.dart';
+// No aliasing needed — v1's equivalent is AssetsController/AssetsScreen
+// (plural), a different name from this screen's singular
+// FixedAssetController/FixedAssetScreen.
+import '../../features/fixed_asset_v2/controller/fixed_asset_controller.dart';
+import '../../features/fixed_asset_v2/view/fixed_asset_screen.dart';
 
 abstract class AppPages {
   static final pages = [
@@ -242,6 +247,13 @@ abstract class AppPages {
       page: () => const OrderScreen(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => OrderController(Get.find<AppDatabaseV2>()));
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.fixedAssetV2,
+      page: () => const FixedAssetScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => FixedAssetController(Get.find<AppDatabaseV2>()));
       }),
     ),
   ];

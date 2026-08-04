@@ -497,4 +497,13 @@ const Map<String, String> bnBD = {
   // ── Order (M3 v2 screen) ────────────────────────────────────────────
   'noOrdersYet': 'এখনো কোনো অর্ডার নেই',
   'itemDescription': 'তারা কী চান?',
+
+  // ── Fixed Asset (M3 v2 screen) ───────────────────────────────────────
+  'addAsset': 'সম্পদ যোগ করুন',
+  'assetValue': 'মূল্য',
+  'dateAcquired': 'অর্জনের তারিখ',
+  'convertFromStock': 'স্টক থেকে কনভার্ট',
+  'directPurchase': 'সরাসরি কেনা',
+  'noAssetsYet': 'এখনো কোনো ফিক্সড এসেট নেই',
+  'quantityToConvert': 'কনভার্ট করার পরিমাণ',
 };
