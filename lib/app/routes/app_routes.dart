@@ -16,4 +16,5 @@ abstract class AppRoutes {
   static const catalogV2 = '/v2/catalog';
   static const purchaseEntryV2 = '/v2/purchase-entry';
   static const accountSettings = '/v2/account';
+  static const dailySalesV2 = '/v2/daily-sales';
 }
