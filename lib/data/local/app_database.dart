@@ -10,6 +10,7 @@ import 'daos/customer_dao.dart';
 import 'daos/investor_dao.dart';
 import 'daos/product_dao.dart';
 import 'daos/purchase_dao.dart';
+import 'daos/sync_metadata_dao.dart';
 import 'default_shop.dart';
 import '../../domain/entities/enums.dart';
 import 'tables/assets.dart';
@@ -89,7 +90,7 @@ part 'app_database.g.dart';
     SyncPendingUploads,
     SyncCursors,
   ],
-  daos: [ProductDao, CustomerDao, InvestorDao, PurchaseDao],
+  daos: [ProductDao, CustomerDao, InvestorDao, PurchaseDao, SyncMetadataDao],
 )
 class AppDatabaseV2 extends _$AppDatabaseV2 {
   AppDatabaseV2() : super(_openConnection());
