@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/native.dart';
 import 'package:get/get.dart';
 import 'package:inventory/core/error/failure.dart';
@@ -100,17 +101,21 @@ void main() {
   late AuthController authController;
   late _FakeSyncTransport transport;
   late SyncController syncController;
+  late StreamController<List<ConnectivityResult>> connectivityController;
 
   setUp(() {
     Get.testMode = true;
     db = AppDatabaseV2.forTesting(NativeDatabase.memory());
     authRepo = _FakeAuthRepository();
     transport = _FakeSyncTransport();
+    connectivityController =
+        StreamController<List<ConnectivityResult>>.broadcast();
   });
 
   tearDown(() async {
     syncController.onClose();
     authController.onClose();
+    await connectivityController.close();
     await db.close();
     Get.reset();
   });
@@ -124,7 +129,14 @@ void main() {
   // Get.put (no widget tree, no GetX lifecycle to drive it
   // automatically), bootstrapAuth must explicitly wait for that chain to
   // finish rather than assume Get.put's usual timing.
-  Future<void> bootstrapAuth(AuthSession? session) async {
+  //
+  // autoSyncInterval defaults to a full day specifically so the periodic
+  // timer never fires during a test that isn't testing the timer itself
+  // — tests that do want it fast pass a short override.
+  Future<void> bootstrapAuth(
+    AuthSession? session, {
+    Duration autoSyncInterval = const Duration(days: 1),
+  }) async {
     if (session != null) authRepo.seed(session);
     authController = AuthController(authRepo);
     authController.onInit();
@@ -142,7 +154,14 @@ void main() {
         LocalRowUpserter(db),
       ),
       authController: authController,
+      connectivityChanges: connectivityController.stream,
+      autoSyncInterval: autoSyncInterval,
     );
+    // Same reasoning as authController.onInit() above: constructed
+    // directly, not via Get.put, so nothing else calls this — without
+    // it the periodic timer and connectivity listener this test suite
+    // exercises below are never actually started.
+    syncController.onInit();
   }
 
   test('syncNow is a no-op failure when the session has no shop yet', () async {
@@ -279,5 +298,126 @@ void main() {
     // directly a second time.
     final count = await db.syncMetadataDao.watchPendingCount().first;
     expect(count, 1);
+  });
+
+  group('automatic sync (periodic timer)', () {
+    test(
+      'a pending outbox entry is pushed automatically once the timer fires',
+      () async {
+        await bootstrapAuth(
+          const AuthSession(
+            userId: 'u1',
+            email: 'owner@example.com',
+            shopId: 'real-shop-1',
+            role: ShopMemberRole.owner,
+          ),
+          autoSyncInterval: const Duration(milliseconds: 20),
+        );
+
+        final categoryUseCases = CategoryUseCases(db);
+        await categoryUseCases.create(
+          id: 'cat-auto-1',
+          shopId: defaultShopId,
+          name: 'Books',
+          sortOrder: 0,
+        );
+        expect(
+          transport.pushedIdempotencyKeys,
+          isEmpty,
+          reason: 'no sync has run yet',
+        );
+
+        // The timer is real (Timer.periodic), so this really does wait —
+        // deliberately short (autoSyncInterval above) rather than mocked,
+        // so this test exercises the actual Timer, not a stand-in for it.
+        await Future<void>.delayed(const Duration(milliseconds: 60));
+
+        expect(transport.pushedIdempotencyKeys, isNotEmpty);
+        expect(await db.syncMetadataDao.pendingEntries(), isEmpty);
+      },
+    );
+
+    test(
+      'the timer silently does nothing before onboarding completes',
+      () async {
+        await bootstrapAuth(
+          const AuthSession(userId: 'u1', email: 'owner@example.com'),
+          autoSyncInterval: const Duration(milliseconds: 20),
+        );
+
+        await Future<void>.delayed(const Duration(milliseconds: 60));
+
+        // Unlike syncNow() (the button), the automatic path must not turn
+        // "not onboarded yet" into a visible failure state — see the class
+        // doc comment.
+        expect(syncController.status.value, SyncStatus.idle);
+        expect(syncController.statusMessage.value, isNull);
+        expect(transport.pushedIdempotencyKeys, isEmpty);
+      },
+    );
+  });
+
+  group('automatic sync (connectivity regained)', () {
+    test('going from offline to online triggers an automatic sync', () async {
+      await bootstrapAuth(
+        const AuthSession(
+          userId: 'u1',
+          email: 'owner@example.com',
+          shopId: 'real-shop-1',
+          role: ShopMemberRole.owner,
+        ),
+      );
+      final categoryUseCases = CategoryUseCases(db);
+      await categoryUseCases.create(
+        id: 'cat-auto-2',
+        shopId: defaultShopId,
+        name: 'Attar',
+        sortOrder: 0,
+      );
+
+      connectivityController.add([ConnectivityResult.none]);
+      await Future<void>.delayed(Duration.zero);
+      expect(
+        transport.pushedIdempotencyKeys,
+        isEmpty,
+        reason: 'still offline, must not sync yet',
+      );
+
+      connectivityController.add([ConnectivityResult.wifi]);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(transport.pushedIdempotencyKeys, isNotEmpty);
+    });
+
+    test(
+      'a network handoff that never actually went offline does not trigger a sync',
+      () async {
+        await bootstrapAuth(
+          const AuthSession(
+            userId: 'u1',
+            email: 'owner@example.com',
+            shopId: 'real-shop-1',
+            role: ShopMemberRole.owner,
+          ),
+        );
+        final categoryUseCases = CategoryUseCases(db);
+        await categoryUseCases.create(
+          id: 'cat-auto-3',
+          shopId: defaultShopId,
+          name: 'Topi',
+          sortOrder: 0,
+        );
+
+        // wifi -> ethernet: a real connectivity *event* connectivity_plus
+        // would emit (e.g. plugging in a cable while on wifi), but never
+        // an offline/none reading in between.
+        connectivityController.add([ConnectivityResult.wifi]);
+        await Future<void>.delayed(Duration.zero);
+        connectivityController.add([ConnectivityResult.ethernet]);
+        await Future<void>.delayed(Duration.zero);
+
+        expect(transport.pushedIdempotencyKeys, isEmpty);
+      },
+    );
   });
 }
