@@ -54,6 +54,17 @@ class SaleDao extends DatabaseAccessor<AppDatabaseV2> with _$SaleDaoMixin {
     return query.watch().map((rows) => rows.map((r) => r.toDomain()).toList());
   }
 
+  /// Every [Sales] row for [shopId], unlimited — [watchRecent] intentionally
+  /// caps at [limit] for a scrolling list UI; the v2 Dashboard's totals need
+  /// every sale in whatever `DateRange` it's filtering by (day or all-time),
+  /// so a capped stream would silently under-count once a shop passes that
+  /// limit's worth of history.
+  Stream<List<domain.Sale>> watchAll(String shopId) {
+    final query = select(sales)
+      ..where((s) => s.shopId.equals(shopId) & s.deletedAt.isNull());
+    return query.watch().map((rows) => rows.map((r) => r.toDomain()).toList());
+  }
+
   Future<void> create(
     domain.Sale sale, {
     required String shopId,

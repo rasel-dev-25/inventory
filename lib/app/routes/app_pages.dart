@@ -46,6 +46,12 @@ import '../../features/customers_v2/view/customers_screen.dart' as v2_customers;
 // InventoryController/InventoryScreen, a different name entirely).
 import '../../features/stock_v2/controller/stock_controller.dart';
 import '../../features/stock_v2/view/stock_screen.dart';
+// Same aliasing reason as daily_sales_v2/dues_v2/customers_v2 above —
+// v1's DashboardController/DashboardScreen (imported above) share these
+// exact names.
+import '../../features/dashboard_v2/controller/dashboard_controller.dart'
+    as v2_dashboard;
+import '../../features/dashboard_v2/view/dashboard_screen.dart' as v2_dashboard;
 
 abstract class AppPages {
   static final pages = [
@@ -181,6 +187,15 @@ abstract class AppPages {
       page: () => const StockScreen(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => StockController(Get.find<AppDatabaseV2>()));
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.dashboardV2,
+      page: () => const v2_dashboard.DashboardScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(
+          () => v2_dashboard.DashboardController(Get.find<AppDatabaseV2>()),
+        );
       }),
     ),
   ];

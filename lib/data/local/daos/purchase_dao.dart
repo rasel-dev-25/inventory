@@ -102,6 +102,24 @@ class PurchaseDao extends DatabaseAccessor<AppDatabaseV2>
     });
   }
 
+  /// Every trip for [shopId], unlimited — same reasoning as
+  /// `SaleDao.watchAll`: [watchRecent]'s cap is right for a scrolling list,
+  /// wrong for the v2 Dashboard's totals, which must never silently
+  /// under-count once a shop has more trips than that limit.
+  Stream<List<domain.PurchaseTrip>> watchAll(String shopId) {
+    final query = select(purchaseTrips)
+      ..where((t) => t.shopId.equals(shopId) & t.deletedAt.isNull())
+      ..orderBy([(t) => OrderingTerm.desc(t.date)]);
+    return query.watch().asyncMap((rows) async {
+      final trips = <domain.PurchaseTrip>[];
+      for (final row in rows) {
+        final full = await getById(row.id);
+        if (full != null) trips.add(full);
+      }
+      return trips;
+    });
+  }
+
   /// Inserts a full trip — the trip row, every item, and every other-cost
   /// — atomically. See the class doc comment for why this must be one
   /// transaction. Does not touch [StockMovements] or [CashLedgerEntries];
