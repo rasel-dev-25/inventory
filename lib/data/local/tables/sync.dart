@@ -7,6 +7,7 @@ import 'package:drift/drift.dart';
 /// needing to re-derive any business rule. [idempotencyKey] is generated
 /// once per event and reused across every retry, so a flaky connection can
 /// never cause the same event to apply twice server-side.
+@DataClassName('SyncOutboxEntryRow')
 class SyncOutboxEntries extends Table {
   TextColumn get id => text()();
   TextColumn get eventType => text()();
@@ -29,6 +30,7 @@ class SyncOutboxEntries extends Table {
 /// images upload as raw bytes to Storage, not as a JSON mutation through
 /// the same RPC. [priority] lets thumbnails jump ahead of full-size images
 /// so lists populate quickly on a slow connection.
+@DataClassName('SyncPendingUploadRow')
 class SyncPendingUploads extends Table {
   TextColumn get id => text()();
   TextColumn get localPath => text()();
@@ -49,6 +51,7 @@ class SyncPendingUploads extends Table {
 /// The incremental-pull cursor per remote table — see the working plan's
 /// SYNC design for why this uses `(lastSyncedAt, lastSyncedId)` rather
 /// than a bare timestamp (ties at the same millisecond need a tie-breaker).
+@DataClassName('SyncCursorRow')
 class SyncCursors extends Table {
   // Named syncedTableName, not tableName: see the identical note on
   // AuditLogEntries.changedTableName in audit.dart — `tableName` collides
