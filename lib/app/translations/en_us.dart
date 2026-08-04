@@ -385,4 +385,23 @@ const Map<String, String> enUS = {
   'transportCosts': 'Transport Costs',
   'investorProfitSplit': 'Investor Profit Split',
   'rentPaid': 'Rent Paid',
+
+  // ── Auth (M1) ──────────────────────────────────────────────────────
+  'signIn': 'Sign In',
+  'signUp': 'Sign Up',
+  'signOut': 'Sign Out',
+  'email': 'Email',
+  'password': 'Password',
+  'confirmPassword': 'Confirm Password',
+  'noAccountSignUp': "Don't have an account? Sign up",
+  'haveAccountSignIn': 'Already have an account? Sign in',
+  'passwordsDontMatch': 'Passwords do not match',
+  'createYourShop': 'Create Your Shop',
+  'shopName': 'Shop Name',
+  'createShop': 'Create Shop',
+  'waitingForOwnerInvite':
+      'Your account is ready. Ask your shop owner to add you as staff using this email.',
+  'inviteStaffByEmail': 'Invite Staff by Email',
+  'invite': 'Invite',
+  'staffInvitedSuccessfully': 'Staff member added successfully',
 };

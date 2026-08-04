@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'app_routes.dart';
-import '../../features/shell/view/shell_screen.dart';
+import '../../features/auth/view/auth_gate.dart';
 import '../../features/shell/controller/shell_controller.dart';
 import '../../features/quick_capture/view/quick_capture_screen.dart';
 import '../../features/quick_capture/controller/quick_capture_controller.dart';
@@ -25,7 +25,12 @@ abstract class AppPages {
   static final pages = [
     GetPage(
       name: AppRoutes.shell,
-      page: () => const ShellScreen(),
+      // AuthGate decides between sign-in / onboarding / the real shell —
+      // see lib/features/auth/view/auth_gate.dart. ShellController and
+      // its screen-level controllers are still bound eagerly here so
+      // AuthGate's ShellScreen branch has them ready the instant it
+      // renders, exactly as before this change.
+      page: () => const AuthGate(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => ShellController());
         Get.lazyPut(() => DashboardController());
