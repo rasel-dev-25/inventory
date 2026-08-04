@@ -9,6 +9,7 @@ import 'shared.dart';
 /// customer is a query concern (in the repository layer), not a stored
 /// fact, so one person can be a buyer, a renter, and a due-taker at once
 /// without three disconnected rows.
+@DataClassName('CustomerRow')
 class Customers extends Table {
   TextColumn get id => text()();
   TextColumn get shopId => text().references(Shops, #id)();
