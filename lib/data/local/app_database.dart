@@ -9,6 +9,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'daos/category_dao.dart';
 import 'daos/customer_dao.dart';
 import 'daos/due_dao.dart';
+import 'daos/expense_dao.dart';
 import 'daos/investor_dao.dart';
 import 'daos/ledger_dao.dart';
 import 'daos/product_dao.dart';
@@ -104,6 +105,7 @@ part 'app_database.g.dart';
     LedgerDao,
     SaleDao,
     DueDao,
+    ExpenseDao,
   ],
 )
 class AppDatabaseV2 extends _$AppDatabaseV2 {

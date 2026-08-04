@@ -51,7 +51,6 @@ class DashboardScreen extends GetView<DashboardController> {
               label: 'netProfit'.tr,
               value: totals.netProfit,
               highlightNegative: true,
-              footnote: 'netProfitFootnote'.tr,
             ),
           ],
         );
@@ -64,13 +63,11 @@ class _DashboardCard extends StatelessWidget {
   final String label;
   final Money value;
   final bool highlightNegative;
-  final String? footnote;
 
   const _DashboardCard({
     required this.label,
     required this.value,
     this.highlightNegative = false,
-    this.footnote,
   });
 
   @override
@@ -92,14 +89,6 @@ class _DashboardCard extends StatelessWidget {
                 color: isNegative ? Theme.of(context).colorScheme.error : null,
               ),
             ),
-            if (footnote != null)
-              Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.xs),
-                child: Text(
-                  footnote!,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ),
           ],
         ),
       ),

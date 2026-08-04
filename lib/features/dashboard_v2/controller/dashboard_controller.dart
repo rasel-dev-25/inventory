@@ -6,6 +6,7 @@ import '../../../core/time/date_range.dart';
 import '../../../data/local/app_database.dart';
 import '../../../data/local/default_shop.dart';
 import '../../../domain/entities/cash_ledger_entry.dart';
+import '../../../domain/entities/expense.dart';
 import '../../../domain/entities/product.dart';
 import '../../../domain/entities/purchase.dart';
 import '../../../domain/entities/sale.dart';
@@ -34,6 +35,7 @@ class DashboardController extends GetxController {
   final sales = <Sale>[].obs;
   final purchaseTrips = <PurchaseTrip>[].obs;
   final stockMovements = <StockMovementRow>[].obs;
+  final expenses = <Expense>[].obs;
 
   /// `true` = Day view (today), `false` = All-time — matches the spec's
   /// stated default of Day view.
@@ -68,6 +70,11 @@ class DashboardController extends GetxController {
       db.ledgerDao
           .watchAllStockMovements(defaultShopId)
           .listen((rows) => stockMovements.assignAll(rows)),
+    );
+    _subscriptions.add(
+      db.expenseDao
+          .watchAll(defaultShopId)
+          .listen((rows) => expenses.assignAll(rows)),
     );
   }
 
@@ -107,9 +114,10 @@ class DashboardController extends GetxController {
             ),
           )
           .toList(),
-      // Expense v2 doesn't exist yet — see DashboardTotals.netProfit's own
-      // doc comment for why this is a flagged gap, not a silent omission.
-      expensesInRange: const [],
+      expensesInRange: expenses
+          .where((e) => range.contains(e.date))
+          .map((e) => e.amount)
+          .toList(),
     );
   }
 }

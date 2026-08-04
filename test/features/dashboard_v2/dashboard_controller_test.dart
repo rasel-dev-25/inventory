@@ -2,10 +2,12 @@ import 'package:drift/native.dart';
 import 'package:inventory/core/money/money.dart';
 import 'package:inventory/data/local/app_database.dart';
 import 'package:inventory/data/local/default_shop.dart';
+import 'package:inventory/data/usecases/expense_usecases.dart';
 import 'package:inventory/data/usecases/product_usecases.dart';
 import 'package:inventory/data/usecases/save_purchase_trip_usecase.dart';
 import 'package:inventory/data/usecases/save_sale_usecase.dart';
 import 'package:inventory/domain/entities/enums.dart';
+import 'package:inventory/domain/entities/expense.dart';
 import 'package:inventory/domain/entities/fund_source.dart';
 import 'package:inventory/domain/entities/product.dart';
 import 'package:inventory/domain/entities/purchase.dart';
@@ -86,6 +88,20 @@ void main() {
       now: twoDaysAgo,
     );
 
+    // An expense today: ৳100 monthly rent — cash out ৳100, reduces
+    // netProfit by the same amount now that the Expense module exists.
+    await ExpenseUseCases(db).create(
+      Expense(
+        id: 'expense-1',
+        category: ExpenseCategory.monthlyRent,
+        amount: Money.fromMinor(10000),
+        date: today,
+        paymentMethod: PaymentMethod.cash,
+      ),
+      shopId: defaultShopId,
+      now: today,
+    );
+
     controller = DashboardController(db);
     controller.onInit();
     await Future<void>.delayed(Duration.zero);
@@ -100,27 +116,33 @@ void main() {
     expect(controller.isDayView.value, isTrue);
   });
 
-  test('Day view only counts today\'s trip and sale, not the older one', () {
-    final totals = controller.totals;
-    // cash: -1000 (purchase) + 600 (today's sale) = -400.
-    expect(totals.totalCash, Money.fromMinor(-40000));
-    expect(totals.totalSaleRevenue, Money.fromMinor(60000));
-    expect(totals.totalPurchaseCashOut, Money.fromMinor(100000));
-    expect(totals.netProfit, Money.fromMinor(20000));
-    // net movement today: +10 - 4 = 6 units at current cost 100 = 600.
-    expect(totals.stockValue, Money.fromMinor(60000));
-  });
+  test(
+    'Day view only counts today\'s trip, sale, and expense, not the older sale',
+    () {
+      final totals = controller.totals;
+      // cash: -1000 (purchase) + 600 (today's sale) - 100 (expense) = -500.
+      expect(totals.totalCash, Money.fromMinor(-50000));
+      expect(totals.totalSaleRevenue, Money.fromMinor(60000));
+      expect(totals.totalPurchaseCashOut, Money.fromMinor(100000));
+      // netProfit = grossProfit(200) - expenses(100) = 100 — now real net
+      // profit, not gross-profit-only, since the Expense module exists.
+      expect(totals.netProfit, Money.fromMinor(10000));
+      // net movement today: +10 - 4 = 6 units at current cost 100 = 600.
+      expect(totals.stockValue, Money.fromMinor(60000));
+    },
+  );
 
-  test('All-time view folds in the older sale too', () {
+  test('All-time view folds in the older sale too, expense unaffected', () {
     controller.toggleView();
     expect(controller.isDayView.value, isFalse);
 
     final totals = controller.totals;
-    // cash: -1000 + 600 + 150 = -250.
-    expect(totals.totalCash, Money.fromMinor(-25000));
+    // cash: -1000 + 600 + 150 - 100 = -350.
+    expect(totals.totalCash, Money.fromMinor(-35000));
     expect(totals.totalSaleRevenue, Money.fromMinor(75000));
     expect(totals.totalPurchaseCashOut, Money.fromMinor(100000));
-    expect(totals.netProfit, Money.fromMinor(25000));
+    // netProfit = grossProfit(200+50=250) - expenses(100) = 150.
+    expect(totals.netProfit, Money.fromMinor(15000));
     // all-time net movement (+10-4-1=5) at current cost 100 = 500 — exactly
     // today's on-hand qty (5) * cost price, confirming the identity
     // dashboard_calculator.dart's doc comment describes.
