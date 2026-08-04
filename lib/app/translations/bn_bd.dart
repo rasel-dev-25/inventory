@@ -464,4 +464,10 @@ const Map<String, String> bnBD = {
   'totalPurchase': 'মোট কেনা',
   'netProfitFootnote':
       'এখন পর্যন্ত শুধু গ্রস প্রফিট — Expense মডিউল যোগ হলে আপডেট হবে।',
+
+  // ── Investor (M1 v2 screen) ─────────────────────────────────────────
+  'currentStockValue': 'বর্তমান স্টক মূল্য',
+  'profitShareAmount': 'লাভের ভাগ',
+  'capitalReturn': 'মূলধন ফেরত',
+  'perContract': 'চুক্তি অনুযায়ী',
 };
