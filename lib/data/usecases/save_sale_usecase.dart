@@ -37,13 +37,18 @@ import 'sync_enqueue_helper.dart';
 /// at the moment of this call — see [Sale]'s own doc comment for why a
 /// later cost-price edit on the product must never rewrite a historical
 /// sale's profit.
+///
+/// Returns the new sale's id on success — added for
+/// `QuickCaptureController`'s conversion flow, which needs to link a
+/// converted capture back to the record it became; every prior caller
+/// that only checked `result.isOk`/`result.failureOrNull` is unaffected.
 class SaveSaleUseCase {
   final AppDatabaseV2 db;
   static const _uuid = Uuid();
 
   SaveSaleUseCase(this.db);
 
-  Future<Result<void>> call({
+  Future<Result<String>> call({
     required String productId,
     required double qty,
     required Money actualSellPrice,
@@ -240,6 +245,6 @@ class SaveSaleUseCase {
       },
     );
 
-    return const Result.ok(null);
+    return Result.ok(saleId);
   }
 }

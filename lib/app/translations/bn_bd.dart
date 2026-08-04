@@ -506,4 +506,14 @@ const Map<String, String> bnBD = {
   'directPurchase': 'সরাসরি কেনা',
   'noAssetsYet': 'এখনো কোনো ফিক্সড এসেট নেই',
   'quantityToConvert': 'কনভার্ট করার পরিমাণ',
+
+  // ── Quick Capture (M3 v2 screen) ────────────────────────────────────
+  'voiceNote': 'ভয়েস নোট',
+  'photoNote': 'ছবি নোট',
+  'convertTo': 'রূপান্তর করুন',
+  'noPendingCaptures': 'কোনো পেন্ডিং ক্যাপচার নেই',
+  'noConvertedCaptures': 'এখনো কোনো কনভার্টেড ক্যাপচার নেই',
+  'writeQuickNote': 'দ্রুত নোট',
+  'shopNameLabel': 'দোকানের নাম',
+  'converted': 'কনভার্টেড',
 };
