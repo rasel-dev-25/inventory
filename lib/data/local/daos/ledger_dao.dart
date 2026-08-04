@@ -79,6 +79,39 @@ class LedgerDao extends DatabaseAccessor<AppDatabaseV2> with _$LedgerDaoMixin {
     return query.watch().map((rows) => rows.map((r) => r.toDomain()).toList());
   }
 
+  /// Every [CashLedgerEntries] row already recorded for one
+  /// (`sourceType`, `sourceId`) pair — the exact rows `ledger_reversal.dart`
+  /// needs to negate when a source row (an expense, a purchase trip) is
+  /// deleted after the fact. Excludes nothing: a source that was already
+  /// reversed once and somehow deleted again would still get every prior
+  /// entry summed correctly by whatever reads this table, since each
+  /// reversal is its own row, never a mutation of the original.
+  Future<List<domain.CashLedgerEntry>> getEntriesForSource(
+    String sourceType,
+    String sourceId,
+  ) async {
+    final rows =
+        await (select(cashLedgerEntries)..where(
+              (e) =>
+                  e.sourceType.equals(sourceType) & e.sourceId.equals(sourceId),
+            ))
+            .get();
+    return rows.map((r) => r.toDomain()).toList();
+  }
+
+  /// Every [StockMovements] row already recorded for one (`sourceType`,
+  /// `sourceId`) pair — same reasoning as [getEntriesForSource], for the
+  /// stock side of reversing a deleted purchase trip.
+  Future<List<StockMovementRow>> getMovementsForSource(
+    String sourceType,
+    String sourceId,
+  ) {
+    return (select(stockMovements)..where(
+          (m) => m.sourceType.equals(sourceType) & m.sourceId.equals(sourceId),
+        ))
+        .get();
+  }
+
   /// Every `sale`-sourced [StockMovements] row for [shopId] — the raw data
   /// the v2 Stock screen's "বেশি বিক্রি হওয়া বনাম কমে যাওয়া পণ্য" (top
   /// sellers vs. slow movers) view is aggregated from client-side, per

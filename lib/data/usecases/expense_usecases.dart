@@ -5,6 +5,7 @@ import '../../core/error/result.dart';
 import '../../domain/entities/expense.dart';
 import '../local/app_database.dart';
 import '../sync/outbox_event.dart';
+import 'ledger_reversal.dart';
 import 'sync_enqueue_helper.dart';
 
 /// Create/delete for [Expense] — per `notes/business_logic.md` §চ section
@@ -89,15 +90,27 @@ class ExpenseUseCases {
     return const Result.ok(null);
   }
 
-  /// See `ExpenseDao.softDelete`'s own doc comment for the known gap this
-  /// inherits: this hides the expense but does not reverse its ledger
-  /// entry.
+  /// Soft-deletes the expense *and* reverses its cash-ledger entry (a new,
+  /// negated row — see `ledger_reversal.dart`'s own doc comment for why
+  /// this is a new row, never an edit of the original). This closes the
+  /// gap `ExpenseDao.softDelete`'s doc comment used to describe: deleting
+  /// an expense now actually restores its amount to Total Cash, not just
+  /// hides the row.
   Future<void> softDelete(
     String id, {
     required String shopId,
     required DateTime now,
-  }) {
-    return writeAndEnqueue(
+  }) async {
+    final reversal = await buildCashLedgerReversal(
+      db: db,
+      shopId: shopId,
+      sourceType: 'expense',
+      sourceId: id,
+      date: now,
+      now: now,
+    );
+
+    await writeAndEnqueue(
       db: db,
       eventType: 'expense_deleted',
       upserts: [
@@ -109,8 +122,12 @@ class ExpenseUseCases {
             'deleted_at': now.toIso8601String(),
           },
         ),
+        ...reversal.upserts,
       ],
-      localWrite: () => db.expenseDao.softDelete(id, now),
+      localWrite: () async {
+        await db.expenseDao.softDelete(id, now);
+        await reversal.localWrite();
+      },
     );
   }
 }

@@ -105,4 +105,53 @@ void main() {
 
     expect(await db.expenseDao.getById('expense-1'), isNull);
   });
+
+  test(
+    'softDelete reverses the cash ledger entry so Total Cash is unaffected',
+    () async {
+      await useCases.create(
+        Expense(
+          id: 'expense-1',
+          category: ExpenseCategory.dailyOther,
+          amount: Money.fromMinor(2000),
+          date: DateTime.utc(2026, 1, 4),
+          paymentMethod: PaymentMethod.cash,
+        ),
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+
+      await useCases.softDelete(
+        'expense-1',
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+
+      final ledgerEntries = await (db.select(
+        db.cashLedgerEntries,
+      )..where((l) => l.sourceType.equals('expense'))).get();
+      expect(
+        ledgerEntries,
+        hasLength(2),
+        reason: 'the original entry plus its reversal — never edited/removed',
+      );
+      final netEffect = ledgerEntries.fold<int>(
+        0,
+        (sum, e) => sum + e.amountMinor,
+      );
+      expect(
+        netEffect,
+        0,
+        reason: 'a deleted expense must net to zero cash impact',
+      );
+
+      final pending = await db.syncMetadataDao.pendingEntries();
+      final entry = pending.firstWhere((e) => e.eventType == 'expense_deleted');
+      final upserts = OutboxEvent.decodePayload(entry.payloadJson);
+      expect(upserts.map((u) => u.table).toList(), [
+        'expenses',
+        'cash_ledger_entries',
+      ]);
+    },
+  );
 }

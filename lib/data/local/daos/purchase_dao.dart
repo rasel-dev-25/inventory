@@ -177,6 +177,11 @@ class PurchaseDao extends DatabaseAccessor<AppDatabaseV2>
     });
   }
 
+  /// Only hides the trip from every read (`getById`/`watchRecent`/
+  /// `watchAll`) — does **not** touch `StockMovements`/`CashLedgerEntries`.
+  /// `DeletePurchaseTripUseCase` pairs this with reversals of both in the
+  /// same transaction; calling this method directly (bypassing that use
+  /// case) would leave the trip's stock and cash impact in place forever.
   Future<void> softDeleteTrip(String id, DateTime now) {
     return (update(purchaseTrips)..where((t) => t.id.equals(id))).write(
       PurchaseTripsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
