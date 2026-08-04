@@ -1,8 +1,8 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
-// Dart imports are not transitive: the generated database.g.dart part file
-// shares this file's import scope, not each table file's — so every enum
+// Dart imports are not transitive: the generated app_database.g.dart part
+// file shares this file's import scope, not each table file's — so every enum
 // used as a textEnum<T>() type argument anywhere in tables/*.dart must also
 // be imported directly here, or codegen produces a part file that
 // references an undefined type.
@@ -28,7 +28,7 @@ import 'tables/sales.dart';
 import 'tables/shared.dart';
 import 'tables/sync.dart';
 
-part 'database.g.dart';
+part 'app_database.g.dart';
 
 /// The v2 local Drift database — a clean-slate schema (schemaVersion 1),
 /// not a migration path from the v1 app's database. Per the working plan's
