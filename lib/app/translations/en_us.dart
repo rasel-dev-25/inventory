@@ -627,4 +627,9 @@ const Map<String, String> enUS = {
       'Permanently removes deleted items and audit log entries older than '
       'the retention window. This cannot be undone.',
   'pruneResultMessage': 'Removed items: ',
+
+  // ── Barcode scanning (M4) ────────────────────────────────────────────
+  'scanBarcodeTitle': 'Scan Barcode',
+  'scanBarcodeHint': 'Point the camera at a barcode',
+  'noProductForBarcode': 'No product found for that barcode',
 };
