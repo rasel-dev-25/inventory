@@ -154,4 +154,31 @@ void main() {
       ]);
     },
   );
+
+  test('softDelete records a delete audit log entry', () async {
+    await useCases.create(
+      Expense(
+        id: 'expense-1',
+        category: ExpenseCategory.dailyOther,
+        amount: Money.fromMinor(1500),
+        date: DateTime.utc(2026, 1, 3),
+        paymentMethod: PaymentMethod.cash,
+      ),
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+
+    await useCases.softDelete(
+      'expense-1',
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+
+    final auditEntries = await db.auditLogDao.watchAll(defaultShopId).first;
+    expect(auditEntries, hasLength(1));
+    expect(auditEntries.single.action, 'delete');
+    expect(auditEntries.single.changedTableName, 'expenses');
+    expect(auditEntries.single.recordId, 'expense-1');
+    expect(auditEntries.single.oldValueJson, contains('1500'));
+  });
 }

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:uuid/uuid.dart';
 
 import '../../core/error/failure.dart';
@@ -6,6 +8,7 @@ import '../../domain/entities/enums.dart';
 import '../../domain/entities/order.dart';
 import '../local/app_database.dart';
 import '../sync/outbox_event.dart';
+import 'audit_log_usecases.dart';
 import 'sync_enqueue_helper.dart';
 
 /// Create/status-transition/delete for [Order] — per
@@ -96,12 +99,17 @@ class OrderUseCases {
     return const Result.ok(null);
   }
 
+  /// Audit-logged — see `CustomerUseCases.softDelete`'s own doc comment
+  /// for why this and [restore] are among the small, explicit set of
+  /// call sites that write an audit entry today.
   Future<void> softDelete(
     String id, {
     required String shopId,
     required DateTime now,
-  }) {
-    return writeAndEnqueue(
+  }) async {
+    final existing = await db.orderDao.getById(id);
+
+    await writeAndEnqueue(
       db: db,
       eventType: 'order_deleted',
       upserts: [
@@ -115,6 +123,41 @@ class OrderUseCases {
         ),
       ],
       localWrite: () => db.orderDao.softDelete(id, now),
+    );
+
+    await recordAuditLog(
+      db: db,
+      shopId: shopId,
+      action: 'delete',
+      changedTableName: 'orders',
+      recordId: id,
+      oldValueJson: existing == null
+          ? null
+          : jsonEncode(_rowFor(existing, shopId)),
+      now: now,
+    );
+  }
+
+  /// Un-deletes — safe unconditionally, see `OrderDao.restore`'s own doc
+  /// comment. Local-only, same as `CustomerUseCases.restore`.
+  Future<void> restore(
+    String id, {
+    required String shopId,
+    required DateTime now,
+  }) async {
+    await db.orderDao.restore(id, now);
+    final restored = await db.orderDao.getById(id);
+
+    await recordAuditLog(
+      db: db,
+      shopId: shopId,
+      action: 'restore',
+      changedTableName: 'orders',
+      recordId: id,
+      newValueJson: restored == null
+          ? null
+          : jsonEncode(_rowFor(restored, shopId)),
+      now: now,
     );
   }
 

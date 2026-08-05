@@ -7,6 +7,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 // be imported directly here, or codegen produces a part file that
 // references an undefined type.
 import 'daos/app_settings_dao.dart';
+import 'daos/audit_log_dao.dart';
 import 'daos/category_dao.dart';
 import 'daos/customer_dao.dart';
 import 'daos/due_dao.dart';
@@ -116,6 +117,7 @@ part 'app_database.g.dart';
     OrderDao,
     FixedAssetDao,
     QuickCaptureDao,
+    AuditLogDao,
   ],
 )
 class AppDatabaseV2 extends _$AppDatabaseV2 {

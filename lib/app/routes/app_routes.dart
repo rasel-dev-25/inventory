@@ -30,4 +30,6 @@ abstract class AppRoutes {
   static const pricingSettingsV2 = '/v2/pricing-settings';
   static const reportsV2 = '/v2/reports';
   static const remindersV2 = '/v2/reminders';
+  static const auditLogV2 = '/v2/audit-log';
+  static const recycleBinV2 = '/v2/recycle-bin';
 }

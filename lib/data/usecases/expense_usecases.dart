@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:uuid/uuid.dart';
 
 import '../../core/error/failure.dart';
@@ -5,6 +7,7 @@ import '../../core/error/result.dart';
 import '../../domain/entities/expense.dart';
 import '../local/app_database.dart';
 import '../sync/outbox_event.dart';
+import 'audit_log_usecases.dart';
 import 'ledger_reversal.dart';
 import 'sync_enqueue_helper.dart';
 
@@ -101,6 +104,8 @@ class ExpenseUseCases {
     required String shopId,
     required DateTime now,
   }) async {
+    final existing = await db.expenseDao.getById(id);
+
     final reversal = await buildCashLedgerReversal(
       db: db,
       shopId: shopId,
@@ -128,6 +133,28 @@ class ExpenseUseCases {
         await db.expenseDao.softDelete(id, now);
         await reversal.localWrite();
       },
+    );
+
+    // Audit-logged — see `CustomerUseCases.softDelete`'s own doc comment
+    // for the scope this belongs to. No `restore` counterpart for this
+    // entity — see `ExpenseDao.watchDeleted`'s own doc comment for why.
+    await recordAuditLog(
+      db: db,
+      shopId: shopId,
+      action: 'delete',
+      changedTableName: 'expenses',
+      recordId: id,
+      oldValueJson: existing == null
+          ? null
+          : jsonEncode({
+              'id': existing.id,
+              'category': existing.category.name,
+              'amount_minor': existing.amount.minorUnits,
+              'date': existing.date.toUtc().toIso8601String(),
+              'description': existing.description,
+              'payment_method': existing.paymentMethod.name,
+            }),
+      now: now,
     );
   }
 }
