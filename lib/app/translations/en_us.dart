@@ -618,8 +618,12 @@ const Map<String, String> enUS = {
   'deletedCustomersSectionTitle': 'Deleted Customers',
   'deletedOrdersSectionTitle': 'Deleted Orders',
   'deletedExpensesSectionTitle': 'Deleted Expenses',
+  'deletedProductsSectionTitle': 'Deleted Products',
+  'deletedFixedAssetsSectionTitle': 'Deleted Fixed Assets',
+  'deletedPurchaseTripsSectionTitle': 'Deleted Purchase Trips',
   'restoreAction': 'Restore',
   'cannotRestoreExpenseNote': 'restore not supported (cash already adjusted)',
+  'cannotRestoreNote': 'restore not supported (cash/stock already adjusted)',
   'deletedOnLabel': 'Deleted on ',
   'cleanUpOldItemsNow': 'Clean up old items now',
   'pruneConfirmTitle': 'Clean up old items?',
@@ -627,9 +631,13 @@ const Map<String, String> enUS = {
       'Permanently removes deleted items and audit log entries older than '
       'the retention window. This cannot be undone.',
   'pruneResultMessage': 'Removed items: ',
+  'cannotUndoNote': 'This cannot be undone.',
 
   // ── Barcode scanning (M4) ────────────────────────────────────────────
   'scanBarcodeTitle': 'Scan Barcode',
   'scanBarcodeHint': 'Point the camera at a barcode',
   'noProductForBarcode': 'No product found for that barcode',
+
+  // ── Purchase Entry: Recent Trips (M4 hardening) ──────────────────────
+  'recentTripsSectionTitle': 'Recent Trips',
 };

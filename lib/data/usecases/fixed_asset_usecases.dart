@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:uuid/uuid.dart';
 
 import '../../core/error/failure.dart';
@@ -7,6 +9,8 @@ import '../../domain/entities/enums.dart';
 import '../../domain/entities/fixed_asset.dart';
 import '../local/app_database.dart';
 import '../sync/outbox_event.dart';
+import 'audit_log_usecases.dart';
+import 'ledger_reversal.dart';
 import 'sync_enqueue_helper.dart';
 
 /// The two fixed-asset creation paths, per `notes/business_logic.md`'s
@@ -86,6 +90,16 @@ class FixedAssetUseCases {
           description: 'Fixed asset purchase: ${asset.name}',
         );
       },
+    );
+
+    await recordAuditLog(
+      db: db,
+      shopId: shopId,
+      action: 'insert',
+      changedTableName: 'fixed_assets',
+      recordId: asset.id,
+      newValueJson: jsonEncode(_rowFor(asset, shopId)),
+      now: now,
     );
 
     return const Result.ok(null);
@@ -173,6 +187,95 @@ class FixedAssetUseCases {
           now: now,
         );
       },
+    );
+
+    await recordAuditLog(
+      db: db,
+      shopId: shopId,
+      action: 'insert',
+      changedTableName: 'fixed_assets',
+      recordId: asset.id,
+      newValueJson: jsonEncode(_rowFor(asset, shopId)),
+      now: now,
+    );
+
+    return const Result.ok(null);
+  }
+
+  /// Soft-deletes the asset *and* reverses whichever paired write its
+  /// creation made — a negative `cash_ledger_entries` row for
+  /// [FixedAssetSource.shopCashPurchase], a negative `stock_movements` row
+  /// (undoing the `Products.qty` decrement too) for
+  /// [FixedAssetSource.convertedFromStock]. Branches on
+  /// [FixedAsset.sourceType] rather than calling both reversal builders
+  /// unconditionally — `buildCashLedgerReversal`/`buildStockMovementReversal`
+  /// both already no-op safely on a source with zero matching rows (see
+  /// `ledger_reversal.dart`'s own doc comment), but a given asset only
+  /// ever has rows in *one* of the two tables, never both, so this stays
+  /// explicit about which one actually applies instead of relying on that
+  /// no-op behavior to paper over calling the wrong one.
+  ///
+  /// No `restore` counterpart — same reasoning `ExpenseUseCases.softDelete`
+  /// documents: undoing this would need to re-apply a reversal
+  /// `buildCashLedgerReversal`/`buildStockMovementReversal` cannot safely
+  /// run a second time on an already-reversed source.
+  Future<Result<void>> delete({
+    required String id,
+    required String shopId,
+    required DateTime now,
+  }) async {
+    final asset = await db.fixedAssetDao.getById(id);
+    if (asset == null) {
+      return Result.err(NotFoundFailure('fixedAsset', id));
+    }
+
+    final reversal = switch (asset.sourceType) {
+      FixedAssetSource.shopCashPurchase => await buildCashLedgerReversal(
+        db: db,
+        shopId: shopId,
+        sourceType: 'fixed_asset',
+        sourceId: id,
+        date: now,
+        now: now,
+      ),
+      FixedAssetSource.convertedFromStock => await buildStockMovementReversal(
+        db: db,
+        shopId: shopId,
+        sourceType: 'fixed_asset',
+        sourceId: id,
+        date: now,
+        now: now,
+      ),
+    };
+
+    await writeAndEnqueue(
+      db: db,
+      eventType: 'fixed_asset_deleted',
+      upserts: [
+        TableUpsert(
+          table: 'fixed_assets',
+          row: {
+            'id': id,
+            'shop_id': shopId,
+            'deleted_at': now.toIso8601String(),
+          },
+        ),
+        ...reversal.upserts,
+      ],
+      localWrite: () async {
+        await db.fixedAssetDao.softDelete(id, now);
+        await reversal.localWrite();
+      },
+    );
+
+    await recordAuditLog(
+      db: db,
+      shopId: shopId,
+      action: 'delete',
+      changedTableName: 'fixed_assets',
+      recordId: id,
+      oldValueJson: jsonEncode(_rowFor(asset, shopId)),
+      now: now,
     );
 
     return const Result.ok(null);

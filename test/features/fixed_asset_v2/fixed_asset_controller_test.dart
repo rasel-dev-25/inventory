@@ -82,4 +82,39 @@ void main() {
       expect(controller.assets, isEmpty);
     },
   );
+
+  test('deleteAsset removes it from the visible list', () async {
+    await controller.createFromCashPurchase(
+      name: 'Display Showcase',
+      value: Money.fromMinor(1500000),
+      dateAcquired: DateTime.now(),
+    );
+    await Future<void>.delayed(Duration.zero);
+    final assetId = controller.assets.single.id;
+
+    final ok = await controller.deleteAsset(assetId);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(ok, isTrue);
+    expect(controller.assets, isEmpty);
+  });
+
+  test(
+    'deleteAsset surfaces an error for a nonexistent id and leaves the list untouched',
+    () async {
+      await controller.createFromCashPurchase(
+        name: 'Display Showcase',
+        value: Money.fromMinor(1500000),
+        dateAcquired: DateTime.now(),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      final ok = await controller.deleteAsset('does-not-exist');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(ok, isFalse);
+      expect(controller.errorMessage.value, isNotNull);
+      expect(controller.assets, hasLength(1));
+    },
+  );
 }

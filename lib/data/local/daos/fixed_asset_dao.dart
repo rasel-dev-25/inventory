@@ -71,4 +71,21 @@ class FixedAssetDao extends DatabaseAccessor<AppDatabaseV2>
       FixedAssetsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
     );
   }
+
+  /// Every soft-deleted [FixedAssets] row for [shopId] — the Recycle
+  /// Bin's source list, same shape as `CustomerDao.watchDeleted`.
+  Stream<List<FixedAssetRow>> watchDeleted(String shopId) {
+    final query = select(fixedAssets)
+      ..where((a) => a.shopId.equals(shopId) & a.deletedAt.isNotNull())
+      ..orderBy([(a) => OrderingTerm.desc(a.deletedAt)]);
+    return query.watch();
+  }
+
+  // Deliberately no `restore` — see `FixedAssetUseCases.delete`'s own doc
+  // comment for why un-deleting an asset is not safely offered: doing so
+  // would need to re-apply whichever cash-ledger or stock-movement entry
+  // `delete`'s reversal already negated, and `buildCashLedgerReversal`/
+  // `buildStockMovementReversal` cannot safely run a second time on an
+  // already-reversed source (see `ledger_reversal.dart`'s own doc
+  // comment) — same reasoning `ExpenseDao.watchDeleted` documents.
 }

@@ -46,6 +46,15 @@ extension _ProductRowMapping on ProductRow {
 /// they own that pairing; this DAO only exposes the primitive `adjustQty`
 /// used by those use cases, not a public `setQty` that could be called
 /// without the accompanying movement row.
+///
+/// Deliberately **no `hardDeleteOlderThan`**, unlike `CustomerDao`/
+/// `OrderDao`/`ExpenseDao`: `Products.id` is a foreign key target for
+/// `StockMovements`, `SaleItems`, `PurchaseItems`, and `RentTiers` (see
+/// `tables/ledger.dart`/`sales.dart`/`purchases.dart`/`products.dart`'s
+/// own `references(Products, #id)` columns) — a real `DELETE` on any
+/// product with actual sale/purchase/rent history would violate those FK
+/// constraints. [softDelete]/[restore] (hide/un-hide) are as far as this
+/// DAO goes; `RetentionPolicyUseCase` does not prune this table.
 @DriftAccessor(tables: [Products])
 class ProductDao extends DatabaseAccessor<AppDatabaseV2>
     with _$ProductDaoMixin {
@@ -125,6 +134,29 @@ class ProductDao extends DatabaseAccessor<AppDatabaseV2>
   Future<void> softDelete(String id, DateTime now) {
     return (update(products)..where((p) => p.id.equals(id))).write(
       ProductsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
+    );
+  }
+
+  /// Every soft-deleted [Products] row for [shopId] — the Recycle Bin's
+  /// source list, same shape as `CustomerDao.watchDeleted`. Returns the
+  /// raw generated row (not [domain.Product]) for the same reason: only
+  /// the bin needs `deletedAt`, and the domain entity doesn't carry it.
+  Stream<List<ProductRow>> watchDeleted(String shopId) {
+    final query = select(products)
+      ..where((p) => p.shopId.equals(shopId) & p.deletedAt.isNotNull())
+      ..orderBy([(p) => OrderingTerm.desc(p.deletedAt)]);
+    return query.watch();
+  }
+
+  /// Un-deletes — clears `deletedAt` and nothing else. Safe to offer
+  /// unconditionally, same reasoning as `CustomerDao.restore`: creating a
+  /// product never writes a paired cash-ledger or stock-movement entry
+  /// (see this class's own doc comment — `qty` only ever moves via
+  /// [adjustQty], driven by other use cases, never by create/update
+  /// here), so there is nothing else to undo.
+  Future<void> restore(String id, DateTime now) {
+    return (update(products)..where((p) => p.id.equals(id))).write(
+      ProductsCompanion(deletedAt: const Value(null), updatedAt: Value(now)),
     );
   }
 
