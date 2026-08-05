@@ -221,11 +221,7 @@ class _OrderCard extends GetView<OrderController> {
                 controller.customerName(order.customerId),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-              if (order.neededByDate != null)
-                Text(
-                  '${'dateNeeded'.tr}: ${_fmt(order.neededByDate!)}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+              if (order.neededByDate != null) _neededByLine(context),
               if (order.status == OrderStatus.pending) ...[
                 const SizedBox(height: AppSpacing.sm),
                 Row(
@@ -246,6 +242,44 @@ class _OrderCard extends GetView<OrderController> {
           ),
         ),
       ),
+    );
+  }
+
+  /// Only [OrderStatus.pending] orders can actually be overdue in any
+  /// meaningful sense — a fulfilled or cancelled order's deadline is
+  /// moot, same reasoning `buildOrderDeadlineReminders`
+  /// (`reminder_engine.dart`) uses to decide which orders produce a
+  /// reminder at all. This is the screen-level half of that fix: the
+  /// Reminders inbox is where an approaching/passed deadline surfaces
+  /// proactively, this is where it's visible right on the order itself
+  /// without having to go looking for it.
+  Widget _neededByLine(BuildContext context) {
+    final overdue =
+        order.status == OrderStatus.pending &&
+        DateTime.now().isAfter(order.neededByDate!);
+    final theme = Theme.of(context);
+    final style = theme.textTheme.bodySmall?.copyWith(
+      color: overdue ? theme.colorScheme.error : null,
+      fontWeight: overdue ? FontWeight.bold : null,
+    );
+
+    if (!overdue) {
+      return Text(
+        '${'dateNeeded'.tr}: ${_fmt(order.neededByDate!)}',
+        style: style,
+      );
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.warning_amber, size: 14, color: theme.colorScheme.error),
+        const SizedBox(width: 4),
+        Text(
+          '${'dateNeeded'.tr}: ${_fmt(order.neededByDate!)} · '
+          '${'orderOverdueLabel'.tr}',
+          style: style,
+        ),
+      ],
     );
   }
 

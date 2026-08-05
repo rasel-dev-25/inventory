@@ -5,6 +5,7 @@ import 'package:inventory/domain/entities/due.dart';
 import 'package:inventory/domain/entities/enums.dart';
 import 'package:inventory/domain/entities/fund_source.dart';
 import 'package:inventory/domain/entities/investor.dart';
+import 'package:inventory/domain/entities/order.dart';
 import 'package:inventory/domain/entities/purchase.dart';
 import 'package:inventory/domain/entities/rent_transaction.dart';
 import 'package:inventory/domain/services/reminder_engine.dart';
@@ -60,6 +61,21 @@ RentTransaction _rent({
     dueDate: dueDate,
     deposit: Money.fromMinor(5000),
     rentPrice: Money.fromMinor(3000),
+    status: status,
+  );
+}
+
+Order _order({
+  required String id,
+  DateTime? neededByDate,
+  OrderStatus status = OrderStatus.pending,
+}) {
+  return Order(
+    id: id,
+    customerId: 'customer-1',
+    itemDescription: 'A red backpack',
+    requestedDate: DateTime.utc(2026, 8, 1),
+    neededByDate: neededByDate,
     status: status,
   );
 }
@@ -348,6 +364,93 @@ void main() {
     });
   });
 
+  group('buildOrderDeadlineReminders', () {
+    test('reminds for a pending order whose deadline already passed', () {
+      final order = _order(
+        id: 'order-1',
+        neededByDate: now.subtract(const Duration(days: 1)),
+      );
+      final reminders = buildOrderDeadlineReminders(
+        orders: [order],
+        customerNameOf: (_) => 'Karim',
+        now: now,
+      );
+      expect(reminders, hasLength(1));
+      expect(reminders.single.customerName, 'Karim');
+      expect(reminders.single.isOverdueAsOf(now), isTrue);
+    });
+
+    test(
+      'includes an order deadline within the upcoming window but not overdue yet',
+      () {
+        final order = _order(
+          id: 'order-1',
+          neededByDate: now.add(const Duration(days: 2)),
+        );
+        final reminders = buildOrderDeadlineReminders(
+          orders: [order],
+          customerNameOf: (_) => 'Karim',
+          now: now,
+          upcomingWithinDays: 3,
+        );
+        expect(reminders, hasLength(1));
+        expect(reminders.single.isOverdueAsOf(now), isFalse);
+      },
+    );
+
+    test('excludes an order deadline far outside the upcoming window', () {
+      final order = _order(
+        id: 'order-1',
+        neededByDate: now.add(const Duration(days: 30)),
+      );
+      final reminders = buildOrderDeadlineReminders(
+        orders: [order],
+        customerNameOf: (_) => 'Karim',
+        now: now,
+        upcomingWithinDays: 3,
+      );
+      expect(reminders, isEmpty);
+    });
+
+    test('excludes an order with no neededByDate set', () {
+      final order = _order(id: 'order-1', neededByDate: null);
+      final reminders = buildOrderDeadlineReminders(
+        orders: [order],
+        customerNameOf: (_) => 'Karim',
+        now: now,
+      );
+      expect(reminders, isEmpty);
+    });
+
+    test('excludes a fulfilled order even if its deadline already passed', () {
+      final order = _order(
+        id: 'order-1',
+        neededByDate: now.subtract(const Duration(days: 1)),
+        status: OrderStatus.fulfilled,
+      );
+      final reminders = buildOrderDeadlineReminders(
+        orders: [order],
+        customerNameOf: (_) => 'Karim',
+        now: now,
+      );
+      expect(reminders, isEmpty);
+    });
+
+    test('excludes a cancelled order even if its deadline already passed', () {
+      final order = _order(
+        id: 'order-1',
+        neededByDate: now.subtract(const Duration(days: 1)),
+        status: OrderStatus.cancelled,
+      );
+      final reminders = buildOrderDeadlineReminders(
+        orders: [order],
+        customerNameOf: (_) => 'Karim',
+        now: now,
+      );
+      expect(reminders, isEmpty);
+    });
+  });
+
   group('buildReminderInbox', () {
     test(
       'pins the no-date suspicious-customer reminder first, then sorts by date',
@@ -373,6 +476,7 @@ void main() {
           customers: customers,
           rentals: [upcomingRent],
           bookNameOf: (_) => 'Book A',
+          orders: const [],
           now: now,
         );
 
@@ -384,6 +488,29 @@ void main() {
       },
     );
 
+    test('includes an order deadline reminder alongside the others', () {
+      final overdueOrder = _order(
+        id: 'order-1',
+        neededByDate: now.subtract(const Duration(days: 1)),
+      );
+
+      final inbox = buildReminderInbox(
+        dues: const [],
+        customerNameOf: (_) => 'Karim',
+        investors: const [],
+        purchaseTrips: const [],
+        customers: const [],
+        rentals: const [],
+        bookNameOf: (_) => 'Book A',
+        orders: [overdueOrder],
+        now: now,
+      );
+
+      expect(inbox, hasLength(1));
+      expect(inbox.single, isA<OrderDeadlineReminder>());
+      expect(inbox.single.isOverdueAsOf(now), isTrue);
+    });
+
     test('empty when nothing needs attention', () {
       final inbox = buildReminderInbox(
         dues: const [],
@@ -393,6 +520,7 @@ void main() {
         customers: const [],
         rentals: const [],
         bookNameOf: (_) => '',
+        orders: const [],
         now: now,
       );
       expect(inbox, isEmpty);

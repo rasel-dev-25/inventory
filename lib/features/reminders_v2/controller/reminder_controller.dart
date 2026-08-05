@@ -8,6 +8,7 @@ import '../../../data/local/default_shop.dart';
 import '../../../domain/entities/customer.dart';
 import '../../../domain/entities/due.dart';
 import '../../../domain/entities/investor.dart';
+import '../../../domain/entities/order.dart';
 import '../../../domain/entities/product.dart';
 import '../../../domain/entities/purchase.dart';
 import '../../../domain/entities/rent_transaction.dart';
@@ -41,6 +42,7 @@ class ReminderController extends GetxController {
   final customers = <Customer>[].obs;
   final rentals = <RentTransaction>[].obs;
   final products = <Product>[].obs;
+  final orders = <Order>[].obs;
 
   final _notifiedReminderIds = <String>{};
 
@@ -85,6 +87,12 @@ class ReminderController extends GetxController {
         _notifyNewReminders();
       }),
     );
+    _subscriptions.add(
+      db.orderDao.watchAll(defaultShopId).listen((rows) {
+        orders.assignAll(rows);
+        _notifyNewReminders();
+      }),
+    );
   }
 
   @override
@@ -110,6 +118,7 @@ class ReminderController extends GetxController {
       customers: customers,
       rentals: rentals,
       bookNameOf: _bookNameOf,
+      orders: orders,
       now: DateTime.now().toUtc(),
     );
   }
@@ -145,6 +154,9 @@ class ReminderController extends GetxController {
         '${'reminderSuspiciousBody'.tr}${r.customer.name}',
       OverdueRentReminder r =>
         '${'reminderOverdueRentBody'.tr}${r.customerName} · ${r.bookName}',
+      OrderDeadlineReminder r =>
+        '${'reminderOrderDeadlineBody'.tr}${r.customerName} · '
+            '${r.order.itemDescription}',
     };
   }
 }
