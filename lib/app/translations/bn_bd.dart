@@ -440,6 +440,8 @@ const Map<String, String> bnBD = {
   'noProductsYet': 'এখনো কোনো পণ্য নেই',
   'account': 'অ্যাকাউন্ট',
   'signedInAs': 'সাইন ইন করা আছে',
+  'barcodeLabel': 'বারকোড',
+  'skuLabel': 'SKU',
 
   // ── Sync (M1) ────────────────────────────────────────────────────────
   'syncNow': 'এখনই সিঙ্ক করুন',

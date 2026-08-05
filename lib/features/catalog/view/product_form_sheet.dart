@@ -281,7 +281,7 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
               TextFormField(
                 controller: _barcodeController,
                 decoration: InputDecoration(
-                  labelText: 'Barcode',
+                  labelText: 'barcodeLabel'.tr,
                   suffixIcon: PlatformCapabilities.detect().hasCamera
                       ? IconButton(
                           tooltip: 'scanBarcodeTitle'.tr,
@@ -294,7 +294,7 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
               const SizedBox(height: AppSpacing.md),
               TextFormField(
                 controller: _skuController,
-                decoration: const InputDecoration(labelText: 'SKU'),
+                decoration: InputDecoration(labelText: 'skuLabel'.tr),
               ),
               const SizedBox(height: AppSpacing.lg),
               FilledButton(onPressed: _submit, child: Text('save'.tr)),
