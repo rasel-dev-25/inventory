@@ -23,6 +23,14 @@ class PlatformCapabilities {
   final bool hasMicrophone;
   final bool hasFileSystemAccess;
 
+  /// Local (on-device) push notifications via `flutter_local_notifications`
+  /// — Android-only, same reasoning as [hasCamera]/[hasMicrophone]: no
+  /// equivalent "native OS notification" integration point exists for
+  /// this app on Windows/Web today. `ReminderController` degrades to
+  /// showing the in-app reminder inbox only when this is false, never
+  /// crashing and never silently dropping the reminders themselves.
+  final bool hasNotifications;
+
   const PlatformCapabilities({
     required this.isWeb,
     required this.isAndroid,
@@ -31,6 +39,7 @@ class PlatformCapabilities {
     required this.hasCamera,
     required this.hasMicrophone,
     required this.hasFileSystemAccess,
+    required this.hasNotifications,
   });
 
   /// Detects capabilities for the platform this build is actually running
@@ -49,6 +58,7 @@ class PlatformCapabilities {
         hasCamera: false,
         hasMicrophone: false,
         hasFileSystemAccess: false,
+        hasNotifications: false,
       );
     }
     final isAndroid = Platform.isAndroid;
@@ -63,6 +73,7 @@ class PlatformCapabilities {
       hasCamera: isAndroid,
       hasMicrophone: isAndroid,
       hasFileSystemAccess: true,
+      hasNotifications: isAndroid,
     );
   }
 
@@ -78,5 +89,6 @@ class PlatformCapabilities {
     hasCamera: true,
     hasMicrophone: true,
     hasFileSystemAccess: true,
+    hasNotifications: true,
   );
 }

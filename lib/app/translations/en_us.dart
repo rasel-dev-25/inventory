@@ -583,4 +583,21 @@ const Map<String, String> enUS = {
   'restoreFailedV2': 'Restore failed: ',
   'noBackupFilesFoundV2': 'No v2 backup files found',
   'selectBackupFileV2': 'Select a backup file',
+
+  // ── Reminders (M4 v2 screen) ─────────────────────────────────────────
+  'remindersTitle': 'Reminders',
+  'noReminders': 'Nothing needs your attention right now',
+  'reminderNotificationTitle': 'AL ASHAB — Reminder',
+  'reminderDueBody': 'Payment due from ',
+  'reminderInvestorCapitalBody': 'Capital return due to ',
+  'reminderInvestorPayoutBody': 'Profit share payout due to ',
+  'reminderSuspiciousBody': 'Follow up needed with ',
+  'reminderOverdueRentBody': 'Overdue rental — ',
+  'dueBalanceReminderLabel': 'Balance due: ',
+  'investorCapitalReminderLabel': 'Capital return due',
+  'investorPayoutReminderLabel': 'Profit share payout due',
+  'suspiciousCustomerReminderLabel': 'Flagged for follow-up',
+  'overdueRentReminderLabel': 'Overdue by ',
+  'overdueSinceLabel': 'Overdue since ',
+  'dueOnLabel': 'Due on ',
 };
