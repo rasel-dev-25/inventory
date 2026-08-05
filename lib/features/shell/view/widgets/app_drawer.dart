@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
@@ -6,6 +8,7 @@ import '../../../../app/routes/app_routes.dart';
 import '../../../../core/widgets/shop_logo.dart';
 import '../../../../core/services/data_service.dart';
 import '../../../../core/database/app_database.dart';
+import '../../../backup_v2/controller/backup_controller.dart';
 import '../../controller/shell_controller.dart';
 import '../../../settings/controller/settings_controller.dart';
 
@@ -117,6 +120,10 @@ class AppDrawer extends GetView<ShellController> {
             Navigator.pop(context);
             Get.toNamed(AppRoutes.pricingSettingsV2);
           }),
+          _tile(Iconsax.chart_1, 'reportsTitle'.tr, () {
+            Navigator.pop(context);
+            Get.toNamed(AppRoutes.reportsV2);
+          }),
           _tile(Iconsax.user, 'account'.tr, () {
             Navigator.pop(context);
             Get.toNamed(AppRoutes.accountSettings);
@@ -134,6 +141,14 @@ class AppDrawer extends GetView<ShellController> {
           _tile(Iconsax.microscope, 'seedSampleData'.tr, () {
             Navigator.pop(context);
             dataService.seedSampleData();
+          }),
+          _tile(Iconsax.cloud_add, 'backupDataV2'.tr, () {
+            Navigator.pop(context);
+            Get.find<BackupController>().exportAndShare();
+          }),
+          _tile(Iconsax.cloud_lightning, 'restoreDataV2'.tr, () {
+            Navigator.pop(context);
+            _restoreV2();
           }),
           const Divider(),
           Obx(
@@ -163,6 +178,57 @@ class AppDrawer extends GetView<ShellController> {
         ],
       ),
     );
+  }
+
+  /// Lists candidate `backup_v2_*.json` files, lets the owner pick one via
+  /// a `Get.dialog` (context-independent — deliberate, since the drawer
+  /// that triggered this has already closed by the time any of these
+  /// dialogs would show), confirms the destructive replace, then restores.
+  Future<void> _restoreV2() async {
+    final controller = Get.find<BackupController>();
+    final files = await controller.listBackupFiles();
+    if (files.isEmpty) {
+      Get.snackbar(
+        '',
+        'noBackupFilesFoundV2'.tr,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    final selected = await Get.dialog<File>(
+      SimpleDialog(
+        title: Text('selectBackupFileV2'.tr),
+        children: files.map((f) {
+          final name = f.path.split(Platform.pathSeparator).last;
+          return SimpleDialogOption(
+            child: Text(name),
+            onPressed: () => Get.back(result: f),
+          );
+        }).toList(),
+      ),
+    );
+    if (selected == null) return;
+
+    final confirmed = await Get.dialog<bool>(
+      AlertDialog(
+        title: Text('restoreConfirmTitle'.tr),
+        content: Text('restoreConfirmMessage'.tr),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: Text('cancel'.tr),
+          ),
+          FilledButton(
+            onPressed: () => Get.back(result: true),
+            child: Text('restoreDataV2'.tr),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    await controller.restoreFrom(selected);
   }
 
   Widget _sectionHeader(String text) {

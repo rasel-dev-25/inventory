@@ -553,4 +553,32 @@ const Map<String, String> bnBD = {
       'পজিটিভ বিক্রির অনুমান এখনো নেই, তাই সাজেশন হিসাব করা যাচ্ছে না।',
   'suggestedSellPriceLabel': 'সাজেশন: ',
   'tapToUse': 'ব্যবহার করতে ট্যাপ করুন',
+
+  // ── Reports (M2 v2 screen) ───────────────────────────────────────────
+  'reportsTitle': 'রিপোর্ট',
+  'reportPnlSectionTitle': 'লাভ-ক্ষতি',
+  'investorShareSectionTitle': 'বিনিয়োগকারীর লাভের ভাগ',
+  'productSalesSectionTitle': 'এই সময়ে যা বিক্রি হয়েছে',
+  'totalExpense': 'মোট খরচ',
+  'grossProfit': 'গ্রস প্রফিট',
+  'qtySold': 'বিক্রিত পরিমাণ',
+  'noSalesThisPeriod': 'এই সময়ে কোনো বিক্রি নেই',
+  'today': 'আজ',
+  'thisWeek': 'এই সপ্তাহ',
+  'thisMonth': 'এই মাস',
+  'customRange': 'কাস্টম',
+
+  // ── Backup / Restore (M2 v2, crash-safe) ─────────────────────────────
+  'backupDataV2': 'ব্যাকআপ ডেটা (v2)',
+  'restoreDataV2': 'ডেটা রিস্টোর করুন (v2)',
+  'backupCopiedV2': 'ব্যাকআপ তৈরি হয়েছে, শেয়ার করার জন্য প্রস্তুত',
+  'backupFailedV2': 'ব্যাকআপ ব্যর্থ: ',
+  'restoreConfirmTitle': 'ব্যাকআপ থেকে রিস্টোর করবেন?',
+  'restoreConfirmMessage':
+      'এটি বর্তমান সব ডেটা ব্যাকআপের ডেটা দিয়ে বদলে দেবে। এটি ফিরিয়ে নেওয়া '
+      'যাবে না। চালিয়ে যাবেন?',
+  'restoreSucceededV2': 'রিস্টোর সম্পন্ন হয়েছে',
+  'restoreFailedV2': 'রিস্টোর ব্যর্থ: ',
+  'noBackupFilesFoundV2': 'কোনো v2 ব্যাকআপ ফাইল পাওয়া যায়নি',
+  'selectBackupFileV2': 'একটা ব্যাকআপ ফাইল বাছুন',
 };

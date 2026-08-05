@@ -33,6 +33,32 @@ class DateRange {
     return DateRange(start: DateTime.utc(1970), end: DateTime.utc(9999));
   }
 
+  /// The UTC calendar week containing [day], Monday through Sunday —
+  /// added for `ReportsController`'s period picker. `DateTime.weekday`
+  /// is `1` for Monday through `7` for Sunday, so subtracting
+  /// `(weekday - 1)` days from [day] always lands on that week's Monday
+  /// regardless of which day of the week [day] itself is.
+  factory DateRange.weekContaining(DateTime day) {
+    final utc = day.toUtc();
+    final today = DateTime.utc(utc.year, utc.month, utc.day);
+    final monday = today.subtract(Duration(days: today.weekday - 1));
+    return DateRange(start: monday, end: monday.add(const Duration(days: 7)));
+  }
+
+  /// The UTC calendar month containing [day] — added for
+  /// `ReportsController`'s period picker. Computed via
+  /// `DateTime.utc(year, month + 1, 1)` for the end rather than
+  /// hardcoding a day count, since `DateTime`'s constructor correctly
+  /// rolls December's `month + 1 == 13` over into next January (the same
+  /// month-arithmetic behavior `pricing_engine.dart`'s month-boundary
+  /// helpers already rely on).
+  factory DateRange.monthContaining(DateTime day) {
+    final utc = day.toUtc();
+    final start = DateTime.utc(utc.year, utc.month, 1);
+    final end = DateTime.utc(utc.year, utc.month + 1, 1);
+    return DateRange(start: start, end: end);
+  }
+
   bool contains(DateTime instant) {
     final utc = instant.toUtc();
     return !utc.isBefore(start) && utc.isBefore(end);

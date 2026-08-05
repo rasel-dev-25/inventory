@@ -15,6 +15,7 @@ import 'data/sync/sync_pull_service.dart';
 import 'data/sync/sync_push_service.dart';
 import 'domain/repositories/auth_repository.dart';
 import 'features/auth/controller/auth_controller.dart';
+import 'features/backup_v2/controller/backup_controller.dart';
 import 'features/pricing_settings_v2/controller/pricing_settings_controller.dart';
 import 'features/settings/controller/settings_controller.dart';
 import 'features/sync/controller/sync_controller.dart';
@@ -96,6 +97,11 @@ void main() async {
     PricingSettingsController(dbV2, settingsRegistry),
     permanent: true,
   );
+
+  // --- Backup/restore (v2, crash-safe) ---
+  // Permanent so the drawer's "Backup Data (v2)"/"Restore Data (v2)"
+  // actions can `Get.find` it without a dedicated screen/binding.
+  Get.put<BackupController>(BackupController(dbV2), permanent: true);
 
   runApp(const App());
 }

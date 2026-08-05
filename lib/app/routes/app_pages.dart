@@ -83,6 +83,10 @@ import '../../features/quick_capture_v2/view/quick_capture_screen.dart'
 // No aliasing needed — v1 has no pricing-settings feature at all.
 import '../../features/pricing_settings_v2/controller/pricing_settings_controller.dart';
 import '../../features/pricing_settings_v2/view/pricing_settings_screen.dart';
+// No aliasing needed — v1's equivalent is FinanceController/FinanceScreen,
+// a different name from this screen's ReportsController/ReportsScreen.
+import '../../features/reports_v2/controller/reports_controller.dart';
+import '../../features/reports_v2/view/reports_screen.dart';
 
 abstract class AppPages {
   static final pages = [
@@ -293,6 +297,13 @@ abstract class AppPages {
     GetPage(
       name: AppRoutes.pricingSettingsV2,
       page: () => const PricingSettingsScreen(),
+    ),
+    GetPage(
+      name: AppRoutes.reportsV2,
+      page: () => const ReportsScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => ReportsController(Get.find<AppDatabaseV2>()));
+      }),
     ),
   ];
 }

@@ -555,4 +555,32 @@ const Map<String, String> enUS = {
       'computed.',
   'suggestedSellPriceLabel': 'Suggested: ',
   'tapToUse': 'tap to use',
+
+  // ── Reports (M2 v2 screen) ───────────────────────────────────────────
+  'reportsTitle': 'Reports',
+  'reportPnlSectionTitle': 'Profit & Loss',
+  'investorShareSectionTitle': 'Investor Profit Share',
+  'productSalesSectionTitle': 'What Sold This Period',
+  'totalExpense': 'Total Expense',
+  'grossProfit': 'Gross profit',
+  'qtySold': 'Qty sold',
+  'noSalesThisPeriod': 'No sales in this period',
+  'today': 'Today',
+  'thisWeek': 'This Week',
+  'thisMonth': 'This Month',
+  'customRange': 'Custom',
+
+  // ── Backup / Restore (M2 v2, crash-safe) ─────────────────────────────
+  'backupDataV2': 'Backup Data (v2)',
+  'restoreDataV2': 'Restore Data (v2)',
+  'backupCopiedV2': 'Backup created and ready to share',
+  'backupFailedV2': 'Backup failed: ',
+  'restoreConfirmTitle': 'Restore from backup?',
+  'restoreConfirmMessage':
+      'This replaces all current data with the backup\'s data. This '
+      'cannot be undone. Continue?',
+  'restoreSucceededV2': 'Restore complete',
+  'restoreFailedV2': 'Restore failed: ',
+  'noBackupFilesFoundV2': 'No v2 backup files found',
+  'selectBackupFileV2': 'Select a backup file',
 };
