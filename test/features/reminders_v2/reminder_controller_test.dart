@@ -5,6 +5,7 @@ import 'package:inventory/data/local/app_database.dart';
 import 'package:inventory/data/local/default_shop.dart';
 import 'package:inventory/data/usecases/customer_usecases.dart';
 import 'package:inventory/data/usecases/investor_usecases.dart';
+import 'package:inventory/data/usecases/order_usecases.dart';
 import 'package:inventory/domain/entities/customer.dart';
 import 'package:inventory/domain/entities/enums.dart';
 import 'package:inventory/domain/entities/investor.dart';
@@ -103,4 +104,53 @@ void main() {
       expect(controller.inbox, isEmpty);
     },
   );
+
+  test('a pending order past its neededByDate surfaces in the inbox', () async {
+    await CustomerUseCases(db).create(
+      const Customer(id: 'c1', name: 'Karim'),
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+    await OrderUseCases(db).create(
+      customerId: 'c1',
+      itemDescription: 'A red backpack',
+      requestedDate: DateTime.now().toUtc().subtract(const Duration(days: 5)),
+      neededByDate: DateTime.now().toUtc().subtract(const Duration(days: 1)),
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    final inbox = controller.inbox;
+    expect(inbox, hasLength(1));
+    expect(inbox.single, isA<OrderDeadlineReminder>());
+    expect(controller.overdueOnly, hasLength(1));
+  });
+
+  test('a fulfilled order past its neededByDate does not surface, even though '
+      'the order itself is still in the live list', () async {
+    await CustomerUseCases(db).create(
+      const Customer(id: 'c1', name: 'Karim'),
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+    await OrderUseCases(db).create(
+      customerId: 'c1',
+      itemDescription: 'A red backpack',
+      requestedDate: DateTime.now().toUtc().subtract(const Duration(days: 5)),
+      neededByDate: DateTime.now().toUtc().subtract(const Duration(days: 1)),
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+    final orderId = (await (db.select(db.orders)).get()).single.id;
+    await OrderUseCases(db).updateStatus(
+      orderId: orderId,
+      status: OrderStatus.fulfilled,
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(controller.inbox, isEmpty);
+  });
 }

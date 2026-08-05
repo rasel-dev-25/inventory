@@ -511,6 +511,7 @@ const Map<String, String> enUS = {
   // ── Order (M3 v2 screen) ────────────────────────────────────────────
   'noOrdersYet': 'No orders yet',
   'itemDescription': 'What do they want?',
+  'orderOverdueLabel': 'overdue',
 
   // ── Fixed Asset (M3 v2 screen) ───────────────────────────────────────
   'addAsset': 'Add Asset',
@@ -593,11 +594,13 @@ const Map<String, String> enUS = {
   'reminderInvestorPayoutBody': 'Profit share payout due to ',
   'reminderSuspiciousBody': 'Follow up needed with ',
   'reminderOverdueRentBody': 'Overdue rental — ',
+  'reminderOrderDeadlineBody': 'Order deadline for ',
   'dueBalanceReminderLabel': 'Balance due: ',
   'investorCapitalReminderLabel': 'Capital return due',
   'investorPayoutReminderLabel': 'Profit share payout due',
   'suspiciousCustomerReminderLabel': 'Flagged for follow-up',
   'overdueRentReminderLabel': 'Overdue by ',
+  'orderDeadlineReminderLabel': 'Order deadline',
   'overdueSinceLabel': 'Overdue since ',
   'dueOnLabel': 'Due on ',
 

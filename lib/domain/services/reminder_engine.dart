@@ -7,6 +7,14 @@
 /// - §জ (Rent): "Customer-এ suspicionFlag টিক দেওয়া থাকলে বারবার
 ///   owner-কে reminder দেখাবে" + the overdue-rental follow-up itself
 ///
+/// Plus [OrderDeadlineReminder], added after the fact — not named in the
+/// spec text above, but M3's "customer orders with working deadline
+/// reminders" checklist item always meant this and was previously
+/// checked off without it: [Order.neededByDate] was stored and
+/// displayed, but nothing ever surfaced an approaching or passed one as
+/// an actual reminder anywhere. This closes that gap the same way every
+/// other source here works.
+///
 /// Every function here is pure — no database, no clock read beyond the
 /// [now] each one is explicitly handed — matching every other calculator
 /// in this directory. `ReminderController` resolves the live lists these
@@ -25,6 +33,7 @@ import '../entities/customer.dart';
 import '../entities/due.dart';
 import '../entities/enums.dart';
 import '../entities/investor.dart';
+import '../entities/order.dart';
 import '../entities/purchase.dart';
 import '../entities/rent_transaction.dart';
 import 'due_lifecycle.dart';
@@ -151,6 +160,23 @@ final class OverdueRentReminder extends Reminder {
 
   @override
   bool isOverdueAsOf(DateTime now) => rent_lifecycle.isOverdue(rent, now);
+}
+
+/// A pending customer [Order] approaching or past [Order.neededByDate].
+final class OrderDeadlineReminder extends Reminder {
+  final Order order;
+  final String customerName;
+
+  OrderDeadlineReminder({required this.order, required this.customerName});
+
+  @override
+  String get id => 'order-deadline-${order.id}';
+
+  @override
+  DateTime get dueDate => order.neededByDate!;
+
+  @override
+  bool isOverdueAsOf(DateTime now) => now.isAfter(dueDate);
 }
 
 /// [customerNameOf] must resolve every [dues] entry's `customerId` — a
@@ -313,6 +339,40 @@ List<OverdueRentReminder> buildOverdueRentReminders({
       .toList();
 }
 
+/// [customerNameOf] falls back to the raw id, same convention as
+/// [buildDueReminders]/[buildOverdueRentReminders]. Only [orders] that are
+/// still [OrderStatus.pending] *and* have a [Order.neededByDate] set
+/// produce a reminder — a fulfilled or cancelled order has nothing left
+/// to chase, and an order with no promised date has no deadline to remind
+/// about, same reasoning [buildDueReminders] gives for a [Due] with no
+/// `promisedDays`.
+///
+/// [upcomingWithinDays] is the same "needs attention now or soon" horizon
+/// every other reminder source here uses — see [buildDueReminders]'s own
+/// doc comment.
+List<OrderDeadlineReminder> buildOrderDeadlineReminders({
+  required List<Order> orders,
+  required String Function(String customerId) customerNameOf,
+  required DateTime now,
+  int upcomingWithinDays = 3,
+}) {
+  final horizon = now.add(Duration(days: upcomingWithinDays));
+  final reminders = <OrderDeadlineReminder>[];
+  for (final order in orders) {
+    if (order.status != OrderStatus.pending) continue;
+    final neededByDate = order.neededByDate;
+    if (neededByDate == null) continue;
+    if (neededByDate.isAfter(horizon)) continue;
+    reminders.add(
+      OrderDeadlineReminder(
+        order: order,
+        customerName: customerNameOf(order.customerId),
+      ),
+    );
+  }
+  return reminders;
+}
+
 /// The whole inbox, sorted overdue-first, then soonest-due, with the
 /// always-active (no-date) reminders — currently only
 /// [SuspiciousCustomerReminder] — pinned at the very top: they need
@@ -325,6 +385,7 @@ List<Reminder> buildReminderInbox({
   required List<Customer> customers,
   required List<RentTransaction> rentals,
   required String Function(String productId) bookNameOf,
+  required List<Order> orders,
   required DateTime now,
   int upcomingWithinDays = 3,
 }) {
@@ -347,6 +408,12 @@ List<Reminder> buildReminderInbox({
       bookNameOf: bookNameOf,
       customerNameOf: customerNameOf,
       now: now,
+    ),
+    ...buildOrderDeadlineReminders(
+      orders: orders,
+      customerNameOf: customerNameOf,
+      now: now,
+      upcomingWithinDays: upcomingWithinDays,
     ),
   ];
 

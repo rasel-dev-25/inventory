@@ -511,6 +511,7 @@ const Map<String, String> bnBD = {
   // ── Order (M3 v2 screen) ────────────────────────────────────────────
   'noOrdersYet': 'এখনো কোনো অর্ডার নেই',
   'itemDescription': 'তারা কী চান?',
+  'orderOverdueLabel': 'সময়সীমা পার হয়েছে',
 
   // ── Fixed Asset (M3 v2 screen) ───────────────────────────────────────
   'addAsset': 'সম্পদ যোগ করুন',
@@ -591,11 +592,13 @@ const Map<String, String> bnBD = {
   'reminderInvestorPayoutBody': 'লাভের ভাগ দিতে হবে: ',
   'reminderSuspiciousBody': 'ফলোআপ প্রয়োজন: ',
   'reminderOverdueRentBody': 'বাকি ভাড়া — ',
+  'reminderOrderDeadlineBody': 'অর্ডারের সময়সীমা: ',
   'dueBalanceReminderLabel': 'বাকি: ',
   'investorCapitalReminderLabel': 'মূলধন ফেরত বাকি',
   'investorPayoutReminderLabel': 'লাভের ভাগ পরিশোধ বাকি',
   'suspiciousCustomerReminderLabel': 'ফলোআপের জন্য চিহ্নিত',
   'overdueRentReminderLabel': 'দেরি হয়েছে ',
+  'orderDeadlineReminderLabel': 'অর্ডারের সময়সীমা',
   'overdueSinceLabel': 'বাকি পড়ে আছে ',
   'dueOnLabel': 'দেয় তারিখ ',
 

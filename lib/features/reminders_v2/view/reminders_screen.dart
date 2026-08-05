@@ -90,6 +90,7 @@ class _ReminderCard extends StatelessWidget {
       InvestorProfitPayoutReminder _ => Icons.payments_outlined,
       SuspiciousCustomerReminder _ => Icons.warning_amber,
       OverdueRentReminder _ => Icons.menu_book,
+      OrderDeadlineReminder _ => Icons.shopping_bag_outlined,
     };
   }
 
@@ -100,6 +101,8 @@ class _ReminderCard extends StatelessWidget {
       InvestorProfitPayoutReminder v => v.investor.name,
       SuspiciousCustomerReminder v => v.customer.name,
       OverdueRentReminder v => '${v.customerName} · ${v.bookName}',
+      OrderDeadlineReminder v =>
+        '${v.customerName} · ${v.order.itemDescription}',
     };
   }
 
@@ -112,6 +115,7 @@ class _ReminderCard extends StatelessWidget {
       SuspiciousCustomerReminder _ => 'suspiciousCustomerReminderLabel'.tr,
       OverdueRentReminder v =>
         '${'overdueRentReminderLabel'.tr}${v.extraDaysAsOf(DateTime.now().toUtc())}',
+      OrderDeadlineReminder _ => 'orderDeadlineReminderLabel'.tr,
     };
   }
 
