@@ -84,16 +84,19 @@ Future<void> recordAuditLog({
 ///   actually asked for (Recycle Bin visibility + delete UI triggers),
 ///   not a retention-policy expansion. A real gap, not a silent one.
 ///
-/// **Also flagged, not fixed here**: [Customers] *does* have incoming
-/// foreign keys (`Dues`/`Orders`/`RentTransactions`/`Sales` all reference
-/// `Customers.id`), yet [hardDeleteOlderThan] below already runs against
-/// it unconditionally. A customer with real order/sale/due/rent history
-/// that sits soft-deleted past the retention window would hit the exact
-/// same FK-violation risk described above for [Products] — this is a
-/// pre-existing gap (from the PR that first added this policy), not
-/// something introduced or fixed in this change; its own test only ever
-/// prunes a customer with no linked history, so the violation has never
-/// actually been exercised.
+/// **[Customers] — fixed, not just flagged, as of this change**:
+/// [Customers] *does* have incoming foreign keys (`Dues`/`Orders`/
+/// `RentTransactions`/`Sales` all reference `Customers.id`), and
+/// [CustomerDao.hardDeleteOlderThan] used to run against every candidate
+/// unconditionally — a customer with real order/sale/due/rent history
+/// that sat soft-deleted past the retention window would have hit the
+/// exact same FK-violation risk described above for [Products]. That was
+/// a pre-existing gap (from the PR that first added this policy),
+/// undetected because its own test only ever pruned a customer with no
+/// linked history. `CustomerDao.hardDeleteOlderThan` now checks each
+/// candidate for linked history first and skips any that have some,
+/// leaving them soft-deleted rather than risking that violation — see
+/// its own doc comment for the full reasoning.
 ///
 /// Not a real cron — same honest limitation `PricingSettingsController`'s
 /// month-end refresh documents: this runs whenever a caller (today,
