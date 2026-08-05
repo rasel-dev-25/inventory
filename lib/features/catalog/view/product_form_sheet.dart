@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 
 import '../../../core/design/tokens.dart';
 import '../../../core/money/money.dart';
+import '../../../core/platform/capabilities.dart';
+import '../../../core/widgets/barcode_scanner_view.dart';
 import '../../../domain/entities/fund_source.dart';
 import '../../../domain/entities/investor.dart';
 import '../../../domain/entities/product.dart';
@@ -103,6 +105,16 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
   }
 
   void _onCostChanged() => setState(() {});
+
+  /// Just fills the field with whatever was scanned — unlike Daily
+  /// Sales' scan button, there is no existing product to look up here;
+  /// this form *is* where a barcode gets attached to a product in the
+  /// first place.
+  Future<void> _scanBarcodeIntoField(BuildContext context) async {
+    final code = await showBarcodeScanner(context);
+    if (code == null) return;
+    setState(() => _barcodeController.text = code);
+  }
 
   @override
   void dispose() {
@@ -268,7 +280,16 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
               const SizedBox(height: AppSpacing.md),
               TextFormField(
                 controller: _barcodeController,
-                decoration: const InputDecoration(labelText: 'Barcode'),
+                decoration: InputDecoration(
+                  labelText: 'Barcode',
+                  suffixIcon: PlatformCapabilities.detect().hasCamera
+                      ? IconButton(
+                          tooltip: 'scanBarcodeTitle'.tr,
+                          icon: const Icon(Icons.qr_code_scanner),
+                          onPressed: () => _scanBarcodeIntoField(context),
+                        )
+                      : null,
+                ),
               ),
               const SizedBox(height: AppSpacing.md),
               TextFormField(

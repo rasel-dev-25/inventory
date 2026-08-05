@@ -3,8 +3,11 @@ import 'package:get/get.dart';
 
 import '../../../core/design/tokens.dart';
 import '../../../core/money/money.dart';
+import '../../../core/platform/capabilities.dart';
+import '../../../core/widgets/barcode_scanner_view.dart';
 import '../../../domain/entities/enums.dart';
 import '../../../domain/entities/product.dart';
+import '../../../domain/services/barcode_lookup.dart';
 import '../controller/daily_sales_controller.dart';
 
 /// The v2 Daily Sales screen — product autosuggest, qty/price entry, the
@@ -62,6 +65,16 @@ class _SaleFormBodyState extends State<_SaleFormBody> {
   String? _selectedCustomerId;
   final _promisedDaysController = TextEditingController();
 
+  /// Owned explicitly (rather than letting [Autocomplete] manage its own
+  /// internal controller) so a successful barcode scan can update the
+  /// visible search text to the matched product's name — otherwise the
+  /// field would still show whatever was last typed (usually nothing)
+  /// even though [_selectedProduct] was set, which would look broken.
+  /// [Autocomplete] requires [_searchFocusNode] alongside it once a
+  /// controller is supplied.
+  final _searchController = TextEditingController();
+  final _searchFocusNode = FocusNode();
+
   DailySalesController get controller => Get.find<DailySalesController>();
 
   double get _qty => double.tryParse(_qtyController.text) ?? 0;
@@ -75,12 +88,35 @@ class _SaleFormBodyState extends State<_SaleFormBody> {
     return (_price! - _selectedProduct!.costPrice) * _qty;
   }
 
+  Future<void> _scanBarcode(BuildContext context) async {
+    final code = await showBarcodeScanner(context);
+    if (code == null || !context.mounted) return;
+
+    final product = findProductByBarcode(controller.products, code);
+    if (product == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('noProductForBarcode'.tr)));
+      return;
+    }
+
+    setState(() {
+      _selectedProduct = product;
+      _searchController.text = product.name;
+      _priceController.text = product.suggestedSellPrice.format(
+        showSymbol: false,
+      );
+    });
+  }
+
   @override
   void dispose() {
     _qtyController.dispose();
     _priceController.dispose();
     _receivedController.dispose();
     _promisedDaysController.dispose();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -95,38 +131,53 @@ class _SaleFormBodyState extends State<_SaleFormBody> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Obx(
-                () => Autocomplete<Product>(
-                  displayStringForOption: (p) => p.name,
-                  optionsBuilder: (textValue) {
-                    if (textValue.text.isEmpty) return controller.products;
-                    final query = textValue.text.toLowerCase();
-                    return controller.products.where(
-                      (p) =>
-                          p.name.toLowerCase().contains(query) ||
-                          p.category.toLowerCase().contains(query),
-                    );
-                  },
-                  onSelected: (product) {
-                    setState(() {
-                      _selectedProduct = product;
-                      _priceController.text = product.suggestedSellPrice.format(
-                        showSymbol: false,
-                      );
-                    });
-                  },
-                  fieldViewBuilder:
-                      (context, textController, focusNode, onSubmit) {
-                        return TextFormField(
-                          controller: textController,
-                          focusNode: focusNode,
-                          decoration: InputDecoration(
-                            labelText: 'searchProductAdd'.tr,
-                          ),
-                          validator: (_) => _selectedProduct == null
-                              ? 'selectProduct'.tr
-                              : null,
-                        );
-                      },
+                () => Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Autocomplete<Product>(
+                        textEditingController: _searchController,
+                        focusNode: _searchFocusNode,
+                        displayStringForOption: (p) => p.name,
+                        optionsBuilder: (textValue) {
+                          if (textValue.text.isEmpty)
+                            return controller.products;
+                          final query = textValue.text.toLowerCase();
+                          return controller.products.where(
+                            (p) =>
+                                p.name.toLowerCase().contains(query) ||
+                                p.category.toLowerCase().contains(query),
+                          );
+                        },
+                        onSelected: (product) {
+                          setState(() {
+                            _selectedProduct = product;
+                            _priceController.text = product.suggestedSellPrice
+                                .format(showSymbol: false);
+                          });
+                        },
+                        fieldViewBuilder:
+                            (context, textController, focusNode, onSubmit) {
+                              return TextFormField(
+                                controller: textController,
+                                focusNode: focusNode,
+                                decoration: InputDecoration(
+                                  labelText: 'searchProductAdd'.tr,
+                                ),
+                                validator: (_) => _selectedProduct == null
+                                    ? 'selectProduct'.tr
+                                    : null,
+                              );
+                            },
+                      ),
+                    ),
+                    if (PlatformCapabilities.detect().hasCamera)
+                      IconButton(
+                        tooltip: 'scanBarcodeTitle'.tr,
+                        icon: const Icon(Icons.qr_code_scanner),
+                        onPressed: () => _scanBarcode(context),
+                      ),
+                  ],
                 ),
               ),
               if (_selectedProduct != null)
