@@ -1,10 +1,18 @@
 import 'package:drift/native.dart';
+import 'package:inventory/core/money/money.dart';
 import 'package:inventory/data/local/app_database.dart';
 import 'package:inventory/data/local/default_shop.dart';
 import 'package:inventory/data/usecases/audit_log_usecases.dart';
 import 'package:inventory/data/usecases/customer_usecases.dart';
 import 'package:inventory/data/usecases/order_usecases.dart';
+import 'package:inventory/data/usecases/product_usecases.dart';
 import 'package:inventory/domain/entities/customer.dart';
+import 'package:inventory/domain/entities/due.dart';
+import 'package:inventory/domain/entities/enums.dart';
+import 'package:inventory/domain/entities/fund_source.dart';
+import 'package:inventory/domain/entities/product.dart';
+import 'package:inventory/domain/entities/rent_transaction.dart';
+import 'package:inventory/domain/entities/sale.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -173,5 +181,212 @@ void main() {
         expect(result.totalDeleted, 1);
       },
     );
+
+    // Customers.id is a foreign-key target for Dues/Orders/
+    // RentTransactions/Sales (see CustomerDao.hardDeleteOlderThan's own
+    // doc comment) — a real DELETE on a customer with any row in one of
+    // those four tables would throw a FK-constraint violation. These
+    // four tests each exercise one of those tables directly, confirming
+    // pruneAll skips the customer (leaves it soft-deleted) rather than
+    // crashing or corrupting the delete.
+    group(
+      'skips (does not crash, does not hard-delete) a soft-deleted customer '
+      'with linked history',
+      () {
+        Future<void> createOldSoftDeletedCustomer(String id) async {
+          await CustomerUseCases(db).create(
+            Customer(id: id, name: 'Customer $id'),
+            shopId: defaultShopId,
+            now: DateTime.utc(2026, 1, 1),
+          );
+          await CustomerUseCases(db).softDelete(
+            id,
+            shopId: defaultShopId,
+            now: DateTime.utc(2026, 1, 1),
+          );
+        }
+
+        test('a linked Due', () async {
+          await createOldSoftDeletedCustomer('cust-due');
+          await db.dueDao.create(
+            Due(
+              id: 'due-1',
+              customerId: 'cust-due',
+              sourceType: DueSourceType.sale,
+              sourceId: 'sale-1',
+              originalAmount: Money.fromMinor(5000),
+              paidAmount: Money.zero(),
+              status: DueStatus.pending,
+              createdAt: DateTime.utc(2026, 1, 1),
+            ),
+            shopId: defaultShopId,
+            now: DateTime.utc(2026, 1, 1),
+          );
+
+          final result = await useCase.pruneAll(
+            shopId: defaultShopId,
+            now: DateTime.utc(2026, 8, 5),
+            recycleBinRetentionDays: 30,
+          );
+
+          expect(result.customersDeleted, 0);
+          expect(
+            await (db.select(db.customers)).get(),
+            hasLength(1),
+            reason: 'a customer with a linked due must not be hard-deleted',
+          );
+        });
+
+        test('a linked Order', () async {
+          await createOldSoftDeletedCustomer('cust-order');
+          await OrderUseCases(db).create(
+            customerId: 'cust-order',
+            itemDescription: 'A red backpack',
+            requestedDate: DateTime.utc(2026, 1, 1),
+            shopId: defaultShopId,
+            now: DateTime.utc(2026, 1, 1),
+          );
+
+          final result = await useCase.pruneAll(
+            shopId: defaultShopId,
+            now: DateTime.utc(2026, 8, 5),
+            recycleBinRetentionDays: 30,
+          );
+
+          expect(result.customersDeleted, 0);
+          expect(await (db.select(db.customers)).get(), hasLength(1));
+        });
+
+        test('a linked RentTransaction', () async {
+          await createOldSoftDeletedCustomer('cust-rent');
+          await ProductUseCases(db).create(
+            Product(
+              id: 'book-1',
+              name: 'Rentable Book',
+              category: 'Book',
+              costPrice: Money.fromMinor(10000),
+              suggestedSellPrice: Money.fromMinor(15000),
+              qty: 1,
+              fundSource: FundSource.shop(),
+              isRentable: true,
+              pageCount: 100,
+            ),
+            shopId: defaultShopId,
+            now: DateTime.utc(2026, 1, 1),
+          );
+          await db.rentDao.create(
+            RentTransaction(
+              id: 'rent-1',
+              bookProductId: 'book-1',
+              customerId: 'cust-rent',
+              startDate: DateTime.utc(2026, 1, 1),
+              dueDate: DateTime.utc(2026, 1, 8),
+              deposit: Money.zero(),
+              rentPrice: Money.fromMinor(2000),
+              status: RentStatus.active,
+            ),
+            shopId: defaultShopId,
+            now: DateTime.utc(2026, 1, 1),
+          );
+
+          final result = await useCase.pruneAll(
+            shopId: defaultShopId,
+            now: DateTime.utc(2026, 8, 5),
+            recycleBinRetentionDays: 30,
+          );
+
+          expect(result.customersDeleted, 0);
+          expect(await (db.select(db.customers)).get(), hasLength(1));
+        });
+
+        test('a linked Sale', () async {
+          await createOldSoftDeletedCustomer('cust-sale');
+          await ProductUseCases(db).create(
+            Product(
+              id: 'prod-1',
+              name: 'Notebook',
+              category: 'Stationery',
+              costPrice: Money.fromMinor(5000),
+              suggestedSellPrice: Money.fromMinor(8000),
+              qty: 1,
+              fundSource: FundSource.shop(),
+            ),
+            shopId: defaultShopId,
+            now: DateTime.utc(2026, 1, 1),
+          );
+          await db.saleDao.create(
+            Sale(
+              id: 'sale-1',
+              productId: 'prod-1',
+              qty: 1,
+              actualSellPrice: Money.fromMinor(8000),
+              costPriceAtSale: Money.fromMinor(5000),
+              date: DateTime.utc(2026, 1, 1),
+              customerId: 'cust-sale',
+              paymentStatus: PaymentStatus.fullCash,
+              paymentMethod: PaymentMethod.cash,
+              fundSource: FundSource.shop(),
+            ),
+            shopId: defaultShopId,
+            now: DateTime.utc(2026, 1, 1),
+          );
+
+          final result = await useCase.pruneAll(
+            shopId: defaultShopId,
+            now: DateTime.utc(2026, 8, 5),
+            recycleBinRetentionDays: 30,
+          );
+
+          expect(result.customersDeleted, 0);
+          expect(await (db.select(db.customers)).get(), hasLength(1));
+        });
+      },
+    );
+
+    test('prunes a customer with no linked history while skipping one that has '
+        'some, in the same run', () async {
+      await CustomerUseCases(db).create(
+        const Customer(id: 'cust-clean', name: 'Clean'),
+        shopId: defaultShopId,
+        now: DateTime.utc(2026, 1, 1),
+      );
+      await CustomerUseCases(db).softDelete(
+        'cust-clean',
+        shopId: defaultShopId,
+        now: DateTime.utc(2026, 1, 1),
+      );
+
+      await CustomerUseCases(db).create(
+        const Customer(id: 'cust-with-order', name: 'Has History'),
+        shopId: defaultShopId,
+        now: DateTime.utc(2026, 1, 1),
+      );
+      await OrderUseCases(db).create(
+        customerId: 'cust-with-order',
+        itemDescription: 'A red backpack',
+        requestedDate: DateTime.utc(2026, 1, 1),
+        shopId: defaultShopId,
+        now: DateTime.utc(2026, 1, 1),
+      );
+      await CustomerUseCases(db).softDelete(
+        'cust-with-order',
+        shopId: defaultShopId,
+        now: DateTime.utc(2026, 1, 1),
+      );
+
+      final result = await useCase.pruneAll(
+        shopId: defaultShopId,
+        now: DateTime.utc(2026, 8, 5),
+        recycleBinRetentionDays: 30,
+      );
+
+      expect(
+        result.customersDeleted,
+        1,
+        reason: 'only the customer with no linked history is deletable',
+      );
+      final remaining = await (db.select(db.customers)).get();
+      expect(remaining.map((c) => c.id).toList(), ['cust-with-order']);
+    });
   });
 }
