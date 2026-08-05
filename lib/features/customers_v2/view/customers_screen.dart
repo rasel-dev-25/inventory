@@ -6,18 +6,25 @@ import '../../../domain/entities/customer.dart';
 import '../controller/customers_controller.dart';
 import 'customer_form_sheet.dart';
 
-/// The v2 Customers screen — list/create/edit/delete plus the flagged
+/// The Customers screen — list/create/edit/delete plus the flagged
 /// (suspicion/blocked) filter view, backed by
-/// [CustomersController]/`CustomerUseCases`. See `CatalogScreen`'s doc
-/// comment for why this reads/writes the v2 database only, separate from
-/// v1's Customers tab.
+/// [CustomersController]/`CustomerUseCases`. One of the 5 screens
+/// `ShellScreen` embeds directly — see `DashboardScreen`'s own doc
+/// comment for why [onMenuTap] exists.
 class CustomersScreen extends GetView<CustomersController> {
-  const CustomersScreen({super.key});
+  final VoidCallback? onMenuTap;
+
+  const CustomersScreen({super.key, this.onMenuTap});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('${'customers'.tr} (v2)')),
+      appBar: AppBar(
+        title: Text('customers'.tr),
+        leading: onMenuTap == null
+            ? null
+            : IconButton(icon: const Icon(Icons.menu), onPressed: onMenuTap),
+      ),
       body: Column(
         children: [
           Padding(

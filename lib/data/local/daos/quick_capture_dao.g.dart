@@ -3,7 +3,7 @@
 part of 'quick_capture_dao.dart';
 
 // ignore_for_file: type=lint
-mixin _$QuickCaptureDaoMixin on DatabaseAccessor<AppDatabaseV2> {
+mixin _$QuickCaptureDaoMixin on DatabaseAccessor<AppDatabase> {
   $ShopsTable get shops => attachedDatabase.shops;
   $QuickCapturesTable get quickCaptures => attachedDatabase.quickCaptures;
   QuickCaptureDaoManager get managers => QuickCaptureDaoManager(this);

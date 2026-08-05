@@ -153,16 +153,16 @@ void main() {
       await Get.find<AuthController>().refreshMembership();
 
       // Deliberately NOT pumping again from here: AuthGate's ready
-      // branch renders the real ShellScreen, which pulls in the entire
-      // v1 feature-controller/DAO graph (Get.find<AppDatabase>() for half
-      // a dozen controllers) that this auth-routing test never sets up —
-      // letting that branch actually build would fail the test on an
-      // unrelated missing dependency, not on anything AuthGate got
-      // wrong. AuthUiStatus.ready is the exact value AuthGate's switch
-      // uses to pick ShellScreen (see auth_gate.dart), so asserting the
-      // controller reached it is the correct boundary for what this test
-      // owns; verifying ShellScreen itself renders belongs to a shell
-      // widget test, not an auth one.
+      // branch renders the real ShellScreen, which pulls in the whole
+      // AppDatabase/5-controller graph (Get.find<AppDatabase>() for
+      // each of its 5 embedded screens) that this auth-routing test
+      // never sets up — letting that branch actually build would fail
+      // the test on an unrelated missing dependency, not on anything
+      // AuthGate got wrong. AuthUiStatus.ready is the exact value
+      // AuthGate's switch uses to pick ShellScreen (see auth_gate.dart),
+      // so asserting the controller reached it is the correct boundary
+      // for what this test owns; verifying ShellScreen itself renders
+      // belongs to a shell widget test, not an auth one.
       expect(Get.find<AuthController>().status.value, AuthUiStatus.ready);
     },
   );

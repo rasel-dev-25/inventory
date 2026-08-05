@@ -19,7 +19,7 @@ part 'category_dao.g.dart';
 /// is a deliberate gap, not an oversight, tracked for whenever soft-delete
 /// support is added to this table.
 @DriftAccessor(tables: [Categories])
-class CategoryDao extends DatabaseAccessor<AppDatabaseV2>
+class CategoryDao extends DatabaseAccessor<AppDatabase>
     with _$CategoryDaoMixin {
   CategoryDao(super.db);
 

@@ -3,7 +3,7 @@
 part of 'rent_dao.dart';
 
 // ignore_for_file: type=lint
-mixin _$RentDaoMixin on DatabaseAccessor<AppDatabaseV2> {
+mixin _$RentDaoMixin on DatabaseAccessor<AppDatabase> {
   $ShopsTable get shops => attachedDatabase.shops;
   $RentPricingTiersTable get rentPricingTiers =>
       attachedDatabase.rentPricingTiers;

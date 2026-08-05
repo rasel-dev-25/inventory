@@ -14,12 +14,12 @@ import 'package:inventory/domain/entities/product.dart';
 import 'package:test/test.dart';
 
 void main() {
-  late AppDatabaseV2 db;
+  late AppDatabase db;
   late MarkRentStolenUseCase useCase;
   late String rentId;
 
   setUp(() async {
-    db = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    db = AppDatabase.forTesting(NativeDatabase.memory());
     useCase = MarkRentStolenUseCase(db);
 
     await db.customerDao.create(

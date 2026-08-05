@@ -19,11 +19,11 @@ import 'package:inventory/features/recycle_bin_v2/controller/recycle_bin_control
 import 'package:test/test.dart';
 
 void main() {
-  late AppDatabaseV2 db;
+  late AppDatabase db;
   late RecycleBinController controller;
 
   setUp(() async {
-    db = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    db = AppDatabase.forTesting(NativeDatabase.memory());
     controller = RecycleBinController(db);
     controller.onInit();
     await Future<void>.delayed(Duration.zero);

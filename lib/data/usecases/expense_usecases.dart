@@ -23,7 +23,7 @@ import 'sync_enqueue_helper.dart';
 /// entry recorded alongside it wrong. A mistaken expense is deleted via
 /// [softDelete], not edited.
 class ExpenseUseCases {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
   static const _uuid = Uuid();
 
   ExpenseUseCases(this.db);

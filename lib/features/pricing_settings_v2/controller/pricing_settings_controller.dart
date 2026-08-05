@@ -16,7 +16,7 @@ import '../../../domain/services/pricing_engine.dart';
 /// `notes/business_logic.md`'s pricing engine actually lives for the rest
 /// of the app to read — `CatalogController` looks this controller up (via
 /// DI, injected at the binding site in `app_pages.dart`, same as it looks
-/// up `AppDatabaseV2`) to get a live [overheadMarkupPercent] for
+/// up `AppDatabase`) to get a live [overheadMarkupPercent] for
 /// `ProductFormSheet`'s cost-price suggestion, so registered permanently
 /// in `main.dart` rather than lazily per-route — a product form can open
 /// before the owner has ever visited the Settings screen.
@@ -30,7 +30,7 @@ import '../../../domain/services/pricing_engine.dart';
 /// bumped after every write, which every settings-derived getter below
 /// reads from to register as an `Obx` dependency.
 class PricingSettingsController extends GetxController {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
   final SettingsRegistry settingsRegistry;
 
   /// Defaults to the real system clock — pass a `FixedClock` in tests

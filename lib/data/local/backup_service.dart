@@ -25,14 +25,14 @@ class _TableSpec {
   });
 }
 
-/// Whole-database JSON backup + crash-safe restore for [AppDatabaseV2].
+/// Whole-database JSON backup + crash-safe restore for [AppDatabase].
 ///
 /// **"Crash-safe" is the specific improvement over v1's `DataService`**:
 /// that importer ran a sequence of separate `await _db.delete(...).go()`
 /// calls followed by a *separate* `_db.batch(...)` — if the app were
 /// killed between those, the database was left completely empty with no
 /// way back. [restoreFromBackup] wraps every delete and every insert for
-/// every table in one [AppDatabaseV2.transaction] — either the entire
+/// every table in one [AppDatabase.transaction] — either the entire
 /// restore lands, or (a crash, an exception, anything) none of it does
 /// and the database is exactly as it was before the attempt.
 ///
@@ -55,7 +55,7 @@ class _TableSpec {
 /// m['id']?.toString() ?? '', ...)` repeated per table, and that would
 /// silently go stale the next time a v2 table gained a column.
 class BackupService {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
 
   /// Bumped only if a future backup payload shape is no longer
   /// compatible with the reader below — [restoreFromBackup] rejects any

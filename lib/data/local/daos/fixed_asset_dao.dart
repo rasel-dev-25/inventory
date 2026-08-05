@@ -27,7 +27,7 @@ extension _FixedAssetRowMapping on FixedAssetRow {
 /// conversion): editing the value/source after the fact would leave that
 /// paired write silently wrong.
 @DriftAccessor(tables: [FixedAssets])
-class FixedAssetDao extends DatabaseAccessor<AppDatabaseV2>
+class FixedAssetDao extends DatabaseAccessor<AppDatabase>
     with _$FixedAssetDaoMixin {
   FixedAssetDao(super.db);
 

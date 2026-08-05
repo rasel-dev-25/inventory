@@ -22,7 +22,7 @@ import 'sync_enqueue_helper.dart';
 /// the "before" state, matching `CustomerUseCases.softDelete`'s own
 /// self-fetch convention.
 class ProductUseCases {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
 
   ProductUseCases(this.db);
 

@@ -10,15 +10,13 @@ import '../../../data/usecases/expense_usecases.dart';
 import '../../../domain/entities/enums.dart';
 import '../../../domain/entities/expense.dart';
 
-/// Backs the v2 Expense screen — `notes/business_logic.md` §চ section 1
-/// ("মাসিক ভাড়া ও অন্যান্য খরচ"), via [ExpenseUseCases]. See
-/// `CatalogScreen`'s doc comment for why this reads/writes the v2
-/// database only, separate from v1's Finance tab (whose Purchase and
-/// Investor-repayment sections are already covered by v2's
-/// `PurchaseEntryScreen` and `InvestorScreen` respectively — this screen
-/// is the one genuinely new piece).
+/// Backs the Expense screen — `notes/business_logic.md` §চ section 1
+/// ("মাসিক ভাড়া ও অন্যান্য খরচ"), via [ExpenseUseCases]. Purchases and
+/// investor repayments are their own dedicated screens
+/// (`PurchaseEntryScreen`/`InvestorScreen`) — this one covers everything
+/// else the spec's "Finance" concept used to bundle together.
 class ExpenseController extends GetxController {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
   static const _uuid = Uuid();
 
   ExpenseController(this.db);

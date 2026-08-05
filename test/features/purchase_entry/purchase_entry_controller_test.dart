@@ -15,11 +15,11 @@ import 'package:test/test.dart';
 /// this controller also holds is exercised by `SavePurchaseTripUseCase`'s
 /// own tests, not duplicated here.
 void main() {
-  late AppDatabaseV2 db;
+  late AppDatabase db;
   late PurchaseEntryController controller;
 
   setUp(() async {
-    db = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    db = AppDatabase.forTesting(NativeDatabase.memory());
 
     await ProductUseCases(db).create(
       Product(

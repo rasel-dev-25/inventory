@@ -3,7 +3,7 @@
 part of 'expense_dao.dart';
 
 // ignore_for_file: type=lint
-mixin _$ExpenseDaoMixin on DatabaseAccessor<AppDatabaseV2> {
+mixin _$ExpenseDaoMixin on DatabaseAccessor<AppDatabase> {
   $ShopsTable get shops => attachedDatabase.shops;
   $ExpensesTable get expenses => attachedDatabase.expenses;
   ExpenseDaoManager get managers => ExpenseDaoManager(this);

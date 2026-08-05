@@ -11,11 +11,11 @@ import 'package:inventory/domain/entities/investor.dart';
 import 'package:test/test.dart';
 
 void main() {
-  late AppDatabaseV2 db;
+  late AppDatabase db;
   late LegacySettlementUseCases useCases;
 
   setUp(() async {
-    db = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    db = AppDatabase.forTesting(NativeDatabase.memory());
     useCases = LegacySettlementUseCases(db);
 
     await InvestorUseCases(db).create(

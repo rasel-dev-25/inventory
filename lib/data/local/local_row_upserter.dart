@@ -57,7 +57,7 @@ import 'app_database.dart';
 /// like that; every other `INTEGER` column receives a JSON number or
 /// JSON boolean from PostgREST, never a string).
 class LocalRowUpserter {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
   final Map<String, Map<String, String>> _columnTypeCache = {};
 
   LocalRowUpserter(this.db);

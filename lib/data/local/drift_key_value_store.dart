@@ -4,7 +4,7 @@ import '../../core/settings/key_value_store.dart';
 import 'daos/app_settings_dao.dart';
 
 /// The real, restart-surviving [KeyValueStore] — backed by the
-/// [AppDatabaseV2]'s `AppSettings` table via [AppSettingsDao]. Until this
+/// [AppDatabase]'s `AppSettings` table via [AppSettingsDao]. Until this
 /// class, `SettingsRegistry` only ever ran against
 /// [InMemoryKeyValueStore] (see that class's own doc comment: "until the
 /// Drift-backed implementation lands in M1" — it landed in M2 instead,

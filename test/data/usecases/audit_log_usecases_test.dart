@@ -16,11 +16,11 @@ import 'package:inventory/domain/entities/sale.dart';
 import 'package:test/test.dart';
 
 void main() {
-  late AppDatabaseV2 db;
+  late AppDatabase db;
   late RetentionPolicyUseCase useCase;
 
   setUp(() {
-    db = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    db = AppDatabase.forTesting(NativeDatabase.memory());
     useCase = RetentionPolicyUseCase(db);
   });
 

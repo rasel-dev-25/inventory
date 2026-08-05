@@ -15,7 +15,7 @@ import 'sync_enqueue_helper.dart';
 /// created first (via the same use cases the dedicated v2 screens use),
 /// with this call only ever running *after* that succeeds.
 class QuickCaptureUseCases {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
   static const _uuid = Uuid();
 
   QuickCaptureUseCases(this.db);

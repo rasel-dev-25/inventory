@@ -50,11 +50,11 @@ class _FakeSyncTransport implements SyncTransport {
 }
 
 void main() {
-  late AppDatabaseV2 db;
+  late AppDatabase db;
   late _FakeSyncTransport transport;
 
   setUp(() {
-    db = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    db = AppDatabase.forTesting(NativeDatabase.memory());
     transport = _FakeSyncTransport();
   });
 

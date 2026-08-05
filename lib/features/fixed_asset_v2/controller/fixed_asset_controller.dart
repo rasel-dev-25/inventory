@@ -9,13 +9,11 @@ import '../../../data/usecases/fixed_asset_usecases.dart';
 import '../../../domain/entities/fixed_asset.dart';
 import '../../../domain/entities/product.dart';
 
-/// Backs the v2 Fixed Asset screen — the two creation paths per
+/// Backs the Fixed Asset screen — the two creation paths per
 /// `notes/business_logic.md`'s "দুইভাবে যোগ করার ব্যবস্থা", via
-/// [FixedAssetUseCases]. No v1 name collision: v1's equivalent is
-/// `AssetsController`/`AssetsScreen` (plural), a different name from this
-/// screen's singular `FixedAssetController`/`FixedAssetScreen`.
+/// [FixedAssetUseCases].
 class FixedAssetController extends GetxController {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
 
   FixedAssetController(this.db);
 

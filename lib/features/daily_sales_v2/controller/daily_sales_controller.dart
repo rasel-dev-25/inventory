@@ -11,12 +11,11 @@ import '../../../domain/entities/enums.dart';
 import '../../../domain/entities/product.dart';
 import '../../../domain/entities/sale.dart';
 
-/// Backs the v2 Daily Sales screen — the "cash/due router" from
-/// `notes/business_logic.md` §গ, via `SaveSaleUseCase`. See
-/// `CatalogScreen`'s doc comment for why this reads/writes the v2
-/// database only, separate from v1's Daily Sales tab.
+/// Backs the Daily Sales screen — the "cash/due router" from
+/// `notes/business_logic.md` §গ, via `SaveSaleUseCase`. Embedded directly
+/// in `ShellScreen` — see that class's own doc comment.
 class DailySalesController extends GetxController {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
 
   DailySalesController(this.db);
 

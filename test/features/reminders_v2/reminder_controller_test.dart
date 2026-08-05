@@ -29,11 +29,11 @@ const _noNotifications = PlatformCapabilities(
 );
 
 void main() {
-  late AppDatabaseV2 db;
+  late AppDatabase db;
   late ReminderController controller;
 
   setUp(() async {
-    db = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    db = AppDatabase.forTesting(NativeDatabase.memory());
     controller = ReminderController(db, NotificationService(_noNotifications));
     controller.onInit();
     await Future<void>.delayed(Duration.zero);

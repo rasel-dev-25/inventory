@@ -36,7 +36,7 @@ extension _CashLedgerEntryRowMapping on CashLedgerEntryRow {
 /// exactly the kind of untraceable cash figure this table exists to
 /// prevent.
 @DriftAccessor(tables: [CashLedgerEntries, StockMovements])
-class LedgerDao extends DatabaseAccessor<AppDatabaseV2> with _$LedgerDaoMixin {
+class LedgerDao extends DatabaseAccessor<AppDatabase> with _$LedgerDaoMixin {
   LedgerDao(super.db);
 
   Future<void> recordCashLedgerEntry({

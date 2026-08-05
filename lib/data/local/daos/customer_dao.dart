@@ -36,7 +36,7 @@ extension _CustomerRowMapping on CustomerRow {
 /// `@DriftAccessor`. Multiple DAOs declaring the same table is normal in
 /// Drift — each gets its own independent mixin.
 @DriftAccessor(tables: [Customers, Dues, Orders, RentTransactions, Sales])
-class CustomerDao extends DatabaseAccessor<AppDatabaseV2>
+class CustomerDao extends DatabaseAccessor<AppDatabase>
     with _$CustomerDaoMixin {
   CustomerDao(super.db);
 

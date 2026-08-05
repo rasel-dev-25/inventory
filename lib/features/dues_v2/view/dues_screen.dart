@@ -8,16 +8,24 @@ import '../../../domain/entities/enums.dart';
 import '../../../domain/services/due_lifecycle.dart';
 import '../controller/dues_controller.dart';
 
-/// The v2 Dues screen — outstanding-balance list and paydown, per
+/// The Dues screen — outstanding-balance list and paydown, per
 /// `notes/business_logic.md` §ছ, backed by [DuesController.payDue] →
-/// `PayDueUseCase`.
+/// `PayDueUseCase`. One of the 5 screens `ShellScreen` embeds directly —
+/// see `DashboardScreen`'s own doc comment for why [onMenuTap] exists.
 class DuesScreen extends GetView<DuesController> {
-  const DuesScreen({super.key});
+  final VoidCallback? onMenuTap;
+
+  const DuesScreen({super.key, this.onMenuTap});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('${'dues'.tr} (v2)')),
+      appBar: AppBar(
+        title: Text('dues'.tr),
+        leading: onMenuTap == null
+            ? null
+            : IconButton(icon: const Icon(Icons.menu), onPressed: onMenuTap),
+      ),
       body: Obx(() {
         final open = controller.outstandingDues;
         if (open.isEmpty) {

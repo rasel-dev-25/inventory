@@ -4,11 +4,11 @@ import 'package:inventory/data/local/drift_key_value_store.dart';
 import 'package:test/test.dart';
 
 void main() {
-  late AppDatabaseV2 db;
+  late AppDatabase db;
   late DriftKeyValueStore store;
 
   setUp(() {
-    db = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    db = AppDatabase.forTesting(NativeDatabase.memory());
     store = DriftKeyValueStore(db.appSettingsDao);
   });
 

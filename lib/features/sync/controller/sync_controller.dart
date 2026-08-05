@@ -38,7 +38,7 @@ enum SyncStatus { idle, syncing, success, failure }
 /// injected rather than constructed internally elsewhere in this
 /// codebase.
 class SyncController extends GetxController {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
   final SyncPushService pushService;
   final SyncPullService pullService;
   final AuthController authController;

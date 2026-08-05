@@ -6,7 +6,7 @@ import 'sync_enqueue_helper.dart';
 /// the matching outbox event together. See `CategoryDao`'s doc comment
 /// for why there is no delete here.
 class CategoryUseCases {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
 
   CategoryUseCases(this.db);
 

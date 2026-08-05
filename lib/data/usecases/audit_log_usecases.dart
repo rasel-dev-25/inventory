@@ -31,7 +31,7 @@ const _uuid = Uuid();
 /// but nothing here does yet; flagged, not silently assumed handled
 /// elsewhere.
 Future<void> recordAuditLog({
-  required AppDatabaseV2 db,
+  required AppDatabase db,
   required String shopId,
   required String action,
   required String changedTableName,
@@ -103,7 +103,7 @@ Future<void> recordAuditLog({
 /// `AuditLogController`'s `onInit`) decides to call it, not on a fixed
 /// schedule the app can guarantee while closed.
 class RetentionPolicyUseCase {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
 
   RetentionPolicyUseCase(this.db);
 

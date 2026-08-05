@@ -43,7 +43,7 @@ import 'sync_enqueue_helper.dart';
 /// converted capture back to the record it became; every prior caller
 /// that only checked `result.isOk`/`result.failureOrNull` is unaffected.
 class SaveSaleUseCase {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
   static const _uuid = Uuid();
 
   SaveSaleUseCase(this.db);

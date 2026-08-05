@@ -3,7 +3,7 @@
 part of 'sync_metadata_dao.dart';
 
 // ignore_for_file: type=lint
-mixin _$SyncMetadataDaoMixin on DatabaseAccessor<AppDatabaseV2> {
+mixin _$SyncMetadataDaoMixin on DatabaseAccessor<AppDatabase> {
   $SyncOutboxEntriesTable get syncOutboxEntries =>
       attachedDatabase.syncOutboxEntries;
   $SyncCursorsTable get syncCursors => attachedDatabase.syncCursors;

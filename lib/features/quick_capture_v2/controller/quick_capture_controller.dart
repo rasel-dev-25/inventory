@@ -41,7 +41,7 @@ import '../../../domain/entities/quick_capture.dart';
 /// reasoning applied to capture creation itself (a free-text note
 /// standing in for a real voice/photo file until native capture exists).
 class QuickCaptureController extends GetxController {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
   static const _uuid = Uuid();
 
   QuickCaptureController(this.db);

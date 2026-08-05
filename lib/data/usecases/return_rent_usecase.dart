@@ -32,7 +32,7 @@ import 'sync_enqueue_helper.dart';
 ///   modeled; flagged here rather than silently assumed away.
 /// - **Zero**: the deposit exactly covers everything; no cash moves.
 class ReturnRentUseCase {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
   static const _uuid = Uuid();
 
   ReturnRentUseCase(this.db);

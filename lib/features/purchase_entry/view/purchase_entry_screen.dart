@@ -9,13 +9,11 @@ import '../../../domain/entities/purchase.dart';
 import '../../../domain/services/purchase_reconciliation.dart';
 import '../controller/purchase_entry_controller.dart';
 
-/// The v2 purchase-entry screen — records a full trip (transport/other
+/// The purchase-entry screen — records a full trip (transport/other
 /// costs, cash returned, one or more items) via
 /// [PurchaseEntryController.save], which calls
 /// `SavePurchaseTripUseCase` end-to-end (trip + items + stock movements +
-/// cash-ledger entries, one outbox event). See `CatalogScreen`'s doc
-/// comment for why this reads/writes the v2 database only, separate from
-/// v1's Expenses & Purchases tab.
+/// cash-ledger entries, one outbox event).
 class PurchaseEntryScreen extends GetView<PurchaseEntryController> {
   const PurchaseEntryScreen({super.key});
 

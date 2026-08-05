@@ -45,7 +45,7 @@ extension _PurchaseItemRowMapping on PurchaseItemRow {
 /// purely to satisfy the table's primary key, and never surfaces that id
 /// back to the domain layer.
 @DriftAccessor(tables: [PurchaseTrips, PurchaseItems, PurchaseOtherCosts])
-class PurchaseDao extends DatabaseAccessor<AppDatabaseV2>
+class PurchaseDao extends DatabaseAccessor<AppDatabase>
     with _$PurchaseDaoMixin {
   PurchaseDao(super.db);
 

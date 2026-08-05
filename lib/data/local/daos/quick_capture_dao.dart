@@ -29,7 +29,7 @@ extension _QuickCaptureRowMapping on QuickCaptureRow {
 /// converted; not fixed here, tracked alongside the same gap for
 /// categories.
 @DriftAccessor(tables: [QuickCaptures])
-class QuickCaptureDao extends DatabaseAccessor<AppDatabaseV2>
+class QuickCaptureDao extends DatabaseAccessor<AppDatabase>
     with _$QuickCaptureDaoMixin {
   QuickCaptureDao(super.db);
 

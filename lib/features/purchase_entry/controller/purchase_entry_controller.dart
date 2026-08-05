@@ -38,7 +38,7 @@ class DraftOtherCost {
 /// [reconciliationPreview] so the form can show the same total-cash-out
 /// figure the spec's own "sanity check" describes, before committing.
 class PurchaseEntryController extends GetxController {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
 
   PurchaseEntryController(this.db);
 

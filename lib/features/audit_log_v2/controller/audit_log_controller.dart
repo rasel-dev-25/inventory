@@ -12,7 +12,7 @@ import '../../../data/local/default_shop.dart';
 /// Customers/Orders/Expenses, delete on PurchaseTrips) — not yet every
 /// create/update across the app.
 class AuditLogController extends GetxController {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
 
   AuditLogController(this.db);
 

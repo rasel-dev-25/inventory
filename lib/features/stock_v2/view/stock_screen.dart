@@ -5,17 +5,25 @@ import '../../../core/design/tokens.dart';
 import '../../../domain/entities/product.dart';
 import '../controller/stock_controller.dart';
 
-/// The v2 Stock screen — category/investor filters, per-filter cost/
+/// The Stock screen — category/investor filters, per-filter cost/
 /// sale-value/profit totals, and a top-sellers/slow-movers view, per
-/// `notes/business_logic.md` §খ. See `CatalogScreen`'s doc comment for why
-/// this reads the v2 database only, separate from v1's Inventory tab.
+/// `notes/business_logic.md` §খ. One of the 5 screens `ShellScreen`
+/// embeds directly — see `DashboardScreen`'s own doc comment for why
+/// [onMenuTap] exists.
 class StockScreen extends GetView<StockController> {
-  const StockScreen({super.key});
+  final VoidCallback? onMenuTap;
+
+  const StockScreen({super.key, this.onMenuTap});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('${'stockAndAssets'.tr} (v2)')),
+      appBar: AppBar(
+        title: Text('stockAndAssets'.tr),
+        leading: onMenuTap == null
+            ? null
+            : IconButton(icon: const Icon(Icons.menu), onPressed: onMenuTap),
+      ),
       body: Obx(() {
         if (controller.products.isEmpty) {
           return Center(child: Text('noProductsYet'.tr));

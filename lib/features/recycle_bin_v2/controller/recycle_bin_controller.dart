@@ -37,7 +37,7 @@ import '../../../data/usecases/product_usecases.dart';
 /// `RetentionPolicyUseCase`'s own doc comment for exactly why each of
 /// those three is excluded from hard-delete.
 class RecycleBinController extends GetxController {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
 
   RecycleBinController(this.db);
 

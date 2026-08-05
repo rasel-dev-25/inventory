@@ -19,7 +19,7 @@ import 'sync_enqueue_helper.dart';
 /// way every other cash event does — never a repayment that happened but
 /// left no trace in Total Cash.
 class RecordInvestorRepaymentUseCase {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
   static const _uuid = Uuid();
 
   RecordInvestorRepaymentUseCase(this.db);

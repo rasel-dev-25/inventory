@@ -20,7 +20,7 @@ part 'app_settings_dao.g.dart';
 /// doesn't exist yet) — a deliberate, flagged gap: two devices on the
 /// same shop do not currently share pricing-engine settings.
 @DriftAccessor(tables: [AppSettings])
-class AppSettingsDao extends DatabaseAccessor<AppDatabaseV2>
+class AppSettingsDao extends DatabaseAccessor<AppDatabase>
     with _$AppSettingsDaoMixin {
   AppSettingsDao(super.db);
 

@@ -34,7 +34,7 @@ import 'sync_enqueue_helper.dart';
 /// change ([PurchaseTrip] needs the field first), not something to guess
 /// at here.
 class SavePurchaseTripUseCase {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
   static const _uuid = Uuid();
 
   SavePurchaseTripUseCase(this.db);

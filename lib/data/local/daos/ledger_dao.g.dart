@@ -3,7 +3,7 @@
 part of 'ledger_dao.dart';
 
 // ignore_for_file: type=lint
-mixin _$LedgerDaoMixin on DatabaseAccessor<AppDatabaseV2> {
+mixin _$LedgerDaoMixin on DatabaseAccessor<AppDatabase> {
   $ShopsTable get shops => attachedDatabase.shops;
   $CashLedgerEntriesTable get cashLedgerEntries =>
       attachedDatabase.cashLedgerEntries;

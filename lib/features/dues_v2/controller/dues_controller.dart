@@ -11,11 +11,11 @@ import '../../../domain/entities/due.dart';
 import '../../../domain/entities/enums.dart';
 import '../../../domain/services/due_lifecycle.dart';
 
-/// Backs the v2 Dues screen — outstanding-balance tracking and paydown, via
-/// [PayDueUseCase]. See `CatalogScreen`'s doc comment for why this reads/
-/// writes the v2 database only, separate from v1's Dues tab.
+/// Backs the Dues screen — outstanding-balance tracking and paydown, via
+/// [PayDueUseCase]. Embedded directly in `ShellScreen` — see that
+/// class's own doc comment.
 class DuesController extends GetxController {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
 
   DuesController(this.db);
 

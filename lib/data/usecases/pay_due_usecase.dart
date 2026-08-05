@@ -26,7 +26,7 @@ import 'sync_enqueue_helper.dart';
 /// change hands" branch — a `cash_ledger_entries` row is written
 /// unconditionally, for the full [paymentAmount].
 class PayDueUseCase {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
   static const _uuid = Uuid();
 
   PayDueUseCase(this.db);

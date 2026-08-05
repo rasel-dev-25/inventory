@@ -1,11 +1,14 @@
+import 'dart:async';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app/app.dart';
 import 'core/config/supabase_config.dart';
-import 'core/database/app_database.dart';
+import 'core/db/legacy_cleanup.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/platform/capabilities.dart';
 import 'core/settings/settings_registry.dart';
@@ -42,22 +45,22 @@ void main() async {
     permanent: true,
   );
 
-  // --- v1 Drift init (still what every current screen reads/writes) ---
-  final db = AppDatabase();
-  Get.put<AppDatabase>(db, permanent: true);
+  // --- Legacy v1 database cleanup ---
+  // Every v1 feature screen has been removed (this app is new enough
+  // that there was no real production data to migrate — see
+  // `LegacyDatabaseCleanup`'s own doc comment for the "not yet called"
+  // note this call site replaces). Best-effort and idempotent: a device
+  // that never had the v1 database installed just finds nothing to
+  // delete. Deliberately not awaited before continuing startup — this
+  // is disk housekeeping, not something any other registration below
+  // depends on.
+  unawaited(
+    getApplicationDocumentsDirectory().then(LegacyDatabaseCleanup.deleteFrom),
+  );
 
-  // --- v2 Drift init ---
-  // Coexists with the v1 database above on a *different* file
-  // ('al_ashab_v2' vs. the v1 file's 'inventory_db') — no conflict, no
-  // shared state. Nothing reads from this yet; it is registered here so
-  // the repositories/use cases landing in the next few PRs have it
-  // available via DI without another main.dart change. Once every v1
-  // screen is replaced, this is the point where `LegacyDatabaseCleanup`
-  // (see `lib/core/db/legacy_cleanup.dart`) gets invoked and the `AppDatabase`
-  // registration above comes out — not before, since v1 screens still
-  // depend on that exact file.
-  final dbV2 = AppDatabaseV2();
-  Get.put<AppDatabaseV2>(dbV2, permanent: true);
+  // --- v2 Drift init (the only database now — see the cleanup above) ---
+  final dbV2 = AppDatabase();
+  Get.put<AppDatabase>(dbV2, permanent: true);
 
   // --- Sync engine (outbox pusher + cursor puller) ---
   // See SYNC.md for the design. Registered here (not lazily per-screen)
@@ -79,18 +82,25 @@ void main() async {
     permanent: true,
   );
 
-  // --- Settings service (v1) ---
-  Get.put<SettingsController>(SettingsController(), permanent: true);
-
-  // --- Settings registry (v2) ---
+  // --- Settings registry ---
   // The real, restart-surviving `SettingsRegistry` backing store —
   // `DriftKeyValueStore`'s own doc comment explains why `hydrate()` must
-  // be awaited here, before anything reads from it (the pricing engine's
-  // `PricingSettingsController` is the first real caller).
+  // be awaited here, before anything reads from it. Must exist before
+  // `SettingsController` below, which reads from it synchronously in its
+  // own `onInit`.
   final settingsStore = DriftKeyValueStore(dbV2.appSettingsDao);
   await settingsStore.hydrate();
   final settingsRegistry = SettingsRegistry(settingsStore);
   Get.put<SettingsRegistry>(settingsRegistry, permanent: true);
+
+  // --- App-wide theme + language ---
+  // See `SettingsController`'s own doc comment — this used to read/write
+  // through v1's now-deleted `AppDatabase`/`SettingsDao`; it's the
+  // `SettingsRegistry` above now, same as the pricing engine.
+  Get.put<SettingsController>(
+    SettingsController(settingsRegistry),
+    permanent: true,
+  );
 
   // --- Pricing engine (business_logic.md's overhead-markup suggestion) ---
   // Permanent, not lazy — see `PricingSettingsController`'s own doc

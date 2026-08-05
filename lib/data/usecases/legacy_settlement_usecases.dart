@@ -22,7 +22,7 @@ import 'sync_enqueue_helper.dart';
 /// number that was never actually a real-time cash movement this app
 /// witnessed.
 class LegacySettlementUseCases {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
   static const _uuid = Uuid();
 
   LegacySettlementUseCases(this.db);

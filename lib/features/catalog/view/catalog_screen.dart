@@ -6,18 +6,10 @@ import '../../../domain/entities/product.dart';
 import '../controller/catalog_controller.dart';
 import 'product_form_sheet.dart';
 
-/// The v2 categories + products screen — reads from [AppDatabaseV2] via
-/// [CatalogController], reached from the v1 shell's drawer as a clearly
-/// separate "New" section rather than replacing the v1 Inventory tab.
-///
-/// Deliberately not wired into the v1 shell's tab bar: v1's Daily
-/// Sales/Dues/Finance/Dashboard screens all read products from the
-/// *v1* database, a completely separate file from the v2 one this
-/// screen reads/writes. Replacing the v1 Inventory tab with this screen
-/// would silently split one shop's catalog into two disconnected
-/// copies — a product created here would not be sellable from v1's
-/// Daily Sales screen. That reconciliation is out of scope until v1's
-/// remaining screens are themselves migrated to v2.
+/// The categories + products screen, reached from [AppDrawer] —
+/// backed by [CatalogController]. Not one of `ShellScreen`'s 5 embedded
+/// tabs (see that class's own doc comment): editing the catalog itself
+/// is less frequent than the day-to-day screens that read from it.
 class CatalogScreen extends GetView<CatalogController> {
   const CatalogScreen({super.key});
 

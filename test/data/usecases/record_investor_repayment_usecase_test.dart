@@ -10,11 +10,11 @@ import 'package:inventory/domain/entities/investor.dart';
 import 'package:test/test.dart';
 
 void main() {
-  late AppDatabaseV2 db;
+  late AppDatabase db;
   late RecordInvestorRepaymentUseCase useCase;
 
   setUp(() async {
-    db = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    db = AppDatabase.forTesting(NativeDatabase.memory());
     useCase = RecordInvestorRepaymentUseCase(db);
 
     await db.investorDao.create(

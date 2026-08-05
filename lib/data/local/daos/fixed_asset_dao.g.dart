@@ -3,7 +3,7 @@
 part of 'fixed_asset_dao.dart';
 
 // ignore_for_file: type=lint
-mixin _$FixedAssetDaoMixin on DatabaseAccessor<AppDatabaseV2> {
+mixin _$FixedAssetDaoMixin on DatabaseAccessor<AppDatabase> {
   $ShopsTable get shops => attachedDatabase.shops;
   $ProductsTable get products => attachedDatabase.products;
   $FixedAssetsTable get fixedAssets => attachedDatabase.fixedAssets;

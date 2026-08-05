@@ -36,7 +36,7 @@ extension _SaleRowMapping on SaleRow {
 /// establish between "the storage primitive" and "the use case that
 /// pairs it with everything else that must happen alongside it".
 @DriftAccessor(tables: [Sales])
-class SaleDao extends DatabaseAccessor<AppDatabaseV2> with _$SaleDaoMixin {
+class SaleDao extends DatabaseAccessor<AppDatabase> with _$SaleDaoMixin {
   SaleDao(super.db);
 
   Future<domain.Sale?> getById(String id) async {

@@ -31,7 +31,7 @@ import 'sync_enqueue_helper.dart';
 /// collected here; see `ReturnRentUseCase` for why it's settled at return
 /// time instead.
 class IssueRentUseCase {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
   static const _uuid = Uuid();
 
   IssueRentUseCase(this.db);
