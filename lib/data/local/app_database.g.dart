@@ -16584,6 +16584,7 @@ abstract class _$AppDatabaseV2 extends GeneratedDatabase {
   late final QuickCaptureDao quickCaptureDao = QuickCaptureDao(
     this as AppDatabaseV2,
   );
+  late final AuditLogDao auditLogDao = AuditLogDao(this as AppDatabaseV2);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();

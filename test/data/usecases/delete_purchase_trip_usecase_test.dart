@@ -121,4 +121,20 @@ void main() {
     expect(result.isErr, isTrue);
     expect(result.failureOrNull, isA<NotFoundFailure>());
   });
+
+  test('records a delete audit log entry', () async {
+    final result = await useCase.call(
+      tripId: 'trip-1',
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+    expect(result.isOk, isTrue, reason: result.failureOrNull?.toString());
+
+    final auditEntries = await db.auditLogDao.watchAll(defaultShopId).first;
+    expect(auditEntries, hasLength(1));
+    expect(auditEntries.single.action, 'delete');
+    expect(auditEntries.single.changedTableName, 'purchase_trips');
+    expect(auditEntries.single.recordId, 'trip-1');
+    expect(auditEntries.single.oldValueJson, contains('trip-1'));
+  });
 }

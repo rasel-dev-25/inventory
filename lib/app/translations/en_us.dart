@@ -600,4 +600,31 @@ const Map<String, String> enUS = {
   'overdueRentReminderLabel': 'Overdue by ',
   'overdueSinceLabel': 'Overdue since ',
   'dueOnLabel': 'Due on ',
+
+  // ── Audit Log (M4 v2 screen) ─────────────────────────────────────────
+  'auditLogTitle': 'Audit Log',
+  'noAuditLogEntries': 'No audit log entries yet',
+  'recordIdLabel': 'Record: ',
+  'oldValueLabel': 'Before',
+  'newValueLabel': 'After',
+  'auditActionDelete': 'Deleted',
+  'auditActionRestore': 'Restored',
+  'auditActionUpdate': 'Updated',
+  'auditActionInsert': 'Created',
+
+  // ── Recycle Bin (M4 v2 screen) ───────────────────────────────────────
+  'recycleBinTitle': 'Recycle Bin',
+  'noDeletedItems': 'Nothing deleted right now',
+  'deletedCustomersSectionTitle': 'Deleted Customers',
+  'deletedOrdersSectionTitle': 'Deleted Orders',
+  'deletedExpensesSectionTitle': 'Deleted Expenses',
+  'restoreAction': 'Restore',
+  'cannotRestoreExpenseNote': 'restore not supported (cash already adjusted)',
+  'deletedOnLabel': 'Deleted on ',
+  'cleanUpOldItemsNow': 'Clean up old items now',
+  'pruneConfirmTitle': 'Clean up old items?',
+  'pruneConfirmMessage':
+      'Permanently removes deleted items and audit log entries older than '
+      'the retention window. This cannot be undone.',
+  'pruneResultMessage': 'Removed items: ',
 };

@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import '../../core/error/failure.dart';
 import '../../core/error/result.dart';
 import '../local/app_database.dart';
 import '../sync/outbox_event.dart';
+import 'audit_log_usecases.dart';
 import 'ledger_reversal.dart';
 import 'sync_enqueue_helper.dart';
 
@@ -70,6 +73,26 @@ class DeletePurchaseTripUseCase {
         await stockReversal.localWrite();
         await cashReversal.localWrite();
       },
+    );
+
+    // Audit-logged — see `CustomerUseCases.softDelete`'s own doc comment
+    // for the scope this belongs to. No `restore` counterpart, and no UI
+    // trigger yet either — see `RetentionPolicyUseCase`'s own doc
+    // comment on why `PurchaseTrips` is excluded from that policy too.
+    await recordAuditLog(
+      db: db,
+      shopId: shopId,
+      action: 'delete',
+      changedTableName: 'purchase_trips',
+      recordId: tripId,
+      oldValueJson: jsonEncode({
+        'id': trip.id,
+        'date': trip.date.toUtc().toIso8601String(),
+        'transport_cost_minor': trip.transportCost.minorUnits,
+        'cash_returned_minor': trip.cashReturned.minorUnits,
+        'item_count': trip.items.length,
+      }),
+      now: now,
     );
 
     return const Result.ok(null);

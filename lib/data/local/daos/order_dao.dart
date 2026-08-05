@@ -83,4 +83,35 @@ class OrderDao extends DatabaseAccessor<AppDatabaseV2> with _$OrderDaoMixin {
       OrdersCompanion(deletedAt: Value(now), updatedAt: Value(now)),
     );
   }
+
+  /// The Recycle Bin's source list for [Orders] — see `CustomerDao.
+  /// watchDeleted`'s doc comment for why this returns the raw
+  /// [OrderRow], not [domain.Order].
+  Stream<List<OrderRow>> watchDeleted(String shopId) {
+    final query = select(orders)
+      ..where((o) => o.shopId.equals(shopId) & o.deletedAt.isNotNull())
+      ..orderBy([(o) => OrderingTerm.desc(o.deletedAt)]);
+    return query.watch();
+  }
+
+  /// Un-deletes — safe unconditionally, same reasoning as
+  /// `CustomerDao.restore`: an order has no paired cash/stock write to
+  /// also undo.
+  Future<void> restore(String id, DateTime now) {
+    return (update(orders)..where((o) => o.id.equals(id))).write(
+      OrdersCompanion(deletedAt: const Value(null), updatedAt: Value(now)),
+    );
+  }
+
+  /// [RetentionPolicyUseCase]'s half of the retention policy for this
+  /// table — see `CustomerDao.hardDeleteOlderThan`'s doc comment.
+  Future<int> hardDeleteOlderThan(String shopId, DateTime cutoff) {
+    return (delete(orders)..where(
+          (o) =>
+              o.shopId.equals(shopId) &
+              o.deletedAt.isNotNull() &
+              o.deletedAt.isSmallerThanValue(cutoff),
+        ))
+        .go();
+  }
 }

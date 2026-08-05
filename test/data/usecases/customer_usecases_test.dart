@@ -105,4 +105,64 @@ void main() {
       expect(upserts.single.row.keys, {'id', 'shop_id', 'deleted_at'});
     },
   );
+
+  test(
+    'softDelete records an audit log entry with the pre-delete customer',
+    () async {
+      await useCases.create(
+        const Customer(id: 'cust-1', name: 'Karim'),
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+
+      await useCases.softDelete(
+        'cust-1',
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+
+      final auditEntries = await db.auditLogDao.watchAll(defaultShopId).first;
+      expect(auditEntries, hasLength(1));
+      expect(auditEntries.single.action, 'delete');
+      expect(auditEntries.single.changedTableName, 'customers');
+      expect(auditEntries.single.recordId, 'cust-1');
+      expect(auditEntries.single.oldValueJson, contains('Karim'));
+      expect(auditEntries.single.newValueJson, isNull);
+    },
+  );
+
+  test(
+    'restore un-hides the customer and records an audit log entry',
+    () async {
+      await useCases.create(
+        const Customer(id: 'cust-1', name: 'Karim'),
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+      await useCases.softDelete(
+        'cust-1',
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+      expect(await db.customerDao.getById('cust-1'), isNull);
+
+      await useCases.restore(
+        'cust-1',
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+
+      final restored = await db.customerDao.getById('cust-1');
+      expect(restored, isNotNull);
+      expect(restored!.name, 'Karim');
+
+      final auditEntries = await db.auditLogDao.watchAll(defaultShopId).first;
+      final restoreEntry = auditEntries.firstWhere(
+        (e) => e.action == 'restore',
+      );
+      expect(restoreEntry.changedTableName, 'customers');
+      expect(restoreEntry.newValueJson, contains('Karim'));
+      expect(restoreEntry.oldValueJson, isNull);
+    },
+  );
 }

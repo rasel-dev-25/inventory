@@ -598,4 +598,32 @@ const Map<String, String> bnBD = {
   'overdueRentReminderLabel': 'দেরি হয়েছে ',
   'overdueSinceLabel': 'বাকি পড়ে আছে ',
   'dueOnLabel': 'দেয় তারিখ ',
+
+  // ── Audit Log (M4 v2 screen) ─────────────────────────────────────────
+  'auditLogTitle': 'অডিট লগ',
+  'noAuditLogEntries': 'এখনো কোনো অডিট লগ এন্ট্রি নেই',
+  'recordIdLabel': 'রেকর্ড: ',
+  'oldValueLabel': 'আগে',
+  'newValueLabel': 'পরে',
+  'auditActionDelete': 'ডিলিট হয়েছে',
+  'auditActionRestore': 'রিস্টোর হয়েছে',
+  'auditActionUpdate': 'আপডেট হয়েছে',
+  'auditActionInsert': 'তৈরি হয়েছে',
+
+  // ── Recycle Bin (M4 v2 screen) ───────────────────────────────────────
+  'recycleBinTitle': 'রিসাইকেল বিন',
+  'noDeletedItems': 'এখন কিছু ডিলিট করা নেই',
+  'deletedCustomersSectionTitle': 'ডিলিট করা কাস্টমার',
+  'deletedOrdersSectionTitle': 'ডিলিট করা অর্ডার',
+  'deletedExpensesSectionTitle': 'ডিলিট করা খরচ',
+  'restoreAction': 'রিস্টোর',
+  'cannotRestoreExpenseNote':
+      'রিস্টোর সম্ভব না (ক্যাশ ইতিমধ্যে সমন্বয় হয়েছে)',
+  'deletedOnLabel': 'ডিলিট হয়েছে ',
+  'cleanUpOldItemsNow': 'পুরনো আইটেম পরিষ্কার করুন',
+  'pruneConfirmTitle': 'পুরনো আইটেম পরিষ্কার করবেন?',
+  'pruneConfirmMessage':
+      'রিটেনশন সময়সীমার চেয়ে পুরনো ডিলিট করা আইটেম ও অডিট লগ এন্ট্রি '
+      'স্থায়ীভাবে সরিয়ে দেয়। এটি ফিরিয়ে নেওয়া যাবে না।',
+  'pruneResultMessage': 'সরানো হয়েছে: ',
 };

@@ -81,4 +81,35 @@ class ExpenseDao extends DatabaseAccessor<AppDatabaseV2>
       ExpensesCompanion(deletedAt: Value(now), updatedAt: Value(now)),
     );
   }
+
+  /// The Recycle Bin's source list for [Expenses] — **view-only**, no
+  /// matching `restore` method exists on this DAO. See
+  /// `RecycleBinController`'s own doc comment for why: undoing a deleted
+  /// expense would need to re-apply the cash-ledger reversal
+  /// `ExpenseUseCases.softDelete` already wrote, which needs a genuinely
+  /// different mechanism than `buildCashLedgerReversal` (calling that
+  /// function again on an already-reversed source double-reverses it,
+  /// not un-reverses it) — a real feature, deliberately not attempted in
+  /// this change.
+  Stream<List<ExpenseRow>> watchDeleted(String shopId) {
+    final query = select(expenses)
+      ..where((e) => e.shopId.equals(shopId) & e.deletedAt.isNotNull())
+      ..orderBy([(e) => OrderingTerm.desc(e.deletedAt)]);
+    return query.watch();
+  }
+
+  /// [RetentionPolicyUseCase]'s half of the retention policy for this
+  /// table — see `CustomerDao.hardDeleteOlderThan`'s doc comment. Applies
+  /// here too even though this table has no `restore` — the retention
+  /// window is about freeing space, not about deciding what's
+  /// restorable.
+  Future<int> hardDeleteOlderThan(String shopId, DateTime cutoff) {
+    return (delete(expenses)..where(
+          (e) =>
+              e.shopId.equals(shopId) &
+              e.deletedAt.isNotNull() &
+              e.deletedAt.isSmallerThanValue(cutoff),
+        ))
+        .go();
+  }
 }

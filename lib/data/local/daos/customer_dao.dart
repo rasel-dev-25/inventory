@@ -87,6 +87,46 @@ class CustomerDao extends DatabaseAccessor<AppDatabaseV2>
     );
   }
 
+  /// Every soft-deleted [Customers] row for [shopId] — the Recycle Bin's
+  /// source list. Returns the raw generated row (not [domain.Customer])
+  /// since [CustomerRow.deletedAt] is exactly the field the bin needs to
+  /// show "deleted 3 days ago" and the domain entity deliberately doesn't
+  /// carry that column at all (nothing in normal business logic needs
+  /// it) — same shortcut `dashboard_v2` already takes with
+  /// `StockMovementRow` for a screen-specific need the domain layer has
+  /// no reason to model.
+  Stream<List<CustomerRow>> watchDeleted(String shopId) {
+    final query = select(customers)
+      ..where((c) => c.shopId.equals(shopId) & c.deletedAt.isNotNull())
+      ..orderBy([(c) => OrderingTerm.desc(c.deletedAt)]);
+    return query.watch();
+  }
+
+  /// Un-deletes — clears `deletedAt` and nothing else. Safe to offer
+  /// unconditionally for a [Customers] row: unlike `Expenses`/
+  /// `PurchaseTrips`, deleting a customer never wrote a paired cash-ledger
+  /// or stock-movement reversal to also undo (see `CustomerUseCases`'
+  /// own doc comment — a customer has no such side effect).
+  Future<void> restore(String id, DateTime now) {
+    return (update(customers)..where((c) => c.id.equals(id))).write(
+      CustomersCompanion(deletedAt: const Value(null), updatedAt: Value(now)),
+    );
+  }
+
+  /// A real `DELETE`, not another soft-delete — [RetentionPolicyUseCase]'s
+  /// half of the retention policy for this table. Only ever touches rows
+  /// already past [cutoff] in `deletedAt`; a customer that was never
+  /// deleted at all is untouched regardless of how old it is.
+  Future<int> hardDeleteOlderThan(String shopId, DateTime cutoff) {
+    return (delete(customers)..where(
+          (c) =>
+              c.shopId.equals(shopId) &
+              c.deletedAt.isNotNull() &
+              c.deletedAt.isSmallerThanValue(cutoff),
+        ))
+        .go();
+  }
+
   CustomersCompanion _companionFor(
     domain.Customer customer, {
     required String shopId,

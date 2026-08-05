@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import '../../domain/entities/customer.dart';
 import '../local/app_database.dart';
 import '../sync/outbox_event.dart';
+import 'audit_log_usecases.dart';
 import 'sync_enqueue_helper.dart';
 
 /// Create/update/delete for [Customer] — same shape as [ProductUseCases]:
@@ -58,12 +61,19 @@ class CustomerUseCases {
     );
   }
 
+  /// Audit-logged (`action: 'delete'`, `oldValueJson` the customer as it
+  /// stood before this call) — see `audit_log_usecases.dart`'s own doc
+  /// comment for why this and [restore] are among the small, explicit
+  /// set of call sites that write an audit entry today, not a generic
+  /// hook every use case gets automatically.
   Future<void> softDelete(
     String id, {
     required String shopId,
     required DateTime now,
-  }) {
-    return writeAndEnqueue(
+  }) async {
+    final existing = await db.customerDao.getById(id);
+
+    await writeAndEnqueue(
       db: db,
       eventType: 'customer_deleted',
       upserts: [
@@ -77,6 +87,44 @@ class CustomerUseCases {
         ),
       ],
       localWrite: () => db.customerDao.softDelete(id, now),
+    );
+
+    await recordAuditLog(
+      db: db,
+      shopId: shopId,
+      action: 'delete',
+      changedTableName: 'customers',
+      recordId: id,
+      oldValueJson: existing == null
+          ? null
+          : jsonEncode(_rowFor(existing, shopId: shopId)),
+      now: now,
+    );
+  }
+
+  /// Un-deletes — see `CustomerDao.restore`'s own doc comment for why
+  /// this is safe unconditionally for a customer (no paired cash/stock
+  /// write to also undo). Not currently pushed to the outbox — restoring
+  /// from the Recycle Bin is, like the bin itself, a local-only action
+  /// today (flagged, not silently assumed to sync).
+  Future<void> restore(
+    String id, {
+    required String shopId,
+    required DateTime now,
+  }) async {
+    await db.customerDao.restore(id, now);
+    final restored = await db.customerDao.getById(id);
+
+    await recordAuditLog(
+      db: db,
+      shopId: shopId,
+      action: 'restore',
+      changedTableName: 'customers',
+      recordId: id,
+      newValueJson: restored == null
+          ? null
+          : jsonEncode(_rowFor(restored, shopId: shopId)),
+      now: now,
     );
   }
 

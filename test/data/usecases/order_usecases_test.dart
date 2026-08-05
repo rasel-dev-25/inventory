@@ -204,4 +204,64 @@ void main() {
 
     expect(await db.orderDao.getById(orderId), isNull);
   });
+
+  test('softDelete records a delete audit log entry', () async {
+    await useCases.create(
+      customerId: 'cust-1',
+      itemDescription: 'A red backpack',
+      requestedDate: DateTime.utc(2026, 1, 1),
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+    final orderId = (await (db.select(db.orders)).get()).single.id;
+
+    await useCases.softDelete(
+      orderId,
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+
+    final auditEntries = await db.auditLogDao.watchAll(defaultShopId).first;
+    expect(auditEntries, hasLength(1));
+    expect(auditEntries.single.action, 'delete');
+    expect(auditEntries.single.changedTableName, 'orders');
+    expect(auditEntries.single.recordId, orderId);
+    expect(auditEntries.single.oldValueJson, contains('A red backpack'));
+  });
+
+  test(
+    'restore un-hides the order and records a restore audit log entry',
+    () async {
+      await useCases.create(
+        customerId: 'cust-1',
+        itemDescription: 'A red backpack',
+        requestedDate: DateTime.utc(2026, 1, 1),
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+      final orderId = (await (db.select(db.orders)).get()).single.id;
+      await useCases.softDelete(
+        orderId,
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+
+      await useCases.restore(
+        orderId,
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+
+      final restored = await db.orderDao.getById(orderId);
+      expect(restored, isNotNull);
+      expect(restored!.itemDescription, 'A red backpack');
+
+      final auditEntries = await db.auditLogDao.watchAll(defaultShopId).first;
+      final restoreEntry = auditEntries.firstWhere(
+        (e) => e.action == 'restore',
+      );
+      expect(restoreEntry.changedTableName, 'orders');
+      expect(restoreEntry.newValueJson, contains('A red backpack'));
+    },
+  );
 }

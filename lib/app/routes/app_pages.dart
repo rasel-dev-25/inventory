@@ -91,6 +91,11 @@ import '../../features/reports_v2/view/reports_screen.dart';
 // import here — ReminderController is registered permanently in
 // main.dart, this route has no binding of its own (see the GetPage below).
 import '../../features/reminders_v2/view/reminders_screen.dart';
+// No aliasing needed — v1 has no audit-log/recycle-bin features at all.
+import '../../features/audit_log_v2/controller/audit_log_controller.dart';
+import '../../features/audit_log_v2/view/audit_log_screen.dart';
+import '../../features/recycle_bin_v2/controller/recycle_bin_controller.dart';
+import '../../features/recycle_bin_v2/view/recycle_bin_screen.dart';
 
 abstract class AppPages {
   static final pages = [
@@ -314,5 +319,19 @@ abstract class AppPages {
     // Reminders screen itself is never opened), so
     // GetView<ReminderController> just finds the existing instance.
     GetPage(name: AppRoutes.remindersV2, page: () => const RemindersScreen()),
+    GetPage(
+      name: AppRoutes.auditLogV2,
+      page: () => const AuditLogScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => AuditLogController(Get.find<AppDatabaseV2>()));
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.recycleBinV2,
+      page: () => const RecycleBinScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => RecycleBinController(Get.find<AppDatabaseV2>()));
+      }),
+    ),
   ];
 }
