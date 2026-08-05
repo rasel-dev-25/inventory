@@ -34,6 +34,49 @@ void main() {
     });
   });
 
+  group('DateRange.weekContaining', () {
+    test('spans Monday through Sunday regardless of which day is passed', () {
+      // 2026-08-05 is a Wednesday.
+      final range = DateRange.weekContaining(DateTime.utc(2026, 8, 5));
+      expect(range.start, DateTime.utc(2026, 8, 3)); // Monday
+      expect(range.end, DateTime.utc(2026, 8, 10)); // next Monday
+    });
+
+    test('a Monday itself is the start of its own week', () {
+      final range = DateRange.weekContaining(DateTime.utc(2026, 8, 3, 18));
+      expect(range.start, DateTime.utc(2026, 8, 3));
+    });
+
+    test('a Sunday belongs to the week that started the previous Monday', () {
+      final range = DateRange.weekContaining(DateTime.utc(2026, 8, 9));
+      expect(range.start, DateTime.utc(2026, 8, 3));
+      expect(range.end, DateTime.utc(2026, 8, 10));
+    });
+
+    test('correctly crosses a month boundary', () {
+      // 2026-09-02 is a Wednesday; that week starts Monday 2026-08-31.
+      final range = DateRange.weekContaining(DateTime.utc(2026, 9, 2));
+      expect(range.start, DateTime.utc(2026, 8, 31));
+      expect(range.end, DateTime.utc(2026, 9, 7));
+    });
+  });
+
+  group('DateRange.monthContaining', () {
+    test('spans the first through the last day of the month', () {
+      final range = DateRange.monthContaining(DateTime.utc(2026, 8, 15));
+      expect(range.start, DateTime.utc(2026, 8, 1));
+      expect(range.end, DateTime.utc(2026, 9, 1));
+      expect(range.contains(DateTime.utc(2026, 8, 31, 23, 59, 59)), isTrue);
+      expect(range.contains(DateTime.utc(2026, 9, 1)), isFalse);
+    });
+
+    test('correctly rolls December into next January', () {
+      final range = DateRange.monthContaining(DateTime.utc(2026, 12, 10));
+      expect(range.start, DateTime.utc(2026, 12, 1));
+      expect(range.end, DateTime.utc(2027, 1, 1));
+    });
+  });
+
   group('whereInRange', () {
     test('filters a list down to only the items inside the range — proves '
         'day-view and all-time can share one calculation, fed different '

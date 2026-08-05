@@ -28,4 +28,5 @@ abstract class AppRoutes {
   static const fixedAssetV2 = '/v2/fixed-asset';
   static const quickCaptureV2 = '/v2/quick-capture';
   static const pricingSettingsV2 = '/v2/pricing-settings';
+  static const reportsV2 = '/v2/reports';
 }
