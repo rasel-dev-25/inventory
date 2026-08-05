@@ -6,6 +6,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app/app.dart';
 import 'core/config/supabase_config.dart';
 import 'core/database/app_database.dart';
+import 'core/notifications/notification_service.dart';
+import 'core/platform/capabilities.dart';
 import 'core/settings/settings_registry.dart';
 import 'data/local/app_database.dart';
 import 'data/local/drift_key_value_store.dart';
@@ -17,6 +19,7 @@ import 'domain/repositories/auth_repository.dart';
 import 'features/auth/controller/auth_controller.dart';
 import 'features/backup_v2/controller/backup_controller.dart';
 import 'features/pricing_settings_v2/controller/pricing_settings_controller.dart';
+import 'features/reminders_v2/controller/reminder_controller.dart';
 import 'features/settings/controller/settings_controller.dart';
 import 'features/sync/controller/sync_controller.dart';
 import 'data/local/local_row_upserter.dart';
@@ -102,6 +105,22 @@ void main() async {
   // Permanent so the drawer's "Backup Data (v2)"/"Restore Data (v2)"
   // actions can `Get.find` it without a dedicated screen/binding.
   Get.put<BackupController>(BackupController(dbV2), permanent: true);
+
+  // --- Reminders + notifications (M4) ---
+  // NotificationService.initialize() is awaited here (it's a safe no-op
+  // on Windows/Web, and idempotent) so the Android permission prompt/
+  // channel setup has already happened before ReminderController's
+  // first reminder computation could try to show one. Both permanent —
+  // see ReminderController's own doc comment for why it needs to keep
+  // running even when the Reminders screen is never opened.
+  final notificationService = NotificationService(
+    PlatformCapabilities.detect(),
+  );
+  await notificationService.initialize();
+  Get.put<ReminderController>(
+    ReminderController(dbV2, notificationService),
+    permanent: true,
+  );
 
   runApp(const App());
 }

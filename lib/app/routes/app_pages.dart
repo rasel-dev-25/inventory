@@ -87,6 +87,10 @@ import '../../features/pricing_settings_v2/view/pricing_settings_screen.dart';
 // a different name from this screen's ReportsController/ReportsScreen.
 import '../../features/reports_v2/controller/reports_controller.dart';
 import '../../features/reports_v2/view/reports_screen.dart';
+// No aliasing needed — v1 has no reminders feature at all. No controller
+// import here — ReminderController is registered permanently in
+// main.dart, this route has no binding of its own (see the GetPage below).
+import '../../features/reminders_v2/view/reminders_screen.dart';
 
 abstract class AppPages {
   static final pages = [
@@ -305,5 +309,10 @@ abstract class AppPages {
         Get.lazyPut(() => ReportsController(Get.find<AppDatabaseV2>()));
       }),
     ),
+    // No binding needed — ReminderController is registered permanently in
+    // main.dart (it needs to keep computing/notifying even when the
+    // Reminders screen itself is never opened), so
+    // GetView<ReminderController> just finds the existing instance.
+    GetPage(name: AppRoutes.remindersV2, page: () => const RemindersScreen()),
   ];
 }

@@ -124,6 +124,10 @@ class AppDrawer extends GetView<ShellController> {
             Navigator.pop(context);
             Get.toNamed(AppRoutes.reportsV2);
           }),
+          _tile(Iconsax.notification, 'remindersTitle'.tr, () {
+            Navigator.pop(context);
+            Get.toNamed(AppRoutes.remindersV2);
+          }),
           _tile(Iconsax.user, 'account'.tr, () {
             Navigator.pop(context);
             Get.toNamed(AppRoutes.accountSettings);

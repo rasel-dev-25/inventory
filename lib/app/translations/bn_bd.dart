@@ -581,4 +581,21 @@ const Map<String, String> bnBD = {
   'restoreFailedV2': 'রিস্টোর ব্যর্থ: ',
   'noBackupFilesFoundV2': 'কোনো v2 ব্যাকআপ ফাইল পাওয়া যায়নি',
   'selectBackupFileV2': 'একটা ব্যাকআপ ফাইল বাছুন',
+
+  // ── Reminders (M4 v2 screen) ─────────────────────────────────────────
+  'remindersTitle': 'রিমাইন্ডার',
+  'noReminders': 'এখন কিছুতে মনোযোগ দেওয়ার প্রয়োজন নেই',
+  'reminderNotificationTitle': 'আল আশহাব — রিমাইন্ডার',
+  'reminderDueBody': 'বাকি পরিশোধ করতে হবে: ',
+  'reminderInvestorCapitalBody': 'মূলধন ফেরত দিতে হবে: ',
+  'reminderInvestorPayoutBody': 'লাভের ভাগ দিতে হবে: ',
+  'reminderSuspiciousBody': 'ফলোআপ প্রয়োজন: ',
+  'reminderOverdueRentBody': 'বাকি ভাড়া — ',
+  'dueBalanceReminderLabel': 'বাকি: ',
+  'investorCapitalReminderLabel': 'মূলধন ফেরত বাকি',
+  'investorPayoutReminderLabel': 'লাভের ভাগ পরিশোধ বাকি',
+  'suspiciousCustomerReminderLabel': 'ফলোআপের জন্য চিহ্নিত',
+  'overdueRentReminderLabel': 'দেরি হয়েছে ',
+  'overdueSinceLabel': 'বাকি পড়ে আছে ',
+  'dueOnLabel': 'দেয় তারিখ ',
 };
