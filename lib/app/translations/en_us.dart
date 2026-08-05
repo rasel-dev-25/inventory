@@ -443,6 +443,8 @@ const Map<String, String> enUS = {
   'noProductsYet': 'No products yet',
   'account': 'Account',
   'signedInAs': 'Signed in as',
+  'barcodeLabel': 'Barcode',
+  'skuLabel': 'SKU',
 
   // ── Sync (M1) ────────────────────────────────────────────────────────
   'syncNow': 'Sync Now',
