@@ -530,4 +530,29 @@ const Map<String, String> enUS = {
   'writeQuickNote': 'Quick note',
   'shopNameLabel': 'Shop Name',
   'converted': 'Converted',
+
+  // ── Pricing Settings / overhead-markup engine (M2 v2 screen) ────────
+  'pricingSettingsTitle': 'Pricing Settings',
+  'overheadSectionTitle': 'Monthly Overhead',
+  'monthlyShopRent': 'Monthly Shop Rent',
+  'monthlyOwnerSalary': 'Monthly Owner Salary',
+  'averageMonthlyTripCost': 'Average Monthly Trip Cost',
+  'estimatedMonthlySalesRevenue': 'Estimated Monthly Sales Revenue',
+  'estimatedMonthlySalesRevenueNotSetYet':
+      'Not set yet — waiting for month end',
+  'manuallySet': 'Manually set',
+  'autoAveragedFromTrips': 'Auto-averaged from the last few months\' trips',
+  'autoRefreshedFromLastMonth':
+      'Auto-refreshed from last month\'s actual sales',
+  'useAutoValue': 'Use auto-computed value',
+  'overheadMarkupPercentLabel': 'Overhead Markup',
+  'pricingEngineBootstrapPeriodNotice':
+      'Price suggestions are hidden for now — once this month ends, the '
+      'system will estimate your monthly sales revenue automatically and '
+      'turn suggestions on. You can also set an estimate manually below.',
+  'pricingEngineNoRevenueYetNotice':
+      'No positive sales revenue estimate yet, so a suggestion can\'t be '
+      'computed.',
+  'suggestedSellPriceLabel': 'Suggested: ',
+  'tapToUse': 'tap to use',
 };

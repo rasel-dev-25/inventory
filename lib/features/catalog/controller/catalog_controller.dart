@@ -11,6 +11,7 @@ import '../../../data/usecases/product_usecases.dart';
 import '../../../domain/entities/fund_source.dart';
 import '../../../domain/entities/investor.dart';
 import '../../../domain/entities/product.dart';
+import '../../pricing_settings_v2/controller/pricing_settings_controller.dart';
 
 /// Backs the new v2 categories/products screens
 /// (`lib/features/catalog/view/`). Reads live from [AppDatabaseV2] via
@@ -24,12 +25,25 @@ import '../../../domain/entities/product.dart';
 /// user reaches without also caring about products.
 class CatalogController extends GetxController {
   final AppDatabaseV2 db;
+
+  /// The pricing-engine controller — a permanent, app-wide singleton (see
+  /// its own doc comment), injected here rather than looked up ad hoc so
+  /// [overheadMarkupPercent] stays plain constructor-injected state like
+  /// every other v2 controller dependency.
+  final PricingSettingsController pricingSettings;
+
   static const _uuid = Uuid();
 
-  CatalogController(this.db);
+  CatalogController(this.db, this.pricingSettings);
 
   late final CategoryUseCases _categoryUseCases = CategoryUseCases(db);
   late final ProductUseCases _productUseCases = ProductUseCases(db);
+
+  /// Null exactly when `ProductFormSheet`'s cost-price suggestion should
+  /// stay hidden (the pricing engine's bootstrap period, or no usable
+  /// revenue estimate yet) — see `computeOverheadMarkupPercent`'s doc
+  /// comment for the exact conditions.
+  double? get overheadMarkupPercent => pricingSettings.overheadMarkupPercent;
 
   final categories = <CategoryRow>[].obs;
   final products = <Product>[].obs;

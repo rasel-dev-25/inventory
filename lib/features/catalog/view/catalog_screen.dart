@@ -169,6 +169,7 @@ class _ProductsTab extends GetView<CatalogController> {
         existing: existing,
         categories: controller.categories.map((c) => c.name).toList(),
         investors: controller.investors,
+        overheadMarkupPercent: controller.overheadMarkupPercent,
       ),
     );
     if (result == null) return;
