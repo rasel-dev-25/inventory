@@ -27,16 +27,31 @@ class FixedAssetScreen extends GetView<FixedAssetController> {
             final asset = controller.assets[index];
             final fromStock =
                 asset.sourceType == FixedAssetSource.convertedFromStock;
-            return Card(
-              margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: ListTile(
-                title: Text(asset.name),
-                subtitle: Text(
-                  fromStock ? 'convertFromStock'.tr : 'directPurchase'.tr,
+            return Dismissible(
+              key: ValueKey(asset.id),
+              direction: DismissDirection.endToStart,
+              background: Container(
+                color: Theme.of(context).colorScheme.errorContainer,
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.only(right: AppSpacing.lg),
+                child: Icon(
+                  Icons.delete,
+                  color: Theme.of(context).colorScheme.onErrorContainer,
                 ),
-                trailing: Text(
-                  asset.value.format(),
-                  style: Theme.of(context).textTheme.titleMedium,
+              ),
+              confirmDismiss: (_) => _confirmDelete(context, asset.name),
+              onDismissed: (_) => controller.deleteAsset(asset.id),
+              child: Card(
+                margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: ListTile(
+                  title: Text(asset.name),
+                  subtitle: Text(
+                    fromStock ? 'convertFromStock'.tr : 'directPurchase'.tr,
+                  ),
+                  trailing: Text(
+                    asset.value.format(),
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                 ),
               ),
             );
@@ -266,6 +281,31 @@ class FixedAssetScreen extends GetView<FixedAssetController> {
         );
       },
     );
+  }
+
+  /// Same confirm-before-dismiss pattern `CustomersScreen`'s
+  /// `_confirmDelete` establishes — extra warranted here since, unlike a
+  /// product or customer, this delete is *not* restorable (see
+  /// `FixedAssetUseCases.delete`'s own doc comment).
+  Future<bool> _confirmDelete(BuildContext context, String name) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('${'delete'.tr} $name?'),
+        content: Text('cannotUndoNote'.tr),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('cancel'.tr),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('delete'.tr),
+          ),
+        ],
+      ),
+    );
+    return confirmed ?? false;
   }
 }
 

@@ -616,9 +616,13 @@ const Map<String, String> bnBD = {
   'deletedCustomersSectionTitle': 'ডিলিট করা কাস্টমার',
   'deletedOrdersSectionTitle': 'ডিলিট করা অর্ডার',
   'deletedExpensesSectionTitle': 'ডিলিট করা খরচ',
+  'deletedProductsSectionTitle': 'ডিলিট করা পণ্য',
+  'deletedFixedAssetsSectionTitle': 'ডিলিট করা ফিক্সড অ্যাসেট',
+  'deletedPurchaseTripsSectionTitle': 'ডিলিট করা কেনাকাটার ট্রিপ',
   'restoreAction': 'রিস্টোর',
   'cannotRestoreExpenseNote':
       'রিস্টোর সম্ভব না (ক্যাশ ইতিমধ্যে সমন্বয় হয়েছে)',
+  'cannotRestoreNote': 'রিস্টোর সম্ভব না (ক্যাশ/স্টক ইতিমধ্যে সমন্বয় হয়েছে)',
   'deletedOnLabel': 'ডিলিট হয়েছে ',
   'cleanUpOldItemsNow': 'পুরনো আইটেম পরিষ্কার করুন',
   'pruneConfirmTitle': 'পুরনো আইটেম পরিষ্কার করবেন?',
@@ -626,9 +630,13 @@ const Map<String, String> bnBD = {
       'রিটেনশন সময়সীমার চেয়ে পুরনো ডিলিট করা আইটেম ও অডিট লগ এন্ট্রি '
       'স্থায়ীভাবে সরিয়ে দেয়। এটি ফিরিয়ে নেওয়া যাবে না।',
   'pruneResultMessage': 'সরানো হয়েছে: ',
+  'cannotUndoNote': 'এটি ফিরিয়ে নেওয়া যাবে না।',
 
   // ── Barcode Scanning (M4) ────────────────────────────────────────────
   'scanBarcodeTitle': 'বারকোড স্ক্যান করুন',
   'scanBarcodeHint': 'বারকোডের দিকে ক্যামেরা ধরুন',
   'noProductForBarcode': 'এই বারকোডের জন্য কোনো পণ্য পাওয়া যায়নি',
+
+  // ── Purchase Entry: সাম্প্রতিক ট্রিপ (M4 hardening) ────────────────────
+  'recentTripsSectionTitle': 'সাম্প্রতিক ট্রিপ',
 };

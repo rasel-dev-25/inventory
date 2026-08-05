@@ -8,14 +8,17 @@ const _uuid = Uuid();
 /// use cases that create/delete/restore a row, not auto-hooked into
 /// [writeAndEnqueue] generically for every write in the app.
 ///
-/// **Deliberately scoped down, flagged rather than oversold**: today this
-/// only covers the delete/restore paths this PR touches
-/// (`CustomerUseCases`, `OrderUseCases`, `ExpenseUseCases.softDelete`,
-/// `DeletePurchaseTripUseCase`) — not every create/update across all
-/// ~20 use cases in this app. Auditing "who changed the selling price"
-/// (the spec's own example) would need this called from
-/// `ProductUseCases.update` too, and isn't yet. Extending coverage is a
-/// matter of adding one more call site each time, not a redesign.
+/// **Deliberately scoped down, flagged rather than oversold**: this
+/// covers delete/restore on `CustomerUseCases`, `OrderUseCases`,
+/// `ExpenseUseCases.softDelete`, `DeletePurchaseTripUseCase`,
+/// `ProductUseCases.softDelete`/`restore`, and `FixedAssetUseCases.delete`
+/// — plus create/update on `ProductUseCases` (the spec's own "who changed
+/// the selling price" example) and the two `FixedAssetUseCases` create
+/// paths. It does **not** cover every create/update across all ~20 use
+/// cases in this app — `CustomerUseCases.create`/`update`,
+/// `OrderUseCases.create`, and `ExpenseUseCases.create` remain unaudited,
+/// for one. Extending coverage further is a matter of adding one more
+/// call site each time, not a redesign.
 ///
 /// [oldValueJson]/[newValueJson] are whatever the caller already has in
 /// hand (e.g. a domain entity's own JSON-ish map) — this function does
@@ -66,11 +69,31 @@ Future<void> recordAuditLog({
 /// policy's job is freeing space, not deciding what's restorable; those
 /// are independent concerns that happen to both apply to the same rows.
 ///
-/// **PurchaseTrips is deliberately not pruned here** — see
-/// `DeletePurchaseTripUseCase`'s own doc comment: nothing in the UI can
-/// trigger that deletion yet, so there is nothing real to prune, and
-/// hard-deleting a trip would need to cascade its `PurchaseItems`/
-/// `PurchaseOtherCosts` too, which this scoped-down v1 doesn't attempt.
+/// **[Products]/[FixedAssets]/[PurchaseTrips] are deliberately not
+/// pruned here**, even though all three are now soft-deletable and
+/// visible in the Recycle Bin:
+/// - [Products] — `Products.id` is a foreign-key target for
+///   `StockMovements`/`SaleItems`/`PurchaseItems`/`RentTiers`; a real
+///   `DELETE` on a product with any real usage history would violate
+///   those constraints. See `ProductDao`'s own doc comment.
+/// - [PurchaseTrips] — hard-deleting a trip would need to cascade its
+///   `PurchaseItems`/`PurchaseOtherCosts` too, which this scoped-down v1
+///   doesn't attempt.
+/// - [FixedAssets] — has no incoming foreign key today, so this one
+///   could safely be added; left out to keep this change to what was
+///   actually asked for (Recycle Bin visibility + delete UI triggers),
+///   not a retention-policy expansion. A real gap, not a silent one.
+///
+/// **Also flagged, not fixed here**: [Customers] *does* have incoming
+/// foreign keys (`Dues`/`Orders`/`RentTransactions`/`Sales` all reference
+/// `Customers.id`), yet [hardDeleteOlderThan] below already runs against
+/// it unconditionally. A customer with real order/sale/due/rent history
+/// that sits soft-deleted past the retention window would hit the exact
+/// same FK-violation risk described above for [Products] — this is a
+/// pre-existing gap (from the PR that first added this policy), not
+/// something introduced or fixed in this change; its own test only ever
+/// prunes a customer with no linked history, so the violation has never
+/// actually been exercised.
 ///
 /// Not a real cron — same honest limitation `PricingSettingsController`'s
 /// month-end refresh documents: this runs whenever a caller (today,

@@ -225,4 +225,23 @@ class CatalogController extends GetxController {
       return false;
     }
   }
+
+  /// Soft-deletes — see `ProductUseCases.softDelete`'s own doc comment
+  /// for why this is safe to offer with no extra confirmation logic here
+  /// (the screen itself still confirms with the owner before calling
+  /// this, same as `CustomersController.deleteCustomer`'s call site).
+  Future<bool> deleteProduct(String id) async {
+    errorMessage.value = null;
+    try {
+      await _productUseCases.softDelete(
+        id,
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+      return true;
+    } catch (e) {
+      errorMessage.value = e.toString();
+      return false;
+    }
+  }
 }

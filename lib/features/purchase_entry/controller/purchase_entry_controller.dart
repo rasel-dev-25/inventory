@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/money/money.dart';
 import '../../../data/local/app_database.dart';
 import '../../../data/local/default_shop.dart';
+import '../../../data/usecases/delete_purchase_trip_usecase.dart';
 import '../../../data/usecases/save_purchase_trip_usecase.dart';
 import '../../../domain/entities/fund_source.dart';
 import '../../../domain/entities/investor.dart';
@@ -42,6 +43,8 @@ class PurchaseEntryController extends GetxController {
   PurchaseEntryController(this.db);
 
   late final SavePurchaseTripUseCase _useCase = SavePurchaseTripUseCase(db);
+  late final DeletePurchaseTripUseCase _deleteUseCase =
+      DeletePurchaseTripUseCase(db);
   static const _uuid = Uuid();
 
   final tripDate = DateTime.now().obs;
@@ -52,6 +55,13 @@ class PurchaseEntryController extends GetxController {
 
   final products = <Product>[].obs;
   final investors = <Investor>[].obs;
+
+  /// Backs the screen's "Recent Trips" list — the first real UI trigger
+  /// for [DeletePurchaseTripUseCase] (previously dead code with no
+  /// reachable delete action anywhere, per that use case's own doc
+  /// comment). Capped the same way `PurchaseDao.watchRecent`'s own doc
+  /// comment explains: right for a scrolling list, wrong for a total.
+  final recentTrips = <PurchaseTrip>[].obs;
 
   final isSaving = false.obs;
   final errorMessage = RxnString();
@@ -72,6 +82,11 @@ class PurchaseEntryController extends GetxController {
       db.investorDao
           .watchAll(defaultShopId)
           .listen((rows) => investors.assignAll(rows)),
+    );
+    _subscriptions.add(
+      db.purchaseDao
+          .watchRecent(defaultShopId, limit: 20)
+          .listen((rows) => recentTrips.assignAll(rows)),
     );
   }
 
@@ -162,5 +177,25 @@ class PurchaseEntryController extends GetxController {
     cashReturned.value = Money.zero();
     otherCosts.clear();
     items.clear();
+  }
+
+  /// See `DeletePurchaseTripUseCase`'s own doc comment for exactly what
+  /// this reverses (every stock movement and cash-ledger entry the
+  /// original save wrote) and why there is no matching "restore" —
+  /// deleting a trip is a one-way trip, same as an expense.
+  Future<bool> deleteTrip(String id) async {
+    errorMessage.value = null;
+    final result = await _deleteUseCase.call(
+      tripId: id,
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+    return result.fold(
+      onOk: (_) => true,
+      onErr: (failure) {
+        errorMessage.value = failure.message;
+        return false;
+      },
+    );
   }
 }

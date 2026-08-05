@@ -127,4 +127,116 @@ void main() {
       expect(row['qty'], 12);
     },
   );
+
+  test('create records an audit log insert entry', () async {
+    final product = buildProduct();
+    await useCases.create(
+      product,
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+
+    final auditEntries = await db.auditLogDao.watchAll(defaultShopId).first;
+    expect(auditEntries, hasLength(1));
+    expect(auditEntries.single.action, 'insert');
+    expect(auditEntries.single.changedTableName, 'products');
+    expect(auditEntries.single.recordId, 'prod-1');
+    expect(auditEntries.single.newValueJson, contains('Notebook'));
+    expect(auditEntries.single.oldValueJson, isNull);
+  });
+
+  test(
+    'update records an audit log entry with both the old and new selling price '
+    "— the spec's own \"who changed the selling price\" example",
+    () async {
+      final created = buildProduct();
+      await useCases.create(
+        created,
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+
+      final repriced = created.copyWith(
+        suggestedSellPrice: Money.fromMinor(9500),
+      );
+      await useCases.update(
+        repriced,
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+
+      final auditEntries = await db.auditLogDao.watchAll(defaultShopId).first;
+      final updateEntry = auditEntries.firstWhere((e) => e.action == 'update');
+      expect(updateEntry.changedTableName, 'products');
+      expect(updateEntry.recordId, 'prod-1');
+      expect(updateEntry.oldValueJson, contains('8000'));
+      expect(updateEntry.newValueJson, contains('9500'));
+    },
+  );
+
+  test('softDelete hides the product locally, pushes a partial update, and '
+      'records an audit log entry', () async {
+    final product = buildProduct();
+    await useCases.create(
+      product,
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+
+    await useCases.softDelete(
+      'prod-1',
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+
+    expect(
+      await db.productDao.getById('prod-1'),
+      isNull,
+      reason: 'soft-deleted rows are hidden',
+    );
+
+    final pending = await db.syncMetadataDao.pendingEntries();
+    final entry = pending.lastWhere((e) => e.eventType == 'product_deleted');
+    final upserts = OutboxEvent.decodePayload(entry.payloadJson);
+    expect(upserts.single.row.keys, {'id', 'shop_id', 'deleted_at'});
+
+    final auditEntries = await db.auditLogDao.watchAll(defaultShopId).first;
+    final deleteEntry = auditEntries.firstWhere((e) => e.action == 'delete');
+    expect(deleteEntry.changedTableName, 'products');
+    expect(deleteEntry.recordId, 'prod-1');
+    expect(deleteEntry.oldValueJson, contains('Notebook'));
+  });
+
+  test('restore un-hides the product without touching qty, and records an '
+      'audit log entry', () async {
+    final product = buildProduct(qty: 7);
+    await useCases.create(
+      product,
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+    await useCases.softDelete(
+      'prod-1',
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+    expect(await db.productDao.getById('prod-1'), isNull);
+
+    await useCases.restore(
+      'prod-1',
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+
+    final restored = await db.productDao.getById('prod-1');
+    expect(restored, isNotNull);
+    expect(restored!.name, 'Notebook');
+    expect(restored.qty, 7, reason: 'restore must not touch qty');
+
+    final auditEntries = await db.auditLogDao.watchAll(defaultShopId).first;
+    final restoreEntry = auditEntries.firstWhere((e) => e.action == 'restore');
+    expect(restoreEntry.changedTableName, 'products');
+    expect(restoreEntry.newValueJson, contains('Notebook'));
+    expect(restoreEntry.oldValueJson, isNull);
+  });
 }

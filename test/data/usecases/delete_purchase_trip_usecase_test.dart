@@ -130,11 +130,17 @@ void main() {
     );
     expect(result.isOk, isTrue, reason: result.failureOrNull?.toString());
 
+    // hasLength(1) here (not just among purchase_trips) would be wrong —
+    // setUp's own product creation already logged its own 'insert' entry
+    // on `products` before this test's delete (see `ProductUseCases`'s
+    // own doc comment on why create/update are audit-logged too now).
     final auditEntries = await db.auditLogDao.watchAll(defaultShopId).first;
-    expect(auditEntries, hasLength(1));
-    expect(auditEntries.single.action, 'delete');
-    expect(auditEntries.single.changedTableName, 'purchase_trips');
-    expect(auditEntries.single.recordId, 'trip-1');
-    expect(auditEntries.single.oldValueJson, contains('trip-1'));
+    final tripEntries = auditEntries.where(
+      (e) => e.changedTableName == 'purchase_trips',
+    );
+    expect(tripEntries, hasLength(1));
+    expect(tripEntries.single.action, 'delete');
+    expect(tripEntries.single.recordId, 'trip-1');
+    expect(tripEntries.single.oldValueJson, contains('trip-1'));
   });
 }

@@ -187,4 +187,22 @@ class PurchaseDao extends DatabaseAccessor<AppDatabaseV2>
       PurchaseTripsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
     );
   }
+
+  /// Every soft-deleted [PurchaseTrips] row for [shopId] — the Recycle
+  /// Bin's source list, same shape as `CustomerDao.watchDeleted`. Only
+  /// the trip header row, not its items/other-costs — same reasoning
+  /// `watchRecent` documents for why a list view doesn't eager-load
+  /// those.
+  ///
+  /// Deliberately no `restore` — see `DeletePurchaseTripUseCase`'s own
+  /// doc comment: undoing a deleted trip would need to re-apply the
+  /// stock/cash reversal it already wrote, which
+  /// `buildStockMovementReversal`/`buildCashLedgerReversal` cannot
+  /// safely do a second time.
+  Stream<List<PurchaseTripRow>> watchDeleted(String shopId) {
+    final query = select(purchaseTrips)
+      ..where((t) => t.shopId.equals(shopId) & t.deletedAt.isNotNull())
+      ..orderBy([(t) => OrderingTerm.desc(t.deletedAt)]);
+    return query.watch();
+  }
 }

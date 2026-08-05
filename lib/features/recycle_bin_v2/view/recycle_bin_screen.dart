@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/design/tokens.dart';
 import '../../../core/money/money.dart';
@@ -7,8 +8,8 @@ import '../controller/recycle_bin_controller.dart';
 
 /// The v2 Recycle Bin screen — see `RecycleBinController`'s own doc
 /// comment for exactly which entities appear here and why (Customers/
-/// Orders restorable, Expenses view-only, everything else out of scope
-/// for this change).
+/// Orders/Products restorable; Expenses/FixedAssets/PurchaseTrips
+/// view-only).
 class RecycleBinScreen extends GetView<RecycleBinController> {
   const RecycleBinScreen({super.key});
 
@@ -29,8 +30,16 @@ class RecycleBinScreen extends GetView<RecycleBinController> {
         final customers = controller.deletedCustomers;
         final orders = controller.deletedOrders;
         final expenses = controller.deletedExpenses;
+        final products = controller.deletedProducts;
+        final fixedAssets = controller.deletedFixedAssets;
+        final purchaseTrips = controller.deletedPurchaseTrips;
 
-        if (customers.isEmpty && orders.isEmpty && expenses.isEmpty) {
+        if (customers.isEmpty &&
+            orders.isEmpty &&
+            expenses.isEmpty &&
+            products.isEmpty &&
+            fixedAssets.isEmpty &&
+            purchaseTrips.isEmpty) {
           return Center(child: Text('noDeletedItems'.tr));
         }
 
@@ -65,6 +74,20 @@ class RecycleBinScreen extends GetView<RecycleBinController> {
                 ),
               const SizedBox(height: AppSpacing.lg),
             ],
+            if (products.isNotEmpty) ...[
+              Text(
+                'deletedProductsSectionTitle'.tr,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              for (final product in products)
+                _RecycleBinTile(
+                  title: product.name,
+                  subtitle: _deletedOnLabel(product.deletedAt),
+                  onRestore: () => controller.restoreProduct(product.id),
+                ),
+              const SizedBox(height: AppSpacing.lg),
+            ],
             if (expenses.isNotEmpty) ...[
               Text(
                 'deletedExpensesSectionTitle'.tr,
@@ -76,6 +99,36 @@ class RecycleBinScreen extends GetView<RecycleBinController> {
                   title: Money.fromMinor(expense.amountMinor).format(),
                   subtitle: _deletedOnLabel(expense.deletedAt),
                   trailingNote: 'cannotRestoreExpenseNote'.tr,
+                  onRestore: null,
+                ),
+              const SizedBox(height: AppSpacing.lg),
+            ],
+            if (fixedAssets.isNotEmpty) ...[
+              Text(
+                'deletedFixedAssetsSectionTitle'.tr,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              for (final asset in fixedAssets)
+                _RecycleBinTile(
+                  title: asset.name,
+                  subtitle: _deletedOnLabel(asset.deletedAt),
+                  trailingNote: 'cannotRestoreNote'.tr,
+                  onRestore: null,
+                ),
+              const SizedBox(height: AppSpacing.lg),
+            ],
+            if (purchaseTrips.isNotEmpty) ...[
+              Text(
+                'deletedPurchaseTripsSectionTitle'.tr,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              for (final trip in purchaseTrips)
+                _RecycleBinTile(
+                  title: DateFormat.yMMMd().format(trip.date.toLocal()),
+                  subtitle: _deletedOnLabel(trip.deletedAt),
+                  trailingNote: 'cannotRestoreNote'.tr,
                   onRestore: null,
                 ),
             ],

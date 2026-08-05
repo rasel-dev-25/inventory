@@ -101,4 +101,24 @@ class FixedAssetController extends GetxController {
       },
     );
   }
+
+  /// See `FixedAssetUseCases.delete`'s own doc comment for the
+  /// source-type-branching reversal this triggers, and for why there is
+  /// no matching `restoreAsset` — deleting an asset is a one-way trip
+  /// today, same as an expense.
+  Future<bool> deleteAsset(String id) async {
+    errorMessage.value = null;
+    final result = await _useCases.delete(
+      id: id,
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+    return result.fold(
+      onOk: (_) => true,
+      onErr: (failure) {
+        errorMessage.value = failure.message;
+        return false;
+      },
+    );
+  }
 }

@@ -73,6 +73,17 @@ void main() {
           'fixed_assets',
           'cash_ledger_entries',
         ]);
+
+        // hasLength(1) here (not just among fixed_assets) would be wrong —
+        // the setUp's own product creation already logged its own
+        // 'insert' entry on `products` before this test's asset write.
+        final auditEntries = await db.auditLogDao.watchAll(defaultShopId).first;
+        final assetEntries = auditEntries.where(
+          (e) => e.changedTableName == 'fixed_assets',
+        );
+        expect(assetEntries, hasLength(1));
+        expect(assetEntries.single.action, 'insert');
+        expect(assetEntries.single.newValueJson, contains('Display Showcase'));
       },
     );
 
@@ -156,6 +167,16 @@ void main() {
           'fixed_assets',
           'stock_movements',
         ]);
+
+        // Same reasoning as `createFromCashPurchase`'s own audit
+        // assertion above — the setUp's product creation already logged
+        // its own entry on `products`.
+        final auditEntries = await db.auditLogDao.watchAll(defaultShopId).first;
+        final assetEntries = auditEntries.where(
+          (e) => e.changedTableName == 'fixed_assets',
+        );
+        expect(assetEntries, hasLength(1));
+        expect(assetEntries.single.action, 'insert');
       },
     );
 
@@ -202,6 +223,110 @@ void main() {
       final result = await useCases.createFromStock(
         productId: 'does-not-exist',
         qty: 1,
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+
+      expect(result.isErr, isTrue);
+      expect(result.failureOrNull, isA<NotFoundFailure>());
+    });
+  });
+
+  group('delete', () {
+    test(
+      'a cash-purchase asset: reverses the cash ledger entry and hides the asset',
+      () async {
+        await useCases.createFromCashPurchase(
+          name: 'Display Showcase',
+          value: Money.fromMinor(1500000),
+          dateAcquired: DateTime.utc(2026, 1, 1),
+          shopId: defaultShopId,
+          now: DateTime.now().toUtc(),
+        );
+        final asset = (await (db.select(db.fixedAssets)).get()).single;
+
+        final result = await useCases.delete(
+          id: asset.id,
+          shopId: defaultShopId,
+          now: DateTime.now().toUtc(),
+        );
+
+        expect(result.isOk, isTrue, reason: result.failureOrNull?.toString());
+        expect(
+          await db.fixedAssetDao.getById(asset.id),
+          isNull,
+          reason: 'soft-deleted rows are hidden',
+        );
+
+        final ledgerEntries = await (db.select(
+          db.cashLedgerEntries,
+        )..where((l) => l.sourceType.equals('fixed_asset'))).get();
+        expect(ledgerEntries, hasLength(2), reason: 'original + reversal');
+        final total = ledgerEntries.fold<int>(
+          0,
+          (sum, e) => sum + e.amountMinor,
+        );
+        expect(
+          total,
+          0,
+          reason: 'the reversal must fully cancel the original cash-out',
+        );
+
+        final auditEntries = await db.auditLogDao.watchAll(defaultShopId).first;
+        final deleteEntry = auditEntries.firstWhere(
+          (e) => e.action == 'delete',
+        );
+        expect(deleteEntry.changedTableName, 'fixed_assets');
+        expect(deleteEntry.recordId, asset.id);
+        expect(deleteEntry.oldValueJson, contains('Display Showcase'));
+      },
+    );
+
+    test(
+      'a stock-conversion asset: reverses the stock movement and restores qty',
+      () async {
+        await useCases.createFromStock(
+          productId: 'attar-bottle',
+          qty: 2,
+          shopId: defaultShopId,
+          now: DateTime.now().toUtc(),
+        );
+        final asset = (await (db.select(db.fixedAssets)).get()).single;
+        final afterConvert = await db.productDao.getById('attar-bottle');
+        expect(afterConvert!.qty, 3);
+
+        final result = await useCases.delete(
+          id: asset.id,
+          shopId: defaultShopId,
+          now: DateTime.now().toUtc(),
+        );
+
+        expect(result.isOk, isTrue, reason: result.failureOrNull?.toString());
+        expect(await db.fixedAssetDao.getById(asset.id), isNull);
+
+        final afterDelete = await db.productDao.getById('attar-bottle');
+        expect(
+          afterDelete!.qty,
+          5,
+          reason: 'the reversal must restore the converted qty to the shelf',
+        );
+
+        final movements = await (db.select(
+          db.stockMovements,
+        )..where((m) => m.sourceType.equals('fixed_asset'))).get();
+        expect(movements, hasLength(2), reason: 'original + reversal');
+
+        expect(
+          await (db.select(db.cashLedgerEntries)).get(),
+          isEmpty,
+          reason: 'a stock-conversion asset never touches cash, deleted or not',
+        );
+      },
+    );
+
+    test('rejects a nonexistent asset id', () async {
+      final result = await useCases.delete(
+        id: 'does-not-exist',
         shopId: defaultShopId,
         now: DateTime.now().toUtc(),
       );

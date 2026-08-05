@@ -139,17 +139,33 @@ class _ProductsTab extends GetView<CatalogController> {
                 itemCount: items.length,
                 itemBuilder: (context, index) {
                   final product = items[index];
-                  return ListTile(
-                    title: Text(product.name),
-                    subtitle: Text(
-                      '${product.category} · ${product.suggestedSellPrice.format()}',
-                    ),
-                    trailing: Text(
-                      product.qty.toStringAsFixed(
-                        product.qty == product.qty.roundToDouble() ? 0 : 2,
+                  return Dismissible(
+                    key: ValueKey(product.id),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      color: Theme.of(context).colorScheme.errorContainer,
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: AppSpacing.lg),
+                      child: Icon(
+                        Icons.delete,
+                        color: Theme.of(context).colorScheme.onErrorContainer,
                       ),
                     ),
-                    onTap: () => _openForm(context, existing: product),
+                    confirmDismiss: (_) =>
+                        _confirmDelete(context, product.name),
+                    onDismissed: (_) => controller.deleteProduct(product.id),
+                    child: ListTile(
+                      title: Text(product.name),
+                      subtitle: Text(
+                        '${product.category} · ${product.suggestedSellPrice.format()}',
+                      ),
+                      trailing: Text(
+                        product.qty.toStringAsFixed(
+                          product.qty == product.qty.roundToDouble() ? 0 : 2,
+                        ),
+                      ),
+                      onTap: () => _openForm(context, existing: product),
+                    ),
                   );
                 },
               ),
@@ -200,5 +216,29 @@ class _ProductsTab extends GetView<CatalogController> {
         pageCount: result.pageCount,
       );
     }
+  }
+
+  /// Same confirm-before-dismiss pattern `CustomersScreen`'s
+  /// `_confirmDelete` establishes — a product delete is restorable from
+  /// the Recycle Bin, but the swipe-to-dismiss gesture itself is
+  /// destructive-looking enough to still warrant a pause.
+  Future<bool> _confirmDelete(BuildContext context, String name) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('${'delete'.tr} $name?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('cancel'.tr),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('delete'.tr),
+          ),
+        ],
+      ),
+    );
+    return confirmed ?? false;
   }
 }

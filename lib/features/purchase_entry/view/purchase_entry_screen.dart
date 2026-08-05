@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../../../core/design/tokens.dart';
 import '../../../core/money/money.dart';
 import '../../../domain/entities/fund_source.dart';
+import '../../../domain/entities/purchase.dart';
+import '../../../domain/services/purchase_reconciliation.dart';
 import '../controller/purchase_entry_controller.dart';
 
 /// The v2 purchase-entry screen — records a full trip (transport/other
@@ -66,11 +68,102 @@ class PurchaseEntryScreen extends GetView<PurchaseEntryController> {
                       )
                     : Text('savePurchase'.tr),
               ),
+              const SizedBox(height: AppSpacing.xl),
+              _RecentTripsSection(),
             ],
           ),
         );
       }),
     );
+  }
+}
+
+/// The first real UI trigger for `DeletePurchaseTripUseCase` — see
+/// `PurchaseEntryController.recentTrips`'s own doc comment for why this
+/// list exists at all (that use case was previously dead code with no
+/// reachable delete action anywhere). Read-only otherwise: tapping a row
+/// does nothing, since this v2 screen has no "edit an existing trip"
+/// flow — only delete.
+class _RecentTripsSection extends GetView<PurchaseEntryController> {
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final trips = controller.recentTrips;
+      if (trips.isEmpty) return const SizedBox.shrink();
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'recentTripsSectionTitle'.tr,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          for (final trip in trips) _RecentTripTile(trip: trip),
+        ],
+      );
+    });
+  }
+}
+
+class _RecentTripTile extends GetView<PurchaseEntryController> {
+  final PurchaseTrip trip;
+
+  const _RecentTripTile({required this.trip});
+
+  @override
+  Widget build(BuildContext context) {
+    final total = reconcilePurchaseTrip(trip).totalCashOut;
+    return Dismissible(
+      key: ValueKey(trip.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        color: Theme.of(context).colorScheme.errorContainer,
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: AppSpacing.lg),
+        child: Icon(
+          Icons.delete,
+          color: Theme.of(context).colorScheme.onErrorContainer,
+        ),
+      ),
+      confirmDismiss: (_) => _confirmDelete(context),
+      onDismissed: (_) => controller.deleteTrip(trip.id),
+      child: Card(
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+        child: ListTile(
+          title: Text(DateFormat.yMMMd().format(trip.date)),
+          subtitle: Text('${trip.items.length} ${'items'.tr}'),
+          trailing: Text(
+            total.format(),
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Same confirm-before-dismiss pattern `CustomersScreen`'s
+  /// `_confirmDelete` establishes — extra warranted here since, like a
+  /// fixed asset, this delete is *not* restorable (see
+  /// `DeletePurchaseTripUseCase`'s own doc comment).
+  Future<bool> _confirmDelete(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('${'delete'.tr} ${'purchaseEntry'.tr}?'),
+        content: Text('cannotUndoNote'.tr),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('cancel'.tr),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('delete'.tr),
+          ),
+        ],
+      ),
+    );
+    return confirmed ?? false;
   }
 }
 
