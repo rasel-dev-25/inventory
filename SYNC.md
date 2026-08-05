@@ -1,9 +1,10 @@
-# Offline sync engine (M1)
+# Offline sync engine
 
 This is the design ARCHITECTURE.md's introduction points at. It covers
 the outbox pusher, the cursor-based puller, and the conflict-resolution
-policy each one uses — the three pieces after the M1 auth work
-(`lib/features/auth/`) and the Postgres schema (`supabase/migrations/`).
+policy each one uses — all built during M1 and still the sync design today
+(pushed/pulled through the series of `0001`–`0009` Postgres migrations and
+`lib/data/sync/`).
 
 ## Why an outbox, not "just write to Supabase directly"
 
@@ -207,7 +208,40 @@ coincidentally look like a single camelCase word (`"AlAshab"`), and
 mangling free-text user data to fix a column that was never an enum
 would be a worse bug than the one this fixes.
 
-## What's verified vs. not
+## What's covered now vs. still open
+
+Since this document was first written, the gaps below closed and new
+pieces landed:
+
+- **Real feature use cases now enqueue outbox events.** Every feature's
+  write goes through a use case in `lib/data/usecases/`, and
+  `sync_enqueue_helper.dart` is how each one resolves its DB writes into
+  an outbox row — purchase trips, sales, due payments, expenses, rent
+  transactions, orders, fixed assets, investor repayments, and audits all
+  push through the engine described above (this is also what makes soft
+  deletes sync safely — the delete-gap hardening in M4).
+- **A sync front-end exists and is wired into the app.** `SyncController`
+  (`lib/features/sync/`) is registered permanently in `main.dart`,
+  exposes `syncNow()`, drives a periodic timer and a connectivity-regained
+  listener for auto-sync, and publishes the pending-outbox count used by
+  the drawer's "Sync Now" affordance. Manual + background sync are both
+  done.
+
+Still open, flagged honestly:
+
+- **`SyncPendingUploads` (image upload queue) has no push logic.** There
+  is no product-photo or quick-capture media capture flow in the app yet
+  (see ARCHITECTURE.md's platform matrix), so there is nothing to upload
+  and the queue is dormant by design. Uploading raw bytes to Supabase
+  Storage will need its own transport when capture lands.
+- **Push behavior is verified with hand-constructed and
+  use-case-produced events, not on a real second device** — the multi-device
+  contradiction (two devices editing the same row, server-wins resolving
+  them) follows mechanically from the design but has not been exercised
+  against two real clients. CI only verifies compile/analyze/test; there
+  is no device-farm or emulator in this project.
+
+## What's verified
 
 - **Server-side, live against the real deployed project**
   (`dzplxtidfsoovmocgikc`), not just written: a real signed-in owner
@@ -232,7 +266,7 @@ would be a worse bug than the one this fixes.
   query shape the Dart code sends.
 - **Client-side, pure Dart / real in-memory SQLite, no network**:
   `SyncPushService`/`SyncPullService` against a fake `SyncTransport` and
-  a real `AppDatabaseV2.forTesting(NativeDatabase.memory())` — see
+  a real `AppDatabase.forTesting(NativeDatabase.memory())` — see
   `test/data/sync/`. Covers: successful push marks the entry done and
   removes it from the outbox; a failing push increments the attempt
   count and leaves the entry `failed` (retryable); pulled rows for both
@@ -262,16 +296,3 @@ would be a worse bug than the one this fixes.
     directly. Fixed by coercing both based on the column's actual
     declared SQLite type from the same `PRAGMA table_info` call, not by
     guessing from the incoming value's Dart type alone.
-- **Not yet covered**: no feature screens exist yet that actually
-  enqueue an outbox event from a real use case (the DAOs built so far —
-  `ProductDao`, `CustomerDao`, `InvestorDao`, `PurchaseDao` — write
-  directly to the local database and do not yet call
-  `SyncMetadataDao.enqueue()`). Wiring that up is the next M1 step once
-  feature screens exist to drive it; until then this engine has been
-  verified with hand-constructed events, not organically produced ones.
-- **Not yet covered**: `SyncPendingUploads` (image upload queue) has no
-  push logic yet — tracked separately, since it uploads raw bytes to
-  Storage rather than JSON rows through `apply_outbox_event`.
-- **Not yet covered**: a sync status indicator in the UI, and background
-  scheduling of push/pull (both are still manually invoked service
-  methods with no caller yet).

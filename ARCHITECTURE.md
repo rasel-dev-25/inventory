@@ -1,9 +1,11 @@
 # Architecture
 
 This document is living — it started with M0 and gets extended as each
-milestone lands. See `notes/business_logic.md` for the business rules this
-architecture exists to implement correctly, and `SYNC.md` (added in M1) for
-the offline sync engine's design in detail.
+milestone lands. It is current through M4 and the v1 deletion (everything
+through PR #29; the app is now v2-only). See
+`notes/business_logic.md` for the business rules this architecture exists to
+implement correctly, and `SYNC.md` for the offline sync engine's design in
+detail.
 
 ## Why this rewrite exists
 
@@ -45,7 +47,8 @@ must still pass.
 and services. Controllers call use cases; they never touch a repository or
 a DAO directly, and they never contain business math.
 
-`lib/core/check_layer_boundaries.sh` (run in CI, see `tool/`) enforces the
+`tool/check_layer_boundaries.sh` (also available as `.ps1` on Windows; run
+in CI, see `tool/`) enforces the
 domain-purity rule mechanically — a `flutter analyze`-clean PR can still be
 rejected by CI if `lib/domain/**` imports something it shouldn't.
 
@@ -63,15 +66,15 @@ foreign keys, no drift between "copies" of the same entity.
 
 ## Why GetX stays
 
-The v1 app has 378 fully-parity'd translation keys across `en_US`/`bn_BD`
+The app has 582 fully-parity'd translation keys across `en_US`/`bn_BD`
 built on GetX's `Translations` API, plus its routing and DI already wired
 through `GetX`/`GetMaterialApp`. Replacing state-management frameworks
-would not fix a single defect found in the v1 audit — every real bug was in
-the data/business layer, not in GetX itself. GetX stays for DI, routing,
-and i18n. What changes is scope: controllers become thin — they hold `Rx`
-view state and call a use case — with no business math, no direct DB
+would not fix a single defect found in the pre-rewrite audit — every real
+bug was in the data/business layer, not in GetX itself. GetX stays for DI,
+routing, and i18n. What changed is scope: controllers are thin — they hold
+`Rx` view state and call a use case — with no business math, no direct DB
 access, and no `dart:io` calls inside a controller or a widget `build()`
-method (all three were found in the v1 audit).
+method.
 
 ## Platform capability matrix
 
@@ -81,15 +84,15 @@ exists on every platform:
 | Feature | Android | Windows | Web |
 |---|---|---|---|
 | Local database (Drift) | native sqlite3 | native sqlite3 (`sqlite3_flutter_libs`) | WASM + OPFS |
-| Camera capture | yes | file picker fallback (`file_selector`) | file picker fallback |
-| Microphone / voice note | yes | **disabled**, explained in UI | **disabled**, explained in UI |
-| Image compression (`flutter_image_compress`) | yes | yes | limited/no native codec support — falls back to uploading the picked file at its original size, with a size cap |
+| Sync (Supabase) | yes | yes | yes (REST transport) |
+| Push notifications (M4) | yes | no-op | no-op |
+| Camera / photo capture | **not implemented yet** — the `Products` table has `thumbnail_local_path`/`thumbnail_remote_url` columns and quick capture has `voiceNote`/`photoNote` types, but no capture or upload flow exists (no `image_picker`/`file_selector` dependency in `lib/`). Quick capture currently stores a free-text note as `fileLocalPath`. Native capture and the `SyncPendingUploads` image-upload queue are flagged as future work. |
 
 `lib/core/platform/capabilities.dart` is the single place that resolves
 these — no widget or controller may call `Platform.isWindows` or `kIsWeb`
 directly. `lib/core/settings/feature_flags.dart` layers three independent
-sources on top of raw capability: hard platform facts (camera/mic), an
-owner-configurable module toggle (rental/investor/orders/assets/barcode),
+sources on top of raw capability: hard platform facts (push notifications),
+an owner-configurable module toggle (rental/investor/orders/assets/barcode),
 and one spec-driven automatic condition (the pricing engine stays hidden
 until the shop's first monthly close, per `business_logic.md` §৬).
 
@@ -137,13 +140,17 @@ failed partway through.
 ## Settings and feature flags
 
 `lib/core/settings/settings_registry.dart` is a typed key-value registry
-with declared defaults, backed by `KeyValueStore` (in-memory for now; a
-Drift-backed implementation lands in M1, using the same `AppSettings`
-table the v1 app already had). This replaces five speculative tables
+with declared defaults, backed by `DriftKeyValueStore`
+(`lib/data/local/drift_key_value_store.dart`) — a Drift-backed store over
+the `AppSettings` table, hydrated once in `main.dart` before anything reads
+it. It replaces five speculative tables
 (`AppSettings`/`BusinessSettings`/`TaxSettings`/`RentSettings`/`InvoiceSettings`)
 that were proposed during planning — most of what they'd hold is scalar
 configuration for one shop, not relational data. Real tables are reserved
-for things that are actually rows, such as `rent_pricing_tiers`.
+for things that are actually rows, such as `rent_pricing_tiers`. It is the
+single store for dark mode, language, and the pricing engine's
+`OverheadSettings` — `SettingsController` (theme/language) and
+`PricingSettingsController` both read/write through it.
 
 ## Quality gates (CI)
 
@@ -153,16 +160,19 @@ build for each of the three shipping targets. This is the real verification
 gate — a PR is not "done" because it looks right, it is done because CI is
 green.
 
-**Known interim gap, tracked for M4:** `analysis_options.yaml` picked up a
-much stricter lint set in M0 (see "Why this rewrite exists" above), but CI
-runs plain `flutter analyze` rather than `flutter analyze --fatal-infos`.
-Turning that on today would fail the build on the still-untouched v1
-`lib/features/**` tree, which this PR does not modify. `--fatal-infos`
-becomes the real gate once that tree is migrated/replaced module by module
-through M1–M3 — tracked as an M4 hardening task, not dropped.
+**Known interim gap, tracked but not yet closed:** `analysis_options.yaml`
+picked up a much stricter lint set in M0 (see "Why this rewrite exists"
+above), but CI runs plain `flutter analyze` rather than `flutter analyze
+--fatal-infos`. The original blocker — the then-present v1
+`lib/features/**` tree — is gone since the v1 deletion, so today the only
+thing standing between `--fatal-infos` and green CI is ~110 pre-existing
+info-level lints across `lib/` and `test/` (mostly `directives_ordering`,
+`prefer_final_locals`, `prefer_const_constructors`). Cleaning those up and
+flipping the CI flag is a real but self-contained M4-hardening task, still
+open.
 
 **A real environment limitation, found and confirmed, not assumed:** a
-`testWidgets` test that keeps an active `AppDatabaseV2` `.watch()` stream
+`testWidgets` test that keeps an active `AppDatabase` `.watch()` stream
 subscription alive across a `pumpWidget`/`pump` call deadlocks in this
 sandbox's `flutter test` runner — reproduced in isolation (a listener on
 `CategoryDao.watchAll` fires once correctly, then the very next
@@ -174,7 +184,7 @@ by a live `watch()` stream (`CatalogScreen`, `PurchaseEntryScreen`, and
 any future one built the same way) are verified via `flutter analyze`
 plus real-database tests of the controller/use-case layer underneath them
 (`test/data/usecases/`, `test/data/sync/`) — never via a `testWidgets`
-test that pumps the screen itself against a real `AppDatabaseV2`.
+test that pumps the screen itself against a real `AppDatabase`.
 `test/features/auth/auth_gate_test.dart` already established the
 alternative that does work: a hand-rolled fake stream
 (`StreamController`) standing in for the real one, which is what any new
@@ -297,14 +307,16 @@ under clock skew. Every syncable table has a `(shop_id, synced_at, id)`
 index for the pull-since-cursor query the outbox/puller design (still to
 come) will use.
 
-**Known open item, flagged rather than silently resolved:** the
-`shop_members` bootstrap policy (a fresh shop's first member becomes its
-owner) is a reasonable MVP rule for a single-shop app, but the real
-owner-onboarding flow doesn't exist yet (auth screens are a later M1
-task). Revisit `supabase/migrations/0002_shops_and_members_rls.sql` once
-that flow is built — shop creation and the first membership row may need
-to move into an Edge Function so they happen atomically instead of as two
-separate client-issued statements.
+**Owner onboarding (M1) resolves the earlier open item.** The
+`shop_members` bootstrap policy note below was written before the
+owner-onboarding flow existed. It now does: `0006_owner_onboarding_rpc.sql`
+defines `create_shop_and_owner` (creating the shop and its first
+membership row atomically in one RPC), `0007_revoke_anon_from_onboarding_rpcs.sql`
+locks the onboarding RPCs down to the anon role only, and the client
+flow lives in `lib/features/auth/` (see also `lib/data/remote/supabase_auth_repository.dart`).
+Auth is Supabase Auth with email/password, owner sign-up plus staff
+invite (the staff token path), and a session that gates the whole app
+behind `AuthGate`.
 
 **Verified against the real project**, not a local simulation — this
 schema was applied directly to the live (previously empty) Supabase
@@ -316,9 +328,105 @@ investor id, and a foreign key rejecting a reference to a nonexistent
 shop. Test rows were then removed with `TRUNCATE ... CASCADE` (which does
 not fire the per-row immutability trigger) to leave the project clean.
 
-## What's deliberately not here yet
+## Feature inventory (as shipped through M4)
 
-The outbox pusher, the cursor-based puller, conflict resolution, Supabase
-Auth wiring (sign-in, owner onboarding, staff invitation), and every
-feature screen land in M1 onward, each with its own PR and its own
-addition to this document.
+All feature folders live under `lib/features/` (the `_v2` folder-name
+suffix is a deliberate leftover from when v1 coexisted — still accurate,
+just ugly; see "Known gaps" below). Each folder is `controller/` +
+`view/` (and sometimes `widgets/`).
+
+**Shell (`shell/`)** — the app's only skeleton. `ShellScreen` embeds 5
+screens directly via `IndexedStack` — Dashboard, Daily Sales, Stock, Dues,
+Customers — picked as the highest-frequency daily actions per
+`notes/business_logic.md`; `AppBottomNav` shows those 5, and `AppDrawer`
+links to the remaining 13. The 5 embedded screens each take an optional
+`onMenuTap` callback + conditional leading menu `IconButton`, because each
+builds its own nested `Scaffold`/`AppBar` and Flutter's automatic
+hamburger-icon injection only looks at a screen's own immediate `Scaffold`,
+not an ancestor's. *(This 5-tab choice is a judgment call — see "Known
+gaps".)*
+
+**Behaviors / accounting (M1–M2):**
+- `catalog/` — products, categories, barcode/SKU lookup (M4, see
+  `lib/domain/services/barcode_lookup.dart`).
+- `purchase_entry/` — mokam-trip purchase entry (multiple items, per-item
+  `fundSource`, `isInKind`), saved by `SavePurchaseTripUseCase` with
+  per-fund-source reconciliation (`lib/domain/services/purchase_reconciliation.dart`).
+- `daily_sales_v2/` — the cash/due/rent transaction router from
+  `business_logic.md` §গ, saved by `SaveSaleUseCase` (ledger entry +
+  `Product.qty` decrement + due creation in one transaction).
+- `stock_v2/` — inventory view/filters.
+- `dues_v2/` — due lifecycle, payments (`PayDueUseCase`).
+- `customers_v2/` — customers + orders tab.
+- `investor_v2/` — investor metrics & repayments (`lib/domain/services/investor_metrics.dart`,
+  `cash_balance_calculator.dart`), including `legacy_settlement_usecases.dart`.
+- `expense_v2/` — monthly rent / daily-other expenses.
+- `dashboard_v2/` — the Total-Cash / profit cards
+  (`lib/domain/services/dashboard_calculator.dart`), day/All-time toggle.
+- `pricing_settings_v2/` — the overhead-markup pricing engine
+  (`lib/domain/services/pricing_engine.dart`), auto-bootstrapped after the
+  first monthly close.
+- `reports_v2/` — period reports + crash-safe backup/restore
+  (`lib/data/local/backup_service.dart`, `backup_v2/`).
+
+**Side modules (M3):**
+- `rent_v2/` — book rentals: pricing tiers, issue/return/mark-stolen
+  (`lib/domain/services/rent_lifecycle.dart`,
+  `lib/data/usecases/issue_rent_usecase.dart`,
+  `return_rent_usecase.dart`, `mark_rent_stolen_usecase.dart`).
+- `order_v2/` — customer orders with deadline reminders.
+- `fixed_asset_v2/` — fixed assets (shop-cash purchase or stock conversion).
+- `quick_capture_v2/` — quick voice/photo *note* capture flow. Note: the
+  capture is currently a free-text note standing in for a real voice/photo
+  file — the `voiceNote`/`photoNote` types exist but native capture is not
+  implemented (see "Known gaps").
+
+**Polish / M4:**
+- `reminders_v2/` — the 6-type reminder engine
+  (`lib/domain/services/reminder_engine.dart`: due balance, investor capital
+  return, investor profit payout, suspicious customer, overdue rent, order
+  deadline) surfaced via `lib/core/notifications/notification_service.dart`
+  (Android notifications; no-op elsewhere).
+- `audit_log_v2/` + `recycle_bin_v2/` — audit log viewer, soft-delete
+  recycle bin, and the retention policy (`lib/data/usecases/audit_log_usecases.dart`).
+- `sync/` — the `SyncController` (manual "Sync Now" + periodic timer +
+  connectivity-regained auto-sync, pending-outbox-count badge).
+- `settings/` + `auth/` — theme/language (`SettingsController`) and
+  Supabase auth.
+
+The use cases that back these live in `lib/data/usecases/` (21 files,
+including `sync_enqueue_helper.dart` which is how every feature's writes
+reach the outbox).
+
+## The v1 that used to be here
+
+Until PR #28/#29 the same repo carried a parallel v1 app
+(`lib/core/database/` Drift schema + DAOs, `lib/core/services/data_service.dart`
+and `image_service.dart`, and 9 v1 feature folders under `lib/features/`)
+that was still the default UI at launch. Per the owner's explicit decision
+(no real production data to preserve), v1 was removed outright rather than
+migrated, and `AppDatabaseV2` was mechanically renamed to `AppDatabase`.
+`LegacyDatabaseCleanup` (`lib/core/db/legacy_cleanup.dart`) deletes the old
+v1 SQLite file + WAL/SHM sidecars from disk, best-effort and idempotent,
+once at startup. There is no v1 left in the tree.
+
+## Known gaps (honest, current)
+
+- **`_v2` naming debt** — route constants, folder names, controller/class
+  names still carry the `V2` suffix even though nothing needs
+  disambiguating anymore. Pure cosmetic; deferred as a separate cleanup
+  (see `app_routes.dart`'s own doc comment).
+- **Camera/photo capture is not built** — product thumbnails and
+  quick-capture media exist only as schema/UI types; `SyncPendingUploads`
+  has no push logic (see SYNC.md).
+- **Widget/UI test coverage is thin** — only 2 of ~60 test files use
+  `testWidgets`; the Drift-stream deadlock documented above is the reason.
+- **`--fatal-infos` still off in CI** (~110 pre-existing info lints).
+- **No signed release builds** — Android uses the debug signing config;
+  Windows-installer and web-deployment pipelines don't exist.
+
+## What's not here (and never will be, in this project's framing)
+
+Nothing further lands at the architectural level for now — the vanilla
+feature backlog is closed. Future work is the "Known gaps" list plus any
+new business requests from `notes/business_logic.md`.
