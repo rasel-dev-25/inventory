@@ -6,13 +6,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app/app.dart';
 import 'core/config/supabase_config.dart';
 import 'core/database/app_database.dart';
+import 'core/settings/settings_registry.dart';
 import 'data/local/app_database.dart';
+import 'data/local/drift_key_value_store.dart';
 import 'data/remote/supabase_auth_repository.dart';
 import 'data/remote/supabase_sync_transport.dart';
 import 'data/sync/sync_pull_service.dart';
 import 'data/sync/sync_push_service.dart';
 import 'domain/repositories/auth_repository.dart';
 import 'features/auth/controller/auth_controller.dart';
+import 'features/pricing_settings_v2/controller/pricing_settings_controller.dart';
 import 'features/settings/controller/settings_controller.dart';
 import 'features/sync/controller/sync_controller.dart';
 import 'data/local/local_row_upserter.dart';
@@ -72,8 +75,27 @@ void main() async {
     permanent: true,
   );
 
-  // --- Settings service ---
+  // --- Settings service (v1) ---
   Get.put<SettingsController>(SettingsController(), permanent: true);
+
+  // --- Settings registry (v2) ---
+  // The real, restart-surviving `SettingsRegistry` backing store —
+  // `DriftKeyValueStore`'s own doc comment explains why `hydrate()` must
+  // be awaited here, before anything reads from it (the pricing engine's
+  // `PricingSettingsController` is the first real caller).
+  final settingsStore = DriftKeyValueStore(dbV2.appSettingsDao);
+  await settingsStore.hydrate();
+  final settingsRegistry = SettingsRegistry(settingsStore);
+  Get.put<SettingsRegistry>(settingsRegistry, permanent: true);
+
+  // --- Pricing engine (business_logic.md's overhead-markup suggestion) ---
+  // Permanent, not lazy — see `PricingSettingsController`'s own doc
+  // comment for why `CatalogController` needs to find this regardless of
+  // whether the owner ever opened the Pricing Settings screen.
+  Get.put<PricingSettingsController>(
+    PricingSettingsController(dbV2, settingsRegistry),
+    permanent: true,
+  );
 
   runApp(const App());
 }

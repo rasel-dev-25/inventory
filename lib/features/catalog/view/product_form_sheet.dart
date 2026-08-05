@@ -6,6 +6,7 @@ import '../../../core/money/money.dart';
 import '../../../domain/entities/fund_source.dart';
 import '../../../domain/entities/investor.dart';
 import '../../../domain/entities/product.dart';
+import '../../../domain/services/pricing_engine.dart';
 
 /// What [ProductFormSheet] hands back on save — [CatalogScreen] decides
 /// whether that means a create or an update, since only it knows whether
@@ -43,11 +44,20 @@ class ProductFormSheet extends StatefulWidget {
   final List<String> categories;
   final List<Investor> investors;
 
+  /// Null hides the suggestion entirely — see `computeOverheadMarkupPercent`
+  /// (`pricing_engine.dart`) for the exact conditions (the pricing
+  /// engine's bootstrap period, or no usable revenue estimate yet).
+  /// `CatalogScreen` resolves this once from `CatalogController` before
+  /// opening the sheet — this widget stays pure form state, per its own
+  /// class doc comment, so it never reads a controller directly.
+  final double? overheadMarkupPercent;
+
   const ProductFormSheet({
     super.key,
     required this.categories,
     required this.investors,
     this.existing,
+    this.overheadMarkupPercent,
   });
 
   @override
@@ -82,6 +92,57 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
   late bool _isRentable = widget.existing?.isRentable ?? false;
   late bool _fundedByInvestor = widget.existing?.fundSource.isInvestor ?? false;
   late String? _investorId = widget.existing?.fundSource.investorId;
+
+  @override
+  void initState() {
+    super.initState();
+    // Recompute the suggestion live as the cost price is typed — the
+    // fund-source toggle/investor dropdown already trigger their own
+    // setState via onChanged below.
+    _costController.addListener(_onCostChanged);
+  }
+
+  void _onCostChanged() => setState(() {});
+
+  @override
+  void dispose() {
+    _costController.removeListener(_onCostChanged);
+    _nameController.dispose();
+    _costController.dispose();
+    _priceController.dispose();
+    _barcodeController.dispose();
+    _skuController.dispose();
+    _pageCountController.dispose();
+    super.dispose();
+  }
+
+  /// Per the spec's formula, shown next to the cost-price entry the
+  /// instant it's typed — see `pricing_engine.dart`'s own doc comment.
+  /// Null whenever there isn't enough to compute one yet: the engine's
+  /// bootstrap period, an unparseable cost price, or "funded by investor"
+  /// with no investor picked.
+  Money? get _suggestedSellPrice {
+    final markup = widget.overheadMarkupPercent;
+    if (markup == null) return null;
+    final cost = _parseMoneyOrNull(_costController.text);
+    if (cost == null) return null;
+
+    final fundSource = _fundedByInvestor
+        ? (_investorId == null ? null : FundSource.investor(_investorId!))
+        : FundSource.shop();
+    if (fundSource == null) return null;
+
+    final investor = _fundedByInvestor
+        ? widget.investors.where((i) => i.id == _investorId).firstOrNull
+        : null;
+
+    return suggestSellPrice(
+      costPrice: cost,
+      overheadMarkupPercent: markup,
+      fundSource: fundSource,
+      fundingInvestor: investor,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -149,6 +210,23 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
                   ),
                 ],
               ),
+              if (_suggestedSellPrice case final suggestion?) ...[
+                const SizedBox(height: AppSpacing.sm),
+                InkWell(
+                  onTap: () => setState(
+                    () => _priceController.text = suggestion.format(
+                      showSymbol: false,
+                    ),
+                  ),
+                  child: Text(
+                    '${'suggestedSellPriceLabel'.tr}${suggestion.format()} '
+                    '· ${'tapToUse'.tr}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: AppSpacing.md),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
@@ -235,5 +313,17 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
         pageCount: _isRentable ? int.tryParse(_pageCountController.text) : null,
       ),
     );
+  }
+}
+
+/// Same pattern as every other live-input `Money` field in the app —
+/// `Money` has no `tryParse`. Used only by [_suggestedSellPrice], which
+/// must degrade to null on unparseable input rather than throw mid-build.
+Money? _parseMoneyOrNull(String text) {
+  if (text.trim().isEmpty) return null;
+  try {
+    return Money.parse(text);
+  } on MoneyException {
+    return null;
   }
 }

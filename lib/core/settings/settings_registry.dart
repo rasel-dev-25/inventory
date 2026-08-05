@@ -1,3 +1,4 @@
+import '../money/money.dart';
 import 'key_value_store.dart';
 
 /// A typed, declared-default setting. Defining settings as `SettingKey`
@@ -44,6 +45,23 @@ class SettingKey<T> {
       defaultValue: defaultValue,
       decode: (raw) => double.tryParse(raw) ?? defaultValue,
       encode: (value) => value.toString(),
+    );
+  }
+
+  /// Stored as the plain integer minor-units count — never a formatted
+  /// string — so a locale change or currency-symbol edit later can never
+  /// corrupt a stored setting the way storing `value.format()` would.
+  static SettingKey<Money> money(String id, {required Money defaultValue}) {
+    return SettingKey<Money>(
+      id,
+      defaultValue: defaultValue,
+      decode: (raw) {
+        final minorUnits = int.tryParse(raw);
+        return minorUnits == null
+            ? defaultValue
+            : Money.fromMinor(minorUnits, currency: defaultValue.currency);
+      },
+      encode: (value) => value.minorUnits.toString(),
     );
   }
 }

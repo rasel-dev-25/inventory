@@ -80,6 +80,9 @@ import '../../features/quick_capture_v2/controller/quick_capture_controller.dart
     as v2_quick_capture;
 import '../../features/quick_capture_v2/view/quick_capture_screen.dart'
     as v2_quick_capture;
+// No aliasing needed — v1 has no pricing-settings feature at all.
+import '../../features/pricing_settings_v2/controller/pricing_settings_controller.dart';
+import '../../features/pricing_settings_v2/view/pricing_settings_screen.dart';
 
 abstract class AppPages {
   static final pages = [
@@ -171,7 +174,17 @@ abstract class AppPages {
       name: AppRoutes.catalogV2,
       page: () => const CatalogScreen(),
       binding: BindingsBuilder(() {
-        Get.lazyPut(() => CatalogController(Get.find<AppDatabaseV2>()));
+        // PricingSettingsController is registered permanently in
+        // main.dart (not lazily here) — CatalogController just looks it
+        // up, same as it does AppDatabaseV2, so ProductFormSheet's
+        // suggestion works even if the owner never opened the Pricing
+        // Settings screen this session.
+        Get.lazyPut(
+          () => CatalogController(
+            Get.find<AppDatabaseV2>(),
+            Get.find<PricingSettingsController>(),
+          ),
+        );
       }),
     ),
     GetPage(
@@ -273,6 +286,13 @@ abstract class AppPages {
           ),
         );
       }),
+    ),
+    // No binding needed — PricingSettingsController is registered
+    // permanently in main.dart (see its own doc comment for why), so
+    // GetView<PricingSettingsController> just finds the existing instance.
+    GetPage(
+      name: AppRoutes.pricingSettingsV2,
+      page: () => const PricingSettingsScreen(),
     ),
   ];
 }

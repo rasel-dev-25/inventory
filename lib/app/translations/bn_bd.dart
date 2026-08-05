@@ -530,4 +530,27 @@ const Map<String, String> bnBD = {
   'writeQuickNote': 'দ্রুত নোট',
   'shopNameLabel': 'দোকানের নাম',
   'converted': 'কনভার্টেড',
+
+  // ── Pricing Settings / overhead-markup engine (M2 v2 screen) ────────
+  'pricingSettingsTitle': 'প্রাইসিং সেটিংস',
+  'overheadSectionTitle': 'মাসিক খরচ (Overhead)',
+  'monthlyShopRent': 'মাসিক দোকান ভাড়া',
+  'monthlyOwnerSalary': 'মাসিক মালিকের বেতন',
+  'averageMonthlyTripCost': 'মাসিক গড় মোকাম ট্রিপ খরচ',
+  'estimatedMonthlySalesRevenue': 'আনুমানিক মাসিক বিক্রি',
+  'estimatedMonthlySalesRevenueNotSetYet':
+      'এখনো সেট হয়নি — মাস শেষ হওয়ার অপেক্ষায়',
+  'manuallySet': 'ম্যানুয়ালি সেট করা',
+  'autoAveragedFromTrips': 'গত কয়েক মাসের ট্রিপ থেকে অটো-গড়',
+  'autoRefreshedFromLastMonth': 'গত মাসের প্রকৃত বিক্রি থেকে অটো-রিফ্রেশড',
+  'useAutoValue': 'অটো-হিসাবকৃত মান ব্যবহার করুন',
+  'overheadMarkupPercentLabel': 'ওভারহেড মার্কআপ',
+  'pricingEngineBootstrapPeriodNotice':
+      'এখন প্রাইস সাজেশন বন্ধ আছে — এই মাস শেষ হলে সিস্টেম নিজে আপনার মাসিক '
+      'বিক্রি থেকে হিসাব করে সাজেশন চালু করবে। চাইলে নিচে ম্যানুয়ালি একটা '
+      'অনুমান দিতে পারেন।',
+  'pricingEngineNoRevenueYetNotice':
+      'পজিটিভ বিক্রির অনুমান এখনো নেই, তাই সাজেশন হিসাব করা যাচ্ছে না।',
+  'suggestedSellPriceLabel': 'সাজেশন: ',
+  'tapToUse': 'ব্যবহার করতে ট্যাপ করুন',
 };
