@@ -9,10 +9,9 @@ import '../../../domain/entities/legacy_settlement.dart';
 import '../controller/investor_controller.dart';
 import 'investor_form_sheet.dart';
 
-/// The v2 Investor screen — list + per-investor metrics
+/// The Investor screen — list + per-investor metrics
 /// (`notes/business_logic.md` §ঙ) and repayment recording, backed by
-/// [InvestorController]. See `CatalogScreen`'s doc comment for why this
-/// reads/writes the v2 database only, separate from v1's Investor tab.
+/// [InvestorController].
 class InvestorScreen extends GetView<InvestorController> {
   const InvestorScreen({super.key});
 

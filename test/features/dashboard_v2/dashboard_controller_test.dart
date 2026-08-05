@@ -15,14 +15,14 @@ import 'package:inventory/features/dashboard_v2/controller/dashboard_controller.
 import 'package:test/test.dart';
 
 void main() {
-  late AppDatabaseV2 db;
+  late AppDatabase db;
   late DashboardController controller;
 
   final today = DateTime.now().toUtc();
   final twoDaysAgo = today.subtract(const Duration(days: 2));
 
   setUp(() async {
-    db = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    db = AppDatabase.forTesting(NativeDatabase.memory());
 
     await ProductUseCases(db).create(
       Product(

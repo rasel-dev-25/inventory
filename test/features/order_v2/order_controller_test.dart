@@ -7,11 +7,11 @@ import 'package:inventory/features/order_v2/controller/order_controller.dart';
 import 'package:test/test.dart';
 
 void main() {
-  late AppDatabaseV2 db;
+  late AppDatabase db;
   late OrderController controller;
 
   setUp(() async {
-    db = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    db = AppDatabase.forTesting(NativeDatabase.memory());
 
     await db.customerDao.create(
       const Customer(id: 'cust-1', name: 'Test Customer'),

@@ -7,11 +7,11 @@ import 'package:inventory/features/audit_log_v2/controller/audit_log_controller.
 import 'package:test/test.dart';
 
 void main() {
-  late AppDatabaseV2 db;
+  late AppDatabase db;
   late AuditLogController controller;
 
   setUp(() async {
-    db = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    db = AppDatabase.forTesting(NativeDatabase.memory());
     controller = AuditLogController(db);
     controller.onInit();
     await Future<void>.delayed(Duration.zero);

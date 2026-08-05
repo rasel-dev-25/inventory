@@ -3,7 +3,7 @@
 part of 'product_dao.dart';
 
 // ignore_for_file: type=lint
-mixin _$ProductDaoMixin on DatabaseAccessor<AppDatabaseV2> {
+mixin _$ProductDaoMixin on DatabaseAccessor<AppDatabase> {
   $ShopsTable get shops => attachedDatabase.shops;
   $ProductsTable get products => attachedDatabase.products;
   ProductDaoManager get managers => ProductDaoManager(this);

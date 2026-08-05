@@ -10,11 +10,11 @@ import 'package:inventory/features/fixed_asset_v2/controller/fixed_asset_control
 import 'package:test/test.dart';
 
 void main() {
-  late AppDatabaseV2 db;
+  late AppDatabase db;
   late FixedAssetController controller;
 
   setUp(() async {
-    db = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    db = AppDatabase.forTesting(NativeDatabase.memory());
 
     await ProductUseCases(db).create(
       Product(

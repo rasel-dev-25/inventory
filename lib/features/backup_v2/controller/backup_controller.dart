@@ -9,21 +9,19 @@ import 'package:share_plus/share_plus.dart';
 import '../../../data/local/app_database.dart';
 import '../../../data/local/backup_service.dart';
 
-/// The v2 counterpart of v1's `DataService` — drives
-/// [BackupService.buildBackupPayload]/[BackupService.restoreFromBackup]
-/// from the drawer's "Backup Data (v2)"/"Restore Data (v2)" actions,
-/// handling the file I/O and file-picking [BackupService] itself
-/// deliberately stays free of (it's data-layer, and layer-boundary rules
-/// forbid `lib/data/**` importing Flutter — see
-/// `tool/check_layer_boundaries.sh`).
+/// Drives [BackupService.buildBackupPayload]/[BackupService.restoreFromBackup]
+/// from the drawer's "Backup Data"/"Restore Data" actions, handling the
+/// file I/O and file-picking [BackupService] itself deliberately stays
+/// free of (it's data-layer, and layer-boundary rules forbid
+/// `lib/data/**` importing Flutter — see `tool/check_layer_boundaries.sh`).
 ///
-/// Filenames are prefixed `backup_v2_` specifically so [listBackupFiles]
-/// never lists v1's own `backup_*.json` files — the two export formats
-/// are not interchangeable (different table sets, different column
-/// shapes), and a v2 restore attempting to parse a v1 file would fail
-/// loudly via [BackupService]'s version check rather than silently
-/// misbehave, but keeping the file lists separate avoids the confusion
-/// of that error ever coming up in the first place.
+/// Filenames are prefixed `backup_v2_` — a naming leftover from before
+/// this was the app's only backup format (the v1 app this was rewritten
+/// from had its own, incompatible `backup_*.json` export, since deleted
+/// along with the rest of v1). Left as-is rather than renamed: an
+/// existing backup file on a real device already carries this prefix,
+/// and [listBackupFiles] just needs to keep matching whatever prefix new
+/// backups are actually written with.
 ///
 /// Uses `Get.snackbar`/`Get.dialog` rather than this file's own
 /// `BuildContext`, unlike every other v2 controller's inline
@@ -32,7 +30,7 @@ import '../../../data/local/backup_service.dart';
 /// instant an item is tapped, before any feedback about a *result* that
 /// only exists after an async operation completes.
 class BackupController extends GetxController {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
   static const _filePrefix = 'backup_v2_';
 
   BackupController(this.db);

@@ -18,19 +18,17 @@ import '../../../domain/entities/purchase.dart';
 import '../../../domain/entities/sale.dart';
 import '../../../domain/services/investor_metrics.dart';
 
-/// Backs the v2 Investor screen — per-investor metrics
+/// Backs the Investor screen — per-investor metrics
 /// (`notes/business_logic.md` §ঙ) via [computeInvestorMetrics], plus
 /// create/edit ([InvestorUseCases]) and repayment recording
-/// ([RecordInvestorRepaymentUseCase]). See `CatalogScreen`'s doc comment
-/// for why this reads/writes the v2 database only, separate from v1's
-/// Investor tab.
+/// ([RecordInvestorRepaymentUseCase]).
 ///
-/// This is also the first place a v2 investor can be *created* —
+/// This is also the first place an investor can be *created* —
 /// `CatalogScreen`'s and `PurchaseEntryScreen`'s investor dropdowns
 /// already read from `InvestorDao.watchAll`, but nothing wrote to it
 /// until this screen.
 class InvestorController extends GetxController {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
   static const _uuid = Uuid();
 
   InvestorController(this.db);

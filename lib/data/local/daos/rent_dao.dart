@@ -37,11 +37,11 @@ extension _RentTransactionRowMapping on RentTransactionRow {
 ///
 /// [RentPricingTiers] is read-only here — editing tiers (the spec's
 /// "কনফিগারযোগ্য") is not yet built anywhere in v2; the six default tiers
-/// `AppDatabaseV2._seed()` writes on a fresh database are what
+/// `AppDatabase._seed()` writes on a fresh database are what
 /// `IssueRentUseCase`'s tier lookup uses today. Tracked as a follow-up,
 /// not a silent omission.
 @DriftAccessor(tables: [RentPricingTiers, RentTransactions])
-class RentDao extends DatabaseAccessor<AppDatabaseV2> with _$RentDaoMixin {
+class RentDao extends DatabaseAccessor<AppDatabase> with _$RentDaoMixin {
   RentDao(super.db);
 
   Stream<List<RentPricingTierRow>> watchTiers(String shopId) {

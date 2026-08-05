@@ -12,12 +12,11 @@ import '../../../domain/entities/purchase.dart';
 import '../../../domain/entities/sale.dart';
 import '../../../domain/services/dashboard_calculator.dart';
 
-/// Backs the v2 Dashboard screen — `notes/business_logic.md` §ঝ's Day
+/// Backs the Dashboard screen — `notes/business_logic.md` §ঝ's Day
 /// view (default, today) vs. All-time view toggle, both served by the
 /// exact same [computeDashboardTotals] call with a different [DateRange],
-/// per the spec's own implementation note. See `CatalogScreen`'s doc
-/// comment for why this reads the v2 database only, separate from v1's
-/// Dashboard tab.
+/// per the spec's own implementation note. Embedded directly in
+/// `ShellScreen` — see that class's own doc comment.
 ///
 /// **Known simplification, flagged rather than hidden:** the spec's
 /// per-card tap-to-see-all-time interaction (each card independently
@@ -26,7 +25,7 @@ import '../../../domain/services/dashboard_calculator.dart';
 /// per-card granularity; the underlying calculation already supports it
 /// (it's just called once per card instead of once for the screen).
 class DashboardController extends GetxController {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
 
   DashboardController(this.db);
 

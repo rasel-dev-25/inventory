@@ -14,12 +14,10 @@ import '../../../domain/entities/product.dart';
 import '../../../domain/entities/rent_transaction.dart';
 import '../../../domain/services/rent_lifecycle.dart';
 
-/// Backs the v2 Rent screen — issue, return, and stolen-escalation for
-/// book rentals, per `notes/business_logic.md` §জ. No v1 name collision
-/// (v1 has no rent feature at all) — see `CatalogScreen`'s doc comment
-/// for why this reads/writes the v2 database only regardless.
+/// Backs the Rent screen — issue, return, and stolen-escalation for
+/// book rentals, per `notes/business_logic.md` §জ.
 class RentController extends GetxController {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
 
   RentController(this.db);
 

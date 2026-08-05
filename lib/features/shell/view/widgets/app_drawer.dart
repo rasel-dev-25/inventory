@@ -6,19 +6,21 @@ import 'package:iconsax/iconsax.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../../core/widgets/shop_logo.dart';
-import '../../../../core/services/data_service.dart';
-import '../../../../core/database/app_database.dart';
 import '../../../backup_v2/controller/backup_controller.dart';
 import '../../controller/shell_controller.dart';
 import '../../../settings/controller/settings_controller.dart';
 
+/// Everything that isn't one of `ShellScreen`'s 5 embedded tabs — see
+/// that class's own doc comment for which 5 those are. The first 5
+/// tiles here are shortcuts into those same tabs (`switchTab`, matching
+/// v1's own drawer convention of mirroring the bottom nav); everything
+/// below the first divider is a screen with no bottom-nav slot at all.
 class AppDrawer extends GetView<ShellController> {
   const AppDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
     final settings = Get.find<SettingsController>();
-    final dataService = DataService(Get.find<AppDatabase>());
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
@@ -36,34 +38,10 @@ class AppDrawer extends GetView<ShellController> {
             'dailySales'.tr,
             () => controller.switchTab(1),
           ),
-          _tile(
-            Iconsax.shop,
-            'stockAndAssets'.tr,
-            () => controller.switchTab(2),
-          ),
+          _tile(Iconsax.box, 'stock'.tr, () => controller.switchTab(2)),
           _tile(Iconsax.book, 'dues'.tr, () => controller.switchTab(3)),
-          _tile(
-            Iconsax.receipt,
-            'expensesAndPurchases'.tr,
-            () => controller.switchTab(4),
-          ),
-          _tile(Iconsax.chart, 'investor'.tr, () => controller.switchTab(5)),
-          _tile(Iconsax.people, 'customers'.tr, () => controller.switchTab(6)),
+          _tile(Iconsax.people, 'customers'.tr, () => controller.switchTab(4)),
           const Divider(),
-          _sectionHeader('utilities'.tr),
-          _tile(Iconsax.bookmark, 'quickCaptures'.tr, () {
-            Navigator.pop(context);
-            Get.toNamed(AppRoutes.quickCapture);
-          }),
-          _tile(Iconsax.building, 'fixedAssets'.tr, () {
-            Navigator.pop(context);
-            Get.toNamed(AppRoutes.assets);
-          }),
-          const Divider(),
-          // ── M1 v2 preview — reads/writes the new synced database, kept
-          // clearly separate from the v1 tabs above until the rest of the
-          // app is migrated too (see CatalogScreen's doc comment).
-          _sectionHeader('New (v2 preview)'),
           _tile(Iconsax.category_2, 'products'.tr, () {
             Navigator.pop(context);
             Get.toNamed(AppRoutes.catalogV2);
@@ -72,47 +50,27 @@ class AppDrawer extends GetView<ShellController> {
             Navigator.pop(context);
             Get.toNamed(AppRoutes.purchaseEntryV2);
           }),
-          _tile(Iconsax.hashtag, '${'dailySales'.tr} (v2)', () {
-            Navigator.pop(context);
-            Get.toNamed(AppRoutes.dailySalesV2);
-          }),
-          _tile(Iconsax.book, '${'dues'.tr} (v2)', () {
-            Navigator.pop(context);
-            Get.toNamed(AppRoutes.duesV2);
-          }),
-          _tile(Iconsax.people, '${'customers'.tr} (v2)', () {
-            Navigator.pop(context);
-            Get.toNamed(AppRoutes.customersV2);
-          }),
-          _tile(Iconsax.shop, '${'stockAndAssets'.tr} (v2)', () {
-            Navigator.pop(context);
-            Get.toNamed(AppRoutes.stockV2);
-          }),
-          _tile(Iconsax.category, '${'overview'.tr} (v2)', () {
-            Navigator.pop(context);
-            Get.toNamed(AppRoutes.dashboardV2);
-          }),
-          _tile(Iconsax.chart, '${'investor'.tr} (v2)', () {
+          _tile(Iconsax.chart, 'investor'.tr, () {
             Navigator.pop(context);
             Get.toNamed(AppRoutes.investorV2);
           }),
-          _tile(Iconsax.receipt, '${'expenses'.tr} (v2)', () {
+          _tile(Iconsax.receipt, 'expenses'.tr, () {
             Navigator.pop(context);
             Get.toNamed(AppRoutes.expenseV2);
           }),
-          _tile(Iconsax.book_1, '${'rent'.tr} (v2)', () {
+          _tile(Iconsax.book_1, 'rent'.tr, () {
             Navigator.pop(context);
             Get.toNamed(AppRoutes.rentV2);
           }),
-          _tile(Iconsax.bookmark_2, '${'orders'.tr} (v2)', () {
+          _tile(Iconsax.bookmark_2, 'orders'.tr, () {
             Navigator.pop(context);
             Get.toNamed(AppRoutes.orderV2);
           }),
-          _tile(Iconsax.building, '${'fixedAssets'.tr} (v2)', () {
+          _tile(Iconsax.building, 'fixedAssets'.tr, () {
             Navigator.pop(context);
             Get.toNamed(AppRoutes.fixedAssetV2);
           }),
-          _tile(Iconsax.microphone, '${'quickCaptures'.tr} (v2)', () {
+          _tile(Iconsax.microphone, 'quickCaptures'.tr, () {
             Navigator.pop(context);
             Get.toNamed(AppRoutes.quickCaptureV2);
           }),
@@ -142,18 +100,6 @@ class AppDrawer extends GetView<ShellController> {
           }),
           const Divider(),
           _sectionHeader('data'.tr),
-          _tile(Iconsax.export_1, 'exportData'.tr, () {
-            Navigator.pop(context);
-            dataService.exportData();
-          }),
-          _tile(Iconsax.import_1, 'importData'.tr, () {
-            Navigator.pop(context);
-            dataService.importData();
-          }),
-          _tile(Iconsax.microscope, 'seedSampleData'.tr, () {
-            Navigator.pop(context);
-            dataService.seedSampleData();
-          }),
           _tile(Iconsax.cloud_add, 'backupDataV2'.tr, () {
             Navigator.pop(context);
             Get.find<BackupController>().exportAndShare();

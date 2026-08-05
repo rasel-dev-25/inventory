@@ -22,7 +22,7 @@ import 'sync_enqueue_helper.dart';
 /// that wrapper, built at the same time as the fix — not a pre-existing
 /// flow that regressed.
 class DeletePurchaseTripUseCase {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
 
   DeletePurchaseTripUseCase(this.db);
 

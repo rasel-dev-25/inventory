@@ -12,7 +12,7 @@ part 'sync_metadata_dao.g.dart';
 /// both are pure sync-engine plumbing consumed only by
 /// `lib/data/sync/sync_push_service.dart` and `sync_pull_service.dart`.
 @DriftAccessor(tables: [SyncOutboxEntries, SyncCursors])
-class SyncMetadataDao extends DatabaseAccessor<AppDatabaseV2>
+class SyncMetadataDao extends DatabaseAccessor<AppDatabase>
     with _$SyncMetadataDaoMixin {
   SyncMetadataDao(super.db);
 

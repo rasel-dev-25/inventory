@@ -5,18 +5,27 @@ import '../../../core/design/tokens.dart';
 import '../../../core/money/money.dart';
 import '../controller/dashboard_controller.dart';
 
-/// The v2 Dashboard screen — Day/All-time toggle over the totals
+/// The Dashboard screen — Day/All-time toggle over the totals
 /// `notes/business_logic.md` §ঝ specifies, backed by
-/// [DashboardController.totals] → `computeDashboardTotals`. See
-/// `CatalogScreen`'s doc comment for why this reads the v2 database only,
-/// separate from v1's Dashboard tab.
+/// [DashboardController.totals] → `computeDashboardTotals`. One of the 5
+/// screens `ShellScreen` embeds directly — see that class's own doc
+/// comment for why [onMenuTap] exists: this screen builds its own
+/// `Scaffold`/`AppBar`, so the outer shell's drawer needs an explicit way
+/// in, the same convention v1's shell screens used.
 class DashboardScreen extends GetView<DashboardController> {
-  const DashboardScreen({super.key});
+  final VoidCallback? onMenuTap;
+
+  const DashboardScreen({super.key, this.onMenuTap});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('${'overview'.tr} (v2)')),
+      appBar: AppBar(
+        title: Text('overview'.tr),
+        leading: onMenuTap == null
+            ? null
+            : IconButton(icon: const Icon(Icons.menu), onPressed: onMenuTap),
+      ),
       body: Obx(() {
         final totals = controller.totals;
         return ListView(

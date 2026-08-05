@@ -16,13 +16,13 @@ import 'package:inventory/features/pricing_settings_v2/controller/pricing_settin
 import 'package:test/test.dart';
 
 void main() {
-  late AppDatabaseV2 db;
+  late AppDatabase db;
   late SettingsRegistry registry;
   late FixedClock clock;
   late PricingSettingsController controller;
 
   setUp(() async {
-    db = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    db = AppDatabase.forTesting(NativeDatabase.memory());
     registry = SettingsRegistry(InMemoryKeyValueStore());
     clock = FixedClock(DateTime.utc(2026, 8, 5));
 

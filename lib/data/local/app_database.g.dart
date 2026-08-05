@@ -16521,9 +16521,9 @@ class SyncCursorsCompanion extends UpdateCompanion<SyncCursorRow> {
   }
 }
 
-abstract class _$AppDatabaseV2 extends GeneratedDatabase {
-  _$AppDatabaseV2(QueryExecutor e) : super(e);
-  $AppDatabaseV2Manager get managers => $AppDatabaseV2Manager(this);
+abstract class _$AppDatabase extends GeneratedDatabase {
+  _$AppDatabase(QueryExecutor e) : super(e);
+  $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $ShopsTable shops = $ShopsTable(this);
   late final $CategoriesTable categories = $CategoriesTable(this);
   late final $AppSettingsTable appSettings = $AppSettingsTable(this);
@@ -16564,27 +16564,27 @@ abstract class _$AppDatabaseV2 extends GeneratedDatabase {
       $SyncPendingUploadsTable(this);
   late final $SyncCursorsTable syncCursors = $SyncCursorsTable(this);
   late final AppSettingsDao appSettingsDao = AppSettingsDao(
-    this as AppDatabaseV2,
+    this as AppDatabase,
   );
-  late final ProductDao productDao = ProductDao(this as AppDatabaseV2);
-  late final CustomerDao customerDao = CustomerDao(this as AppDatabaseV2);
-  late final InvestorDao investorDao = InvestorDao(this as AppDatabaseV2);
-  late final PurchaseDao purchaseDao = PurchaseDao(this as AppDatabaseV2);
+  late final ProductDao productDao = ProductDao(this as AppDatabase);
+  late final CustomerDao customerDao = CustomerDao(this as AppDatabase);
+  late final InvestorDao investorDao = InvestorDao(this as AppDatabase);
+  late final PurchaseDao purchaseDao = PurchaseDao(this as AppDatabase);
   late final SyncMetadataDao syncMetadataDao = SyncMetadataDao(
-    this as AppDatabaseV2,
+    this as AppDatabase,
   );
-  late final CategoryDao categoryDao = CategoryDao(this as AppDatabaseV2);
-  late final LedgerDao ledgerDao = LedgerDao(this as AppDatabaseV2);
-  late final SaleDao saleDao = SaleDao(this as AppDatabaseV2);
-  late final DueDao dueDao = DueDao(this as AppDatabaseV2);
-  late final ExpenseDao expenseDao = ExpenseDao(this as AppDatabaseV2);
-  late final RentDao rentDao = RentDao(this as AppDatabaseV2);
-  late final OrderDao orderDao = OrderDao(this as AppDatabaseV2);
-  late final FixedAssetDao fixedAssetDao = FixedAssetDao(this as AppDatabaseV2);
+  late final CategoryDao categoryDao = CategoryDao(this as AppDatabase);
+  late final LedgerDao ledgerDao = LedgerDao(this as AppDatabase);
+  late final SaleDao saleDao = SaleDao(this as AppDatabase);
+  late final DueDao dueDao = DueDao(this as AppDatabase);
+  late final ExpenseDao expenseDao = ExpenseDao(this as AppDatabase);
+  late final RentDao rentDao = RentDao(this as AppDatabase);
+  late final OrderDao orderDao = OrderDao(this as AppDatabase);
+  late final FixedAssetDao fixedAssetDao = FixedAssetDao(this as AppDatabase);
   late final QuickCaptureDao quickCaptureDao = QuickCaptureDao(
-    this as AppDatabaseV2,
+    this as AppDatabase,
   );
-  late final AuditLogDao auditLogDao = AuditLogDao(this as AppDatabaseV2);
+  late final AuditLogDao auditLogDao = AuditLogDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -16636,11 +16636,11 @@ typedef $$ShopsTableUpdateCompanionBuilder =
     });
 
 final class $$ShopsTableReferences
-    extends BaseReferences<_$AppDatabaseV2, $ShopsTable, ShopRow> {
+    extends BaseReferences<_$AppDatabase, $ShopsTable, ShopRow> {
   $$ShopsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static MultiTypedResultKey<$CategoriesTable, List<CategoryRow>>
-  _categoriesRefsTable(_$AppDatabaseV2 db) => MultiTypedResultKey.fromTable(
+  _categoriesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.categories,
     aliasName: 'shops__id__categories__shop_id',
   );
@@ -16658,7 +16658,7 @@ final class $$ShopsTableReferences
   }
 
   static MultiTypedResultKey<$ProductsTable, List<ProductRow>>
-  _productsRefsTable(_$AppDatabaseV2 db) => MultiTypedResultKey.fromTable(
+  _productsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.products,
     aliasName: 'shops__id__products__shop_id',
   );
@@ -16676,7 +16676,7 @@ final class $$ShopsTableReferences
   }
 
   static MultiTypedResultKey<$CustomersTable, List<CustomerRow>>
-  _customersRefsTable(_$AppDatabaseV2 db) => MultiTypedResultKey.fromTable(
+  _customersRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.customers,
     aliasName: 'shops__id__customers__shop_id',
   );
@@ -16694,7 +16694,7 @@ final class $$ShopsTableReferences
   }
 
   static MultiTypedResultKey<$InvestorsTable, List<InvestorRow>>
-  _investorsRefsTable(_$AppDatabaseV2 db) => MultiTypedResultKey.fromTable(
+  _investorsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.investors,
     aliasName: 'shops__id__investors__shop_id',
   );
@@ -16715,7 +16715,7 @@ final class $$ShopsTableReferences
     $InvestorRepaymentsTable,
     List<InvestorRepaymentRow>
   >
-  _investorRepaymentsRefsTable(_$AppDatabaseV2 db) =>
+  _investorRepaymentsRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.investorRepayments,
         aliasName: 'shops__id__investor_repayments__shop_id',
@@ -16736,7 +16736,7 @@ final class $$ShopsTableReferences
   }
 
   static MultiTypedResultKey<$LegacySettlementsTable, List<LegacySettlementRow>>
-  _legacySettlementsRefsTable(_$AppDatabaseV2 db) =>
+  _legacySettlementsRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.legacySettlements,
         aliasName: 'shops__id__legacy_settlements__shop_id',
@@ -16757,7 +16757,7 @@ final class $$ShopsTableReferences
   }
 
   static MultiTypedResultKey<$PurchaseTripsTable, List<PurchaseTripRow>>
-  _purchaseTripsRefsTable(_$AppDatabaseV2 db) => MultiTypedResultKey.fromTable(
+  _purchaseTripsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.purchaseTrips,
     aliasName: 'shops__id__purchase_trips__shop_id',
   );
@@ -16775,7 +16775,7 @@ final class $$ShopsTableReferences
   }
 
   static MultiTypedResultKey<$SalesTable, List<SaleRow>> _salesRefsTable(
-    _$AppDatabaseV2 db,
+    _$AppDatabase db,
   ) => MultiTypedResultKey.fromTable(
     db.sales,
     aliasName: 'shops__id__sales__shop_id',
@@ -16794,7 +16794,7 @@ final class $$ShopsTableReferences
   }
 
   static MultiTypedResultKey<$DuesTable, List<DueRow>> _duesRefsTable(
-    _$AppDatabaseV2 db,
+    _$AppDatabase db,
   ) => MultiTypedResultKey.fromTable(
     db.dues,
     aliasName: 'shops__id__dues__shop_id',
@@ -16813,11 +16813,10 @@ final class $$ShopsTableReferences
   }
 
   static MultiTypedResultKey<$RentPricingTiersTable, List<RentPricingTierRow>>
-  _rentPricingTiersRefsTable(_$AppDatabaseV2 db) =>
-      MultiTypedResultKey.fromTable(
-        db.rentPricingTiers,
-        aliasName: 'shops__id__rent_pricing_tiers__shop_id',
-      );
+  _rentPricingTiersRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.rentPricingTiers,
+    aliasName: 'shops__id__rent_pricing_tiers__shop_id',
+  );
 
   $$RentPricingTiersTableProcessedTableManager get rentPricingTiersRefs {
     final manager = $$RentPricingTiersTableTableManager(
@@ -16834,11 +16833,10 @@ final class $$ShopsTableReferences
   }
 
   static MultiTypedResultKey<$RentTransactionsTable, List<RentTransactionRow>>
-  _rentTransactionsRefsTable(_$AppDatabaseV2 db) =>
-      MultiTypedResultKey.fromTable(
-        db.rentTransactions,
-        aliasName: 'shops__id__rent_transactions__shop_id',
-      );
+  _rentTransactionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.rentTransactions,
+    aliasName: 'shops__id__rent_transactions__shop_id',
+  );
 
   $$RentTransactionsTableProcessedTableManager get rentTransactionsRefs {
     final manager = $$RentTransactionsTableTableManager(
@@ -16855,7 +16853,7 @@ final class $$ShopsTableReferences
   }
 
   static MultiTypedResultKey<$ExpensesTable, List<ExpenseRow>>
-  _expensesRefsTable(_$AppDatabaseV2 db) => MultiTypedResultKey.fromTable(
+  _expensesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.expenses,
     aliasName: 'shops__id__expenses__shop_id',
   );
@@ -16873,7 +16871,7 @@ final class $$ShopsTableReferences
   }
 
   static MultiTypedResultKey<$OrdersTable, List<OrderRow>> _ordersRefsTable(
-    _$AppDatabaseV2 db,
+    _$AppDatabase db,
   ) => MultiTypedResultKey.fromTable(
     db.orders,
     aliasName: 'shops__id__orders__shop_id',
@@ -16892,7 +16890,7 @@ final class $$ShopsTableReferences
   }
 
   static MultiTypedResultKey<$FixedAssetsTable, List<FixedAssetRow>>
-  _fixedAssetsRefsTable(_$AppDatabaseV2 db) => MultiTypedResultKey.fromTable(
+  _fixedAssetsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.fixedAssets,
     aliasName: 'shops__id__fixed_assets__shop_id',
   );
@@ -16910,7 +16908,7 @@ final class $$ShopsTableReferences
   }
 
   static MultiTypedResultKey<$QuickCapturesTable, List<QuickCaptureRow>>
-  _quickCapturesRefsTable(_$AppDatabaseV2 db) => MultiTypedResultKey.fromTable(
+  _quickCapturesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.quickCaptures,
     aliasName: 'shops__id__quick_captures__shop_id',
   );
@@ -16928,7 +16926,7 @@ final class $$ShopsTableReferences
   }
 
   static MultiTypedResultKey<$CashLedgerEntriesTable, List<CashLedgerEntryRow>>
-  _cashLedgerEntriesRefsTable(_$AppDatabaseV2 db) =>
+  _cashLedgerEntriesRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.cashLedgerEntries,
         aliasName: 'shops__id__cash_ledger_entries__shop_id',
@@ -16949,7 +16947,7 @@ final class $$ShopsTableReferences
   }
 
   static MultiTypedResultKey<$StockMovementsTable, List<StockMovementRow>>
-  _stockMovementsRefsTable(_$AppDatabaseV2 db) => MultiTypedResultKey.fromTable(
+  _stockMovementsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.stockMovements,
     aliasName: 'shops__id__stock_movements__shop_id',
   );
@@ -16967,11 +16965,10 @@ final class $$ShopsTableReferences
   }
 
   static MultiTypedResultKey<$AuditLogEntriesTable, List<AuditLogEntryRow>>
-  _auditLogEntriesRefsTable(_$AppDatabaseV2 db) =>
-      MultiTypedResultKey.fromTable(
-        db.auditLogEntries,
-        aliasName: 'shops__id__audit_log_entries__shop_id',
-      );
+  _auditLogEntriesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.auditLogEntries,
+    aliasName: 'shops__id__audit_log_entries__shop_id',
+  );
 
   $$AuditLogEntriesTableProcessedTableManager get auditLogEntriesRefs {
     final manager = $$AuditLogEntriesTableTableManager(
@@ -16988,8 +16985,7 @@ final class $$ShopsTableReferences
   }
 }
 
-class $$ShopsTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $ShopsTable> {
+class $$ShopsTableFilterComposer extends Composer<_$AppDatabase, $ShopsTable> {
   $$ShopsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -17464,7 +17460,7 @@ class $$ShopsTableFilterComposer
 }
 
 class $$ShopsTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $ShopsTable> {
+    extends Composer<_$AppDatabase, $ShopsTable> {
   $$ShopsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -17489,7 +17485,7 @@ class $$ShopsTableOrderingComposer
 }
 
 class $$ShopsTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $ShopsTable> {
+    extends Composer<_$AppDatabase, $ShopsTable> {
   $$ShopsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -17963,7 +17959,7 @@ class $$ShopsTableAnnotationComposer
 class $$ShopsTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $ShopsTable,
           ShopRow,
           $$ShopsTableFilterComposer,
@@ -17994,7 +17990,7 @@ class $$ShopsTableTableManager
             bool auditLogEntriesRefs,
           })
         > {
-  $$ShopsTableTableManager(_$AppDatabaseV2 db, $ShopsTable table)
+  $$ShopsTableTableManager(_$AppDatabase db, $ShopsTable table)
     : super(
         TableManagerState(
           db: db,
@@ -18453,7 +18449,7 @@ class $$ShopsTableTableManager
 
 typedef $$ShopsTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $ShopsTable,
       ShopRow,
       $$ShopsTableFilterComposer,
@@ -18502,10 +18498,10 @@ typedef $$CategoriesTableUpdateCompanionBuilder =
     });
 
 final class $$CategoriesTableReferences
-    extends BaseReferences<_$AppDatabaseV2, $CategoriesTable, CategoryRow> {
+    extends BaseReferences<_$AppDatabase, $CategoriesTable, CategoryRow> {
   $$CategoriesTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $ShopsTable _shopIdTable(_$AppDatabaseV2 db) =>
+  static $ShopsTable _shopIdTable(_$AppDatabase db) =>
       db.shops.createAlias('categories__shop_id__shops__id');
 
   $$ShopsTableProcessedTableManager get shopId {
@@ -18524,7 +18520,7 @@ final class $$CategoriesTableReferences
 }
 
 class $$CategoriesTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $CategoriesTable> {
+    extends Composer<_$AppDatabase, $CategoriesTable> {
   $$CategoriesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -18572,7 +18568,7 @@ class $$CategoriesTableFilterComposer
 }
 
 class $$CategoriesTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $CategoriesTable> {
+    extends Composer<_$AppDatabase, $CategoriesTable> {
   $$CategoriesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -18620,7 +18616,7 @@ class $$CategoriesTableOrderingComposer
 }
 
 class $$CategoriesTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $CategoriesTable> {
+    extends Composer<_$AppDatabase, $CategoriesTable> {
   $$CategoriesTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -18664,7 +18660,7 @@ class $$CategoriesTableAnnotationComposer
 class $$CategoriesTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $CategoriesTable,
           CategoryRow,
           $$CategoriesTableFilterComposer,
@@ -18676,7 +18672,7 @@ class $$CategoriesTableTableManager
           CategoryRow,
           PrefetchHooks Function({bool shopId})
         > {
-  $$CategoriesTableTableManager(_$AppDatabaseV2 db, $CategoriesTable table)
+  $$CategoriesTableTableManager(_$AppDatabase db, $CategoriesTable table)
     : super(
         TableManagerState(
           db: db,
@@ -18770,7 +18766,7 @@ class $$CategoriesTableTableManager
 
 typedef $$CategoriesTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $CategoriesTable,
       CategoryRow,
       $$CategoriesTableFilterComposer,
@@ -18796,7 +18792,7 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
     });
 
 class $$AppSettingsTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $AppSettingsTable> {
+    extends Composer<_$AppDatabase, $AppSettingsTable> {
   $$AppSettingsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -18816,7 +18812,7 @@ class $$AppSettingsTableFilterComposer
 }
 
 class $$AppSettingsTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $AppSettingsTable> {
+    extends Composer<_$AppDatabase, $AppSettingsTable> {
   $$AppSettingsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -18836,7 +18832,7 @@ class $$AppSettingsTableOrderingComposer
 }
 
 class $$AppSettingsTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $AppSettingsTable> {
+    extends Composer<_$AppDatabase, $AppSettingsTable> {
   $$AppSettingsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -18854,7 +18850,7 @@ class $$AppSettingsTableAnnotationComposer
 class $$AppSettingsTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $AppSettingsTable,
           AppSettingRow,
           $$AppSettingsTableFilterComposer,
@@ -18864,12 +18860,12 @@ class $$AppSettingsTableTableManager
           $$AppSettingsTableUpdateCompanionBuilder,
           (
             AppSettingRow,
-            BaseReferences<_$AppDatabaseV2, $AppSettingsTable, AppSettingRow>,
+            BaseReferences<_$AppDatabase, $AppSettingsTable, AppSettingRow>,
           ),
           AppSettingRow,
           PrefetchHooks Function()
         > {
-  $$AppSettingsTableTableManager(_$AppDatabaseV2 db, $AppSettingsTable table)
+  $$AppSettingsTableTableManager(_$AppDatabase db, $AppSettingsTable table)
     : super(
         TableManagerState(
           db: db,
@@ -18906,7 +18902,7 @@ class $$AppSettingsTableTableManager
 
 typedef $$AppSettingsTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $AppSettingsTable,
       AppSettingRow,
       $$AppSettingsTableFilterComposer,
@@ -18916,7 +18912,7 @@ typedef $$AppSettingsTableProcessedTableManager =
       $$AppSettingsTableUpdateCompanionBuilder,
       (
         AppSettingRow,
-        BaseReferences<_$AppDatabaseV2, $AppSettingsTable, AppSettingRow>,
+        BaseReferences<_$AppDatabase, $AppSettingsTable, AppSettingRow>,
       ),
       AppSettingRow,
       PrefetchHooks Function()
@@ -18965,10 +18961,10 @@ typedef $$ProductsTableUpdateCompanionBuilder =
     });
 
 final class $$ProductsTableReferences
-    extends BaseReferences<_$AppDatabaseV2, $ProductsTable, ProductRow> {
+    extends BaseReferences<_$AppDatabase, $ProductsTable, ProductRow> {
   $$ProductsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $ShopsTable _shopIdTable(_$AppDatabaseV2 db) =>
+  static $ShopsTable _shopIdTable(_$AppDatabase db) =>
       db.shops.createAlias('products__shop_id__shops__id');
 
   $$ShopsTableProcessedTableManager get shopId {
@@ -18986,7 +18982,7 @@ final class $$ProductsTableReferences
   }
 
   static MultiTypedResultKey<$ProductImagesTable, List<ProductImageRow>>
-  _productImagesRefsTable(_$AppDatabaseV2 db) => MultiTypedResultKey.fromTable(
+  _productImagesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.productImages,
     aliasName: 'products__id__product_images__product_id',
   );
@@ -19004,7 +19000,7 @@ final class $$ProductsTableReferences
   }
 
   static MultiTypedResultKey<$PurchaseItemsTable, List<PurchaseItemRow>>
-  _purchaseItemsRefsTable(_$AppDatabaseV2 db) => MultiTypedResultKey.fromTable(
+  _purchaseItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.purchaseItems,
     aliasName: 'products__id__purchase_items__product_id',
   );
@@ -19022,7 +19018,7 @@ final class $$ProductsTableReferences
   }
 
   static MultiTypedResultKey<$SalesTable, List<SaleRow>> _salesRefsTable(
-    _$AppDatabaseV2 db,
+    _$AppDatabase db,
   ) => MultiTypedResultKey.fromTable(
     db.sales,
     aliasName: 'products__id__sales__product_id',
@@ -19041,11 +19037,10 @@ final class $$ProductsTableReferences
   }
 
   static MultiTypedResultKey<$RentTransactionsTable, List<RentTransactionRow>>
-  _rentTransactionsRefsTable(_$AppDatabaseV2 db) =>
-      MultiTypedResultKey.fromTable(
-        db.rentTransactions,
-        aliasName: 'products__id__rent_transactions__book_product_id',
-      );
+  _rentTransactionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.rentTransactions,
+    aliasName: 'products__id__rent_transactions__book_product_id',
+  );
 
   $$RentTransactionsTableProcessedTableManager get rentTransactionsRefs {
     final manager = $$RentTransactionsTableTableManager(
@@ -19062,7 +19057,7 @@ final class $$ProductsTableReferences
   }
 
   static MultiTypedResultKey<$FixedAssetsTable, List<FixedAssetRow>>
-  _fixedAssetsRefsTable(_$AppDatabaseV2 db) => MultiTypedResultKey.fromTable(
+  _fixedAssetsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.fixedAssets,
     aliasName: 'products__id__fixed_assets__source_product_id',
   );
@@ -19080,7 +19075,7 @@ final class $$ProductsTableReferences
   }
 
   static MultiTypedResultKey<$StockMovementsTable, List<StockMovementRow>>
-  _stockMovementsRefsTable(_$AppDatabaseV2 db) => MultiTypedResultKey.fromTable(
+  _stockMovementsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.stockMovements,
     aliasName: 'products__id__stock_movements__product_id',
   );
@@ -19099,7 +19094,7 @@ final class $$ProductsTableReferences
 }
 
 class $$ProductsTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $ProductsTable> {
+    extends Composer<_$AppDatabase, $ProductsTable> {
   $$ProductsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -19363,7 +19358,7 @@ class $$ProductsTableFilterComposer
 }
 
 class $$ProductsTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $ProductsTable> {
+    extends Composer<_$AppDatabase, $ProductsTable> {
   $$ProductsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -19476,7 +19471,7 @@ class $$ProductsTableOrderingComposer
 }
 
 class $$ProductsTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $ProductsTable> {
+    extends Composer<_$AppDatabase, $ProductsTable> {
   $$ProductsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -19720,7 +19715,7 @@ class $$ProductsTableAnnotationComposer
 class $$ProductsTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $ProductsTable,
           ProductRow,
           $$ProductsTableFilterComposer,
@@ -19740,7 +19735,7 @@ class $$ProductsTableTableManager
             bool stockMovementsRefs,
           })
         > {
-  $$ProductsTableTableManager(_$AppDatabaseV2 db, $ProductsTable table)
+  $$ProductsTableTableManager(_$AppDatabase db, $ProductsTable table)
     : super(
         TableManagerState(
           db: db,
@@ -20029,7 +20024,7 @@ class $$ProductsTableTableManager
 
 typedef $$ProductsTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $ProductsTable,
       ProductRow,
       $$ProductsTableFilterComposer,
@@ -20078,14 +20073,14 @@ typedef $$ProductImagesTableUpdateCompanionBuilder =
 
 final class $$ProductImagesTableReferences
     extends
-        BaseReferences<_$AppDatabaseV2, $ProductImagesTable, ProductImageRow> {
+        BaseReferences<_$AppDatabase, $ProductImagesTable, ProductImageRow> {
   $$ProductImagesTableReferences(
     super.$_db,
     super.$_table,
     super.$_typedResult,
   );
 
-  static $ProductsTable _productIdTable(_$AppDatabaseV2 db) =>
+  static $ProductsTable _productIdTable(_$AppDatabase db) =>
       db.products.createAlias('product_images__product_id__products__id');
 
   $$ProductsTableProcessedTableManager get productId {
@@ -20104,7 +20099,7 @@ final class $$ProductImagesTableReferences
 }
 
 class $$ProductImagesTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $ProductImagesTable> {
+    extends Composer<_$AppDatabase, $ProductImagesTable> {
   $$ProductImagesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -20177,7 +20172,7 @@ class $$ProductImagesTableFilterComposer
 }
 
 class $$ProductImagesTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $ProductImagesTable> {
+    extends Composer<_$AppDatabase, $ProductImagesTable> {
   $$ProductImagesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -20250,7 +20245,7 @@ class $$ProductImagesTableOrderingComposer
 }
 
 class $$ProductImagesTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $ProductImagesTable> {
+    extends Composer<_$AppDatabase, $ProductImagesTable> {
   $$ProductImagesTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -20313,7 +20308,7 @@ class $$ProductImagesTableAnnotationComposer
 class $$ProductImagesTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $ProductImagesTable,
           ProductImageRow,
           $$ProductImagesTableFilterComposer,
@@ -20325,10 +20320,8 @@ class $$ProductImagesTableTableManager
           ProductImageRow,
           PrefetchHooks Function({bool productId})
         > {
-  $$ProductImagesTableTableManager(
-    _$AppDatabaseV2 db,
-    $ProductImagesTable table,
-  ) : super(
+  $$ProductImagesTableTableManager(_$AppDatabase db, $ProductImagesTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
@@ -20441,7 +20434,7 @@ class $$ProductImagesTableTableManager
 
 typedef $$ProductImagesTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $ProductImagesTable,
       ProductImageRow,
       $$ProductImagesTableFilterComposer,
@@ -20485,10 +20478,10 @@ typedef $$CustomersTableUpdateCompanionBuilder =
     });
 
 final class $$CustomersTableReferences
-    extends BaseReferences<_$AppDatabaseV2, $CustomersTable, CustomerRow> {
+    extends BaseReferences<_$AppDatabase, $CustomersTable, CustomerRow> {
   $$CustomersTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $ShopsTable _shopIdTable(_$AppDatabaseV2 db) =>
+  static $ShopsTable _shopIdTable(_$AppDatabase db) =>
       db.shops.createAlias('customers__shop_id__shops__id');
 
   $$ShopsTableProcessedTableManager get shopId {
@@ -20506,7 +20499,7 @@ final class $$CustomersTableReferences
   }
 
   static MultiTypedResultKey<$SalesTable, List<SaleRow>> _salesRefsTable(
-    _$AppDatabaseV2 db,
+    _$AppDatabase db,
   ) => MultiTypedResultKey.fromTable(
     db.sales,
     aliasName: 'customers__id__sales__customer_id',
@@ -20525,7 +20518,7 @@ final class $$CustomersTableReferences
   }
 
   static MultiTypedResultKey<$DuesTable, List<DueRow>> _duesRefsTable(
-    _$AppDatabaseV2 db,
+    _$AppDatabase db,
   ) => MultiTypedResultKey.fromTable(
     db.dues,
     aliasName: 'customers__id__dues__customer_id',
@@ -20544,11 +20537,10 @@ final class $$CustomersTableReferences
   }
 
   static MultiTypedResultKey<$RentTransactionsTable, List<RentTransactionRow>>
-  _rentTransactionsRefsTable(_$AppDatabaseV2 db) =>
-      MultiTypedResultKey.fromTable(
-        db.rentTransactions,
-        aliasName: 'customers__id__rent_transactions__customer_id',
-      );
+  _rentTransactionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.rentTransactions,
+    aliasName: 'customers__id__rent_transactions__customer_id',
+  );
 
   $$RentTransactionsTableProcessedTableManager get rentTransactionsRefs {
     final manager = $$RentTransactionsTableTableManager(
@@ -20565,7 +20557,7 @@ final class $$CustomersTableReferences
   }
 
   static MultiTypedResultKey<$OrdersTable, List<OrderRow>> _ordersRefsTable(
-    _$AppDatabaseV2 db,
+    _$AppDatabase db,
   ) => MultiTypedResultKey.fromTable(
     db.orders,
     aliasName: 'customers__id__orders__customer_id',
@@ -20585,7 +20577,7 @@ final class $$CustomersTableReferences
 }
 
 class $$CustomersTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $CustomersTable> {
+    extends Composer<_$AppDatabase, $CustomersTable> {
   $$CustomersTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -20768,7 +20760,7 @@ class $$CustomersTableFilterComposer
 }
 
 class $$CustomersTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $CustomersTable> {
+    extends Composer<_$AppDatabase, $CustomersTable> {
   $$CustomersTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -20851,7 +20843,7 @@ class $$CustomersTableOrderingComposer
 }
 
 class $$CustomersTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $CustomersTable> {
+    extends Composer<_$AppDatabase, $CustomersTable> {
   $$CustomersTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -21018,7 +21010,7 @@ class $$CustomersTableAnnotationComposer
 class $$CustomersTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $CustomersTable,
           CustomerRow,
           $$CustomersTableFilterComposer,
@@ -21036,7 +21028,7 @@ class $$CustomersTableTableManager
             bool ordersRefs,
           })
         > {
-  $$CustomersTableTableManager(_$AppDatabaseV2 db, $CustomersTable table)
+  $$CustomersTableTableManager(_$AppDatabase db, $CustomersTable table)
     : super(
         TableManagerState(
           db: db,
@@ -21255,7 +21247,7 @@ class $$CustomersTableTableManager
 
 typedef $$CustomersTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $CustomersTable,
       CustomerRow,
       $$CustomersTableFilterComposer,
@@ -21309,10 +21301,10 @@ typedef $$InvestorsTableUpdateCompanionBuilder =
     });
 
 final class $$InvestorsTableReferences
-    extends BaseReferences<_$AppDatabaseV2, $InvestorsTable, InvestorRow> {
+    extends BaseReferences<_$AppDatabase, $InvestorsTable, InvestorRow> {
   $$InvestorsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $ShopsTable _shopIdTable(_$AppDatabaseV2 db) =>
+  static $ShopsTable _shopIdTable(_$AppDatabase db) =>
       db.shops.createAlias('investors__shop_id__shops__id');
 
   $$ShopsTableProcessedTableManager get shopId {
@@ -21333,7 +21325,7 @@ final class $$InvestorsTableReferences
     $InvestorRepaymentsTable,
     List<InvestorRepaymentRow>
   >
-  _investorRepaymentsRefsTable(_$AppDatabaseV2 db) =>
+  _investorRepaymentsRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.investorRepayments,
         aliasName: 'investors__id__investor_repayments__investor_id',
@@ -21354,7 +21346,7 @@ final class $$InvestorsTableReferences
   }
 
   static MultiTypedResultKey<$LegacySettlementsTable, List<LegacySettlementRow>>
-  _legacySettlementsRefsTable(_$AppDatabaseV2 db) =>
+  _legacySettlementsRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.legacySettlements,
         aliasName: 'investors__id__legacy_settlements__investor_id',
@@ -21376,7 +21368,7 @@ final class $$InvestorsTableReferences
 }
 
 class $$InvestorsTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $InvestorsTable> {
+    extends Composer<_$AppDatabase, $InvestorsTable> {
   $$InvestorsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -21521,7 +21513,7 @@ class $$InvestorsTableFilterComposer
 }
 
 class $$InvestorsTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $InvestorsTable> {
+    extends Composer<_$AppDatabase, $InvestorsTable> {
   $$InvestorsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -21614,7 +21606,7 @@ class $$InvestorsTableOrderingComposer
 }
 
 class $$InvestorsTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $InvestorsTable> {
+    extends Composer<_$AppDatabase, $InvestorsTable> {
   $$InvestorsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -21747,7 +21739,7 @@ class $$InvestorsTableAnnotationComposer
 class $$InvestorsTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $InvestorsTable,
           InvestorRow,
           $$InvestorsTableFilterComposer,
@@ -21763,7 +21755,7 @@ class $$InvestorsTableTableManager
             bool legacySettlementsRefs,
           })
         > {
-  $$InvestorsTableTableManager(_$AppDatabaseV2 db, $InvestorsTable table)
+  $$InvestorsTableTableManager(_$AppDatabase db, $InvestorsTable table)
     : super(
         TableManagerState(
           db: db,
@@ -21945,7 +21937,7 @@ class $$InvestorsTableTableManager
 
 typedef $$InvestorsTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $InvestorsTable,
       InvestorRow,
       $$InvestorsTableFilterComposer,
@@ -21991,7 +21983,7 @@ typedef $$InvestorRepaymentsTableUpdateCompanionBuilder =
 final class $$InvestorRepaymentsTableReferences
     extends
         BaseReferences<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $InvestorRepaymentsTable,
           InvestorRepaymentRow
         > {
@@ -22001,7 +21993,7 @@ final class $$InvestorRepaymentsTableReferences
     super.$_typedResult,
   );
 
-  static $ShopsTable _shopIdTable(_$AppDatabaseV2 db) =>
+  static $ShopsTable _shopIdTable(_$AppDatabase db) =>
       db.shops.createAlias('investor_repayments__shop_id__shops__id');
 
   $$ShopsTableProcessedTableManager get shopId {
@@ -22018,7 +22010,7 @@ final class $$InvestorRepaymentsTableReferences
     );
   }
 
-  static $InvestorsTable _investorIdTable(_$AppDatabaseV2 db) => db.investors
+  static $InvestorsTable _investorIdTable(_$AppDatabase db) => db.investors
       .createAlias('investor_repayments__investor_id__investors__id');
 
   $$InvestorsTableProcessedTableManager get investorId {
@@ -22037,7 +22029,7 @@ final class $$InvestorRepaymentsTableReferences
 }
 
 class $$InvestorRepaymentsTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $InvestorRepaymentsTable> {
+    extends Composer<_$AppDatabase, $InvestorRepaymentsTable> {
   $$InvestorRepaymentsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -22130,7 +22122,7 @@ class $$InvestorRepaymentsTableFilterComposer
 }
 
 class $$InvestorRepaymentsTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $InvestorRepaymentsTable> {
+    extends Composer<_$AppDatabase, $InvestorRepaymentsTable> {
   $$InvestorRepaymentsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -22221,7 +22213,7 @@ class $$InvestorRepaymentsTableOrderingComposer
 }
 
 class $$InvestorRepaymentsTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $InvestorRepaymentsTable> {
+    extends Composer<_$AppDatabase, $InvestorRepaymentsTable> {
   $$InvestorRepaymentsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -22305,7 +22297,7 @@ class $$InvestorRepaymentsTableAnnotationComposer
 class $$InvestorRepaymentsTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $InvestorRepaymentsTable,
           InvestorRepaymentRow,
           $$InvestorRepaymentsTableFilterComposer,
@@ -22318,7 +22310,7 @@ class $$InvestorRepaymentsTableTableManager
           PrefetchHooks Function({bool shopId, bool investorId})
         > {
   $$InvestorRepaymentsTableTableManager(
-    _$AppDatabaseV2 db,
+    _$AppDatabase db,
     $InvestorRepaymentsTable table,
   ) : super(
         TableManagerState(
@@ -22453,7 +22445,7 @@ class $$InvestorRepaymentsTableTableManager
 
 typedef $$InvestorRepaymentsTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $InvestorRepaymentsTable,
       InvestorRepaymentRow,
       $$InvestorRepaymentsTableFilterComposer,
@@ -22501,7 +22493,7 @@ typedef $$LegacySettlementsTableUpdateCompanionBuilder =
 final class $$LegacySettlementsTableReferences
     extends
         BaseReferences<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $LegacySettlementsTable,
           LegacySettlementRow
         > {
@@ -22511,7 +22503,7 @@ final class $$LegacySettlementsTableReferences
     super.$_typedResult,
   );
 
-  static $ShopsTable _shopIdTable(_$AppDatabaseV2 db) =>
+  static $ShopsTable _shopIdTable(_$AppDatabase db) =>
       db.shops.createAlias('legacy_settlements__shop_id__shops__id');
 
   $$ShopsTableProcessedTableManager get shopId {
@@ -22528,7 +22520,7 @@ final class $$LegacySettlementsTableReferences
     );
   }
 
-  static $InvestorsTable _investorIdTable(_$AppDatabaseV2 db) => db.investors
+  static $InvestorsTable _investorIdTable(_$AppDatabase db) => db.investors
       .createAlias('legacy_settlements__investor_id__investors__id');
 
   $$InvestorsTableProcessedTableManager get investorId {
@@ -22547,7 +22539,7 @@ final class $$LegacySettlementsTableReferences
 }
 
 class $$LegacySettlementsTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $LegacySettlementsTable> {
+    extends Composer<_$AppDatabase, $LegacySettlementsTable> {
   $$LegacySettlementsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -22658,7 +22650,7 @@ class $$LegacySettlementsTableFilterComposer
 }
 
 class $$LegacySettlementsTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $LegacySettlementsTable> {
+    extends Composer<_$AppDatabase, $LegacySettlementsTable> {
   $$LegacySettlementsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -22764,7 +22756,7 @@ class $$LegacySettlementsTableOrderingComposer
 }
 
 class $$LegacySettlementsTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $LegacySettlementsTable> {
+    extends Composer<_$AppDatabase, $LegacySettlementsTable> {
   $$LegacySettlementsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -22860,7 +22852,7 @@ class $$LegacySettlementsTableAnnotationComposer
 class $$LegacySettlementsTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $LegacySettlementsTable,
           LegacySettlementRow,
           $$LegacySettlementsTableFilterComposer,
@@ -22873,7 +22865,7 @@ class $$LegacySettlementsTableTableManager
           PrefetchHooks Function({bool shopId, bool investorId})
         > {
   $$LegacySettlementsTableTableManager(
-    _$AppDatabaseV2 db,
+    _$AppDatabase db,
     $LegacySettlementsTable table,
   ) : super(
         TableManagerState(
@@ -23021,7 +23013,7 @@ class $$LegacySettlementsTableTableManager
 
 typedef $$LegacySettlementsTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $LegacySettlementsTable,
       LegacySettlementRow,
       $$LegacySettlementsTableFilterComposer,
@@ -23064,14 +23056,14 @@ typedef $$PurchaseTripsTableUpdateCompanionBuilder =
 
 final class $$PurchaseTripsTableReferences
     extends
-        BaseReferences<_$AppDatabaseV2, $PurchaseTripsTable, PurchaseTripRow> {
+        BaseReferences<_$AppDatabase, $PurchaseTripsTable, PurchaseTripRow> {
   $$PurchaseTripsTableReferences(
     super.$_db,
     super.$_table,
     super.$_typedResult,
   );
 
-  static $ShopsTable _shopIdTable(_$AppDatabaseV2 db) =>
+  static $ShopsTable _shopIdTable(_$AppDatabase db) =>
       db.shops.createAlias('purchase_trips__shop_id__shops__id');
 
   $$ShopsTableProcessedTableManager get shopId {
@@ -23089,7 +23081,7 @@ final class $$PurchaseTripsTableReferences
   }
 
   static MultiTypedResultKey<$PurchaseItemsTable, List<PurchaseItemRow>>
-  _purchaseItemsRefsTable(_$AppDatabaseV2 db) => MultiTypedResultKey.fromTable(
+  _purchaseItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.purchaseItems,
     aliasName: 'purchase_trips__id__purchase_items__purchase_trip_id',
   );
@@ -23110,7 +23102,7 @@ final class $$PurchaseTripsTableReferences
     $PurchaseOtherCostsTable,
     List<PurchaseOtherCostRow>
   >
-  _purchaseOtherCostsRefsTable(_$AppDatabaseV2 db) =>
+  _purchaseOtherCostsRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.purchaseOtherCosts,
         aliasName: 'purchase_trips__id__purchase_other_costs__purchase_trip_id',
@@ -23132,7 +23124,7 @@ final class $$PurchaseTripsTableReferences
 }
 
 class $$PurchaseTripsTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $PurchaseTripsTable> {
+    extends Composer<_$AppDatabase, $PurchaseTripsTable> {
   $$PurchaseTripsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -23260,7 +23252,7 @@ class $$PurchaseTripsTableFilterComposer
 }
 
 class $$PurchaseTripsTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $PurchaseTripsTable> {
+    extends Composer<_$AppDatabase, $PurchaseTripsTable> {
   $$PurchaseTripsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -23338,7 +23330,7 @@ class $$PurchaseTripsTableOrderingComposer
 }
 
 class $$PurchaseTripsTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $PurchaseTripsTable> {
+    extends Composer<_$AppDatabase, $PurchaseTripsTable> {
   $$PurchaseTripsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -23455,7 +23447,7 @@ class $$PurchaseTripsTableAnnotationComposer
 class $$PurchaseTripsTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $PurchaseTripsTable,
           PurchaseTripRow,
           $$PurchaseTripsTableFilterComposer,
@@ -23471,10 +23463,8 @@ class $$PurchaseTripsTableTableManager
             bool purchaseOtherCostsRefs,
           })
         > {
-  $$PurchaseTripsTableTableManager(
-    _$AppDatabaseV2 db,
-    $PurchaseTripsTable table,
-  ) : super(
+  $$PurchaseTripsTableTableManager(_$AppDatabase db, $PurchaseTripsTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
@@ -23644,7 +23634,7 @@ class $$PurchaseTripsTableTableManager
 
 typedef $$PurchaseTripsTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $PurchaseTripsTable,
       PurchaseTripRow,
       $$PurchaseTripsTableFilterComposer,
@@ -23697,14 +23687,14 @@ typedef $$PurchaseItemsTableUpdateCompanionBuilder =
 
 final class $$PurchaseItemsTableReferences
     extends
-        BaseReferences<_$AppDatabaseV2, $PurchaseItemsTable, PurchaseItemRow> {
+        BaseReferences<_$AppDatabase, $PurchaseItemsTable, PurchaseItemRow> {
   $$PurchaseItemsTableReferences(
     super.$_db,
     super.$_table,
     super.$_typedResult,
   );
 
-  static $PurchaseTripsTable _purchaseTripIdTable(_$AppDatabaseV2 db) => db
+  static $PurchaseTripsTable _purchaseTripIdTable(_$AppDatabase db) => db
       .purchaseTrips
       .createAlias('purchase_items__purchase_trip_id__purchase_trips__id');
 
@@ -23722,7 +23712,7 @@ final class $$PurchaseItemsTableReferences
     );
   }
 
-  static $ProductsTable _productIdTable(_$AppDatabaseV2 db) =>
+  static $ProductsTable _productIdTable(_$AppDatabase db) =>
       db.products.createAlias('purchase_items__product_id__products__id');
 
   $$ProductsTableProcessedTableManager get productId {
@@ -23741,7 +23731,7 @@ final class $$PurchaseItemsTableReferences
 }
 
 class $$PurchaseItemsTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $PurchaseItemsTable> {
+    extends Composer<_$AppDatabase, $PurchaseItemsTable> {
   $$PurchaseItemsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -23853,7 +23843,7 @@ class $$PurchaseItemsTableFilterComposer
 }
 
 class $$PurchaseItemsTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $PurchaseItemsTable> {
+    extends Composer<_$AppDatabase, $PurchaseItemsTable> {
   $$PurchaseItemsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -23964,7 +23954,7 @@ class $$PurchaseItemsTableOrderingComposer
 }
 
 class $$PurchaseItemsTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $PurchaseItemsTable> {
+    extends Composer<_$AppDatabase, $PurchaseItemsTable> {
   $$PurchaseItemsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -24062,7 +24052,7 @@ class $$PurchaseItemsTableAnnotationComposer
 class $$PurchaseItemsTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $PurchaseItemsTable,
           PurchaseItemRow,
           $$PurchaseItemsTableFilterComposer,
@@ -24074,10 +24064,8 @@ class $$PurchaseItemsTableTableManager
           PurchaseItemRow,
           PrefetchHooks Function({bool purchaseTripId, bool productId})
         > {
-  $$PurchaseItemsTableTableManager(
-    _$AppDatabaseV2 db,
-    $PurchaseItemsTable table,
-  ) : super(
+  $$PurchaseItemsTableTableManager(_$AppDatabase db, $PurchaseItemsTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
@@ -24219,7 +24207,7 @@ class $$PurchaseItemsTableTableManager
 
 typedef $$PurchaseItemsTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $PurchaseItemsTable,
       PurchaseItemRow,
       $$PurchaseItemsTableFilterComposer,
@@ -24251,7 +24239,7 @@ typedef $$PurchaseOtherCostsTableUpdateCompanionBuilder =
 final class $$PurchaseOtherCostsTableReferences
     extends
         BaseReferences<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $PurchaseOtherCostsTable,
           PurchaseOtherCostRow
         > {
@@ -24261,7 +24249,7 @@ final class $$PurchaseOtherCostsTableReferences
     super.$_typedResult,
   );
 
-  static $PurchaseTripsTable _purchaseTripIdTable(_$AppDatabaseV2 db) =>
+  static $PurchaseTripsTable _purchaseTripIdTable(_$AppDatabase db) =>
       db.purchaseTrips.createAlias(
         'purchase_other_costs__purchase_trip_id__purchase_trips__id',
       );
@@ -24282,7 +24270,7 @@ final class $$PurchaseOtherCostsTableReferences
 }
 
 class $$PurchaseOtherCostsTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $PurchaseOtherCostsTable> {
+    extends Composer<_$AppDatabase, $PurchaseOtherCostsTable> {
   $$PurchaseOtherCostsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -24330,7 +24318,7 @@ class $$PurchaseOtherCostsTableFilterComposer
 }
 
 class $$PurchaseOtherCostsTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $PurchaseOtherCostsTable> {
+    extends Composer<_$AppDatabase, $PurchaseOtherCostsTable> {
   $$PurchaseOtherCostsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -24378,7 +24366,7 @@ class $$PurchaseOtherCostsTableOrderingComposer
 }
 
 class $$PurchaseOtherCostsTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $PurchaseOtherCostsTable> {
+    extends Composer<_$AppDatabase, $PurchaseOtherCostsTable> {
   $$PurchaseOtherCostsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -24426,7 +24414,7 @@ class $$PurchaseOtherCostsTableAnnotationComposer
 class $$PurchaseOtherCostsTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $PurchaseOtherCostsTable,
           PurchaseOtherCostRow,
           $$PurchaseOtherCostsTableFilterComposer,
@@ -24439,7 +24427,7 @@ class $$PurchaseOtherCostsTableTableManager
           PrefetchHooks Function({bool purchaseTripId})
         > {
   $$PurchaseOtherCostsTableTableManager(
-    _$AppDatabaseV2 db,
+    _$AppDatabase db,
     $PurchaseOtherCostsTable table,
   ) : super(
         TableManagerState(
@@ -24539,7 +24527,7 @@ class $$PurchaseOtherCostsTableTableManager
 
 typedef $$PurchaseOtherCostsTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $PurchaseOtherCostsTable,
       PurchaseOtherCostRow,
       $$PurchaseOtherCostsTableFilterComposer,
@@ -24593,10 +24581,10 @@ typedef $$SalesTableUpdateCompanionBuilder =
     });
 
 final class $$SalesTableReferences
-    extends BaseReferences<_$AppDatabaseV2, $SalesTable, SaleRow> {
+    extends BaseReferences<_$AppDatabase, $SalesTable, SaleRow> {
   $$SalesTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $ShopsTable _shopIdTable(_$AppDatabaseV2 db) =>
+  static $ShopsTable _shopIdTable(_$AppDatabase db) =>
       db.shops.createAlias('sales__shop_id__shops__id');
 
   $$ShopsTableProcessedTableManager get shopId {
@@ -24613,7 +24601,7 @@ final class $$SalesTableReferences
     );
   }
 
-  static $ProductsTable _productIdTable(_$AppDatabaseV2 db) =>
+  static $ProductsTable _productIdTable(_$AppDatabase db) =>
       db.products.createAlias('sales__product_id__products__id');
 
   $$ProductsTableProcessedTableManager get productId {
@@ -24630,7 +24618,7 @@ final class $$SalesTableReferences
     );
   }
 
-  static $CustomersTable _customerIdTable(_$AppDatabaseV2 db) =>
+  static $CustomersTable _customerIdTable(_$AppDatabase db) =>
       db.customers.createAlias('sales__customer_id__customers__id');
 
   $$CustomersTableProcessedTableManager? get customerId {
@@ -24648,8 +24636,7 @@ final class $$SalesTableReferences
   }
 }
 
-class $$SalesTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $SalesTable> {
+class $$SalesTableFilterComposer extends Composer<_$AppDatabase, $SalesTable> {
   $$SalesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -24796,7 +24783,7 @@ class $$SalesTableFilterComposer
 }
 
 class $$SalesTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $SalesTable> {
+    extends Composer<_$AppDatabase, $SalesTable> {
   $$SalesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -24940,7 +24927,7 @@ class $$SalesTableOrderingComposer
 }
 
 class $$SalesTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $SalesTable> {
+    extends Composer<_$AppDatabase, $SalesTable> {
   $$SalesTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -25075,7 +25062,7 @@ class $$SalesTableAnnotationComposer
 class $$SalesTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $SalesTable,
           SaleRow,
           $$SalesTableFilterComposer,
@@ -25087,7 +25074,7 @@ class $$SalesTableTableManager
           SaleRow,
           PrefetchHooks Function({bool shopId, bool productId, bool customerId})
         > {
-  $$SalesTableTableManager(_$AppDatabaseV2 db, $SalesTable table)
+  $$SalesTableTableManager(_$AppDatabase db, $SalesTable table)
     : super(
         TableManagerState(
           db: db,
@@ -25254,7 +25241,7 @@ class $$SalesTableTableManager
 
 typedef $$SalesTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $SalesTable,
       SaleRow,
       $$SalesTableFilterComposer,
@@ -25302,10 +25289,10 @@ typedef $$DuesTableUpdateCompanionBuilder =
     });
 
 final class $$DuesTableReferences
-    extends BaseReferences<_$AppDatabaseV2, $DuesTable, DueRow> {
+    extends BaseReferences<_$AppDatabase, $DuesTable, DueRow> {
   $$DuesTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $ShopsTable _shopIdTable(_$AppDatabaseV2 db) =>
+  static $ShopsTable _shopIdTable(_$AppDatabase db) =>
       db.shops.createAlias('dues__shop_id__shops__id');
 
   $$ShopsTableProcessedTableManager get shopId {
@@ -25322,7 +25309,7 @@ final class $$DuesTableReferences
     );
   }
 
-  static $CustomersTable _customerIdTable(_$AppDatabaseV2 db) =>
+  static $CustomersTable _customerIdTable(_$AppDatabase db) =>
       db.customers.createAlias('dues__customer_id__customers__id');
 
   $$CustomersTableProcessedTableManager get customerId {
@@ -25340,7 +25327,7 @@ final class $$DuesTableReferences
   }
 
   static MultiTypedResultKey<$DuePaymentsTable, List<DuePaymentRow>>
-  _duePaymentsRefsTable(_$AppDatabaseV2 db) => MultiTypedResultKey.fromTable(
+  _duePaymentsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.duePayments,
     aliasName: 'dues__id__due_payments__due_id',
   );
@@ -25358,7 +25345,7 @@ final class $$DuesTableReferences
   }
 }
 
-class $$DuesTableFilterComposer extends Composer<_$AppDatabaseV2, $DuesTable> {
+class $$DuesTableFilterComposer extends Composer<_$AppDatabase, $DuesTable> {
   $$DuesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -25495,8 +25482,7 @@ class $$DuesTableFilterComposer extends Composer<_$AppDatabaseV2, $DuesTable> {
   }
 }
 
-class $$DuesTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $DuesTable> {
+class $$DuesTableOrderingComposer extends Composer<_$AppDatabase, $DuesTable> {
   $$DuesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -25607,7 +25593,7 @@ class $$DuesTableOrderingComposer
 }
 
 class $$DuesTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $DuesTable> {
+    extends Composer<_$AppDatabase, $DuesTable> {
   $$DuesTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -25732,7 +25718,7 @@ class $$DuesTableAnnotationComposer
 class $$DuesTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $DuesTable,
           DueRow,
           $$DuesTableFilterComposer,
@@ -25748,7 +25734,7 @@ class $$DuesTableTableManager
             bool duePaymentsRefs,
           })
         > {
-  $$DuesTableTableManager(_$AppDatabaseV2 db, $DuesTable table)
+  $$DuesTableTableManager(_$AppDatabase db, $DuesTable table)
     : super(
         TableManagerState(
           db: db,
@@ -25913,7 +25899,7 @@ class $$DuesTableTableManager
 
 typedef $$DuesTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $DuesTable,
       DueRow,
       $$DuesTableFilterComposer,
@@ -25953,10 +25939,10 @@ typedef $$DuePaymentsTableUpdateCompanionBuilder =
     });
 
 final class $$DuePaymentsTableReferences
-    extends BaseReferences<_$AppDatabaseV2, $DuePaymentsTable, DuePaymentRow> {
+    extends BaseReferences<_$AppDatabase, $DuePaymentsTable, DuePaymentRow> {
   $$DuePaymentsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $DuesTable _dueIdTable(_$AppDatabaseV2 db) =>
+  static $DuesTable _dueIdTable(_$AppDatabase db) =>
       db.dues.createAlias('due_payments__due_id__dues__id');
 
   $$DuesTableProcessedTableManager get dueId {
@@ -25975,7 +25961,7 @@ final class $$DuePaymentsTableReferences
 }
 
 class $$DuePaymentsTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $DuePaymentsTable> {
+    extends Composer<_$AppDatabase, $DuePaymentsTable> {
   $$DuePaymentsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -26039,7 +26025,7 @@ class $$DuePaymentsTableFilterComposer
 }
 
 class $$DuePaymentsTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $DuePaymentsTable> {
+    extends Composer<_$AppDatabase, $DuePaymentsTable> {
   $$DuePaymentsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -26102,7 +26088,7 @@ class $$DuePaymentsTableOrderingComposer
 }
 
 class $$DuePaymentsTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $DuePaymentsTable> {
+    extends Composer<_$AppDatabase, $DuePaymentsTable> {
   $$DuePaymentsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -26160,7 +26146,7 @@ class $$DuePaymentsTableAnnotationComposer
 class $$DuePaymentsTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $DuePaymentsTable,
           DuePaymentRow,
           $$DuePaymentsTableFilterComposer,
@@ -26172,7 +26158,7 @@ class $$DuePaymentsTableTableManager
           DuePaymentRow,
           PrefetchHooks Function({bool dueId})
         > {
-  $$DuePaymentsTableTableManager(_$AppDatabaseV2 db, $DuePaymentsTable table)
+  $$DuePaymentsTableTableManager(_$AppDatabase db, $DuePaymentsTable table)
     : super(
         TableManagerState(
           db: db,
@@ -26278,7 +26264,7 @@ class $$DuePaymentsTableTableManager
 
 typedef $$DuePaymentsTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $DuePaymentsTable,
       DuePaymentRow,
       $$DuePaymentsTableFilterComposer,
@@ -26314,7 +26300,7 @@ typedef $$RentPricingTiersTableUpdateCompanionBuilder =
 final class $$RentPricingTiersTableReferences
     extends
         BaseReferences<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $RentPricingTiersTable,
           RentPricingTierRow
         > {
@@ -26324,7 +26310,7 @@ final class $$RentPricingTiersTableReferences
     super.$_typedResult,
   );
 
-  static $ShopsTable _shopIdTable(_$AppDatabaseV2 db) =>
+  static $ShopsTable _shopIdTable(_$AppDatabase db) =>
       db.shops.createAlias('rent_pricing_tiers__shop_id__shops__id');
 
   $$ShopsTableProcessedTableManager get shopId {
@@ -26343,7 +26329,7 @@ final class $$RentPricingTiersTableReferences
 }
 
 class $$RentPricingTiersTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $RentPricingTiersTable> {
+    extends Composer<_$AppDatabase, $RentPricingTiersTable> {
   $$RentPricingTiersTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -26401,7 +26387,7 @@ class $$RentPricingTiersTableFilterComposer
 }
 
 class $$RentPricingTiersTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $RentPricingTiersTable> {
+    extends Composer<_$AppDatabase, $RentPricingTiersTable> {
   $$RentPricingTiersTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -26459,7 +26445,7 @@ class $$RentPricingTiersTableOrderingComposer
 }
 
 class $$RentPricingTiersTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $RentPricingTiersTable> {
+    extends Composer<_$AppDatabase, $RentPricingTiersTable> {
   $$RentPricingTiersTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -26511,7 +26497,7 @@ class $$RentPricingTiersTableAnnotationComposer
 class $$RentPricingTiersTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $RentPricingTiersTable,
           RentPricingTierRow,
           $$RentPricingTiersTableFilterComposer,
@@ -26524,7 +26510,7 @@ class $$RentPricingTiersTableTableManager
           PrefetchHooks Function({bool shopId})
         > {
   $$RentPricingTiersTableTableManager(
-    _$AppDatabaseV2 db,
+    _$AppDatabase db,
     $RentPricingTiersTable table,
   ) : super(
         TableManagerState(
@@ -26629,7 +26615,7 @@ class $$RentPricingTiersTableTableManager
 
 typedef $$RentPricingTiersTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $RentPricingTiersTable,
       RentPricingTierRow,
       $$RentPricingTiersTableFilterComposer,
@@ -26683,7 +26669,7 @@ typedef $$RentTransactionsTableUpdateCompanionBuilder =
 final class $$RentTransactionsTableReferences
     extends
         BaseReferences<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $RentTransactionsTable,
           RentTransactionRow
         > {
@@ -26693,7 +26679,7 @@ final class $$RentTransactionsTableReferences
     super.$_typedResult,
   );
 
-  static $ShopsTable _shopIdTable(_$AppDatabaseV2 db) =>
+  static $ShopsTable _shopIdTable(_$AppDatabase db) =>
       db.shops.createAlias('rent_transactions__shop_id__shops__id');
 
   $$ShopsTableProcessedTableManager get shopId {
@@ -26710,7 +26696,7 @@ final class $$RentTransactionsTableReferences
     );
   }
 
-  static $ProductsTable _bookProductIdTable(_$AppDatabaseV2 db) => db.products
+  static $ProductsTable _bookProductIdTable(_$AppDatabase db) => db.products
       .createAlias('rent_transactions__book_product_id__products__id');
 
   $$ProductsTableProcessedTableManager get bookProductId {
@@ -26727,7 +26713,7 @@ final class $$RentTransactionsTableReferences
     );
   }
 
-  static $CustomersTable _customerIdTable(_$AppDatabaseV2 db) =>
+  static $CustomersTable _customerIdTable(_$AppDatabase db) =>
       db.customers.createAlias('rent_transactions__customer_id__customers__id');
 
   $$CustomersTableProcessedTableManager get customerId {
@@ -26746,7 +26732,7 @@ final class $$RentTransactionsTableReferences
 }
 
 class $$RentTransactionsTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $RentTransactionsTable> {
+    extends Composer<_$AppDatabase, $RentTransactionsTable> {
   $$RentTransactionsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -26886,7 +26872,7 @@ class $$RentTransactionsTableFilterComposer
 }
 
 class $$RentTransactionsTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $RentTransactionsTable> {
+    extends Composer<_$AppDatabase, $RentTransactionsTable> {
   $$RentTransactionsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -27025,7 +27011,7 @@ class $$RentTransactionsTableOrderingComposer
 }
 
 class $$RentTransactionsTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $RentTransactionsTable> {
+    extends Composer<_$AppDatabase, $RentTransactionsTable> {
   $$RentTransactionsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -27152,7 +27138,7 @@ class $$RentTransactionsTableAnnotationComposer
 class $$RentTransactionsTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $RentTransactionsTable,
           RentTransactionRow,
           $$RentTransactionsTableFilterComposer,
@@ -27169,7 +27155,7 @@ class $$RentTransactionsTableTableManager
           })
         > {
   $$RentTransactionsTableTableManager(
-    _$AppDatabaseV2 db,
+    _$AppDatabase db,
     $RentTransactionsTable table,
   ) : super(
         TableManagerState(
@@ -27341,7 +27327,7 @@ class $$RentTransactionsTableTableManager
 
 typedef $$RentTransactionsTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $RentTransactionsTable,
       RentTransactionRow,
       $$RentTransactionsTableFilterComposer,
@@ -27385,10 +27371,10 @@ typedef $$ExpensesTableUpdateCompanionBuilder =
     });
 
 final class $$ExpensesTableReferences
-    extends BaseReferences<_$AppDatabaseV2, $ExpensesTable, ExpenseRow> {
+    extends BaseReferences<_$AppDatabase, $ExpensesTable, ExpenseRow> {
   $$ExpensesTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $ShopsTable _shopIdTable(_$AppDatabaseV2 db) =>
+  static $ShopsTable _shopIdTable(_$AppDatabase db) =>
       db.shops.createAlias('expenses__shop_id__shops__id');
 
   $$ShopsTableProcessedTableManager get shopId {
@@ -27407,7 +27393,7 @@ final class $$ExpensesTableReferences
 }
 
 class $$ExpensesTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $ExpensesTable> {
+    extends Composer<_$AppDatabase, $ExpensesTable> {
   $$ExpensesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -27492,7 +27478,7 @@ class $$ExpensesTableFilterComposer
 }
 
 class $$ExpensesTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $ExpensesTable> {
+    extends Composer<_$AppDatabase, $ExpensesTable> {
   $$ExpensesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -27575,7 +27561,7 @@ class $$ExpensesTableOrderingComposer
 }
 
 class $$ExpensesTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $ExpensesTable> {
+    extends Composer<_$AppDatabase, $ExpensesTable> {
   $$ExpensesTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -27647,7 +27633,7 @@ class $$ExpensesTableAnnotationComposer
 class $$ExpensesTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $ExpensesTable,
           ExpenseRow,
           $$ExpensesTableFilterComposer,
@@ -27659,7 +27645,7 @@ class $$ExpensesTableTableManager
           ExpenseRow,
           PrefetchHooks Function({bool shopId})
         > {
-  $$ExpensesTableTableManager(_$AppDatabaseV2 db, $ExpensesTable table)
+  $$ExpensesTableTableManager(_$AppDatabase db, $ExpensesTable table)
     : super(
         TableManagerState(
           db: db,
@@ -27781,7 +27767,7 @@ class $$ExpensesTableTableManager
 
 typedef $$ExpensesTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $ExpensesTable,
       ExpenseRow,
       $$ExpensesTableFilterComposer,
@@ -27827,10 +27813,10 @@ typedef $$OrdersTableUpdateCompanionBuilder =
     });
 
 final class $$OrdersTableReferences
-    extends BaseReferences<_$AppDatabaseV2, $OrdersTable, OrderRow> {
+    extends BaseReferences<_$AppDatabase, $OrdersTable, OrderRow> {
   $$OrdersTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $ShopsTable _shopIdTable(_$AppDatabaseV2 db) =>
+  static $ShopsTable _shopIdTable(_$AppDatabase db) =>
       db.shops.createAlias('orders__shop_id__shops__id');
 
   $$ShopsTableProcessedTableManager get shopId {
@@ -27847,7 +27833,7 @@ final class $$OrdersTableReferences
     );
   }
 
-  static $CustomersTable _customerIdTable(_$AppDatabaseV2 db) =>
+  static $CustomersTable _customerIdTable(_$AppDatabase db) =>
       db.customers.createAlias('orders__customer_id__customers__id');
 
   $$CustomersTableProcessedTableManager get customerId {
@@ -27866,7 +27852,7 @@ final class $$OrdersTableReferences
 }
 
 class $$OrdersTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $OrdersTable> {
+    extends Composer<_$AppDatabase, $OrdersTable> {
   $$OrdersTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -27973,7 +27959,7 @@ class $$OrdersTableFilterComposer
 }
 
 class $$OrdersTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $OrdersTable> {
+    extends Composer<_$AppDatabase, $OrdersTable> {
   $$OrdersTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -28079,7 +28065,7 @@ class $$OrdersTableOrderingComposer
 }
 
 class $$OrdersTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $OrdersTable> {
+    extends Composer<_$AppDatabase, $OrdersTable> {
   $$OrdersTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -28175,7 +28161,7 @@ class $$OrdersTableAnnotationComposer
 class $$OrdersTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $OrdersTable,
           OrderRow,
           $$OrdersTableFilterComposer,
@@ -28187,7 +28173,7 @@ class $$OrdersTableTableManager
           OrderRow,
           PrefetchHooks Function({bool shopId, bool customerId})
         > {
-  $$OrdersTableTableManager(_$AppDatabaseV2 db, $OrdersTable table)
+  $$OrdersTableTableManager(_$AppDatabase db, $OrdersTable table)
     : super(
         TableManagerState(
           db: db,
@@ -28324,7 +28310,7 @@ class $$OrdersTableTableManager
 
 typedef $$OrdersTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $OrdersTable,
       OrderRow,
       $$OrdersTableFilterComposer,
@@ -28368,10 +28354,10 @@ typedef $$FixedAssetsTableUpdateCompanionBuilder =
     });
 
 final class $$FixedAssetsTableReferences
-    extends BaseReferences<_$AppDatabaseV2, $FixedAssetsTable, FixedAssetRow> {
+    extends BaseReferences<_$AppDatabase, $FixedAssetsTable, FixedAssetRow> {
   $$FixedAssetsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $ShopsTable _shopIdTable(_$AppDatabaseV2 db) =>
+  static $ShopsTable _shopIdTable(_$AppDatabase db) =>
       db.shops.createAlias('fixed_assets__shop_id__shops__id');
 
   $$ShopsTableProcessedTableManager get shopId {
@@ -28388,7 +28374,7 @@ final class $$FixedAssetsTableReferences
     );
   }
 
-  static $ProductsTable _sourceProductIdTable(_$AppDatabaseV2 db) =>
+  static $ProductsTable _sourceProductIdTable(_$AppDatabase db) =>
       db.products.createAlias('fixed_assets__source_product_id__products__id');
 
   $$ProductsTableProcessedTableManager? get sourceProductId {
@@ -28407,7 +28393,7 @@ final class $$FixedAssetsTableReferences
 }
 
 class $$FixedAssetsTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $FixedAssetsTable> {
+    extends Composer<_$AppDatabase, $FixedAssetsTable> {
   $$FixedAssetsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -28509,7 +28495,7 @@ class $$FixedAssetsTableFilterComposer
 }
 
 class $$FixedAssetsTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $FixedAssetsTable> {
+    extends Composer<_$AppDatabase, $FixedAssetsTable> {
   $$FixedAssetsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -28610,7 +28596,7 @@ class $$FixedAssetsTableOrderingComposer
 }
 
 class $$FixedAssetsTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $FixedAssetsTable> {
+    extends Composer<_$AppDatabase, $FixedAssetsTable> {
   $$FixedAssetsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -28702,7 +28688,7 @@ class $$FixedAssetsTableAnnotationComposer
 class $$FixedAssetsTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $FixedAssetsTable,
           FixedAssetRow,
           $$FixedAssetsTableFilterComposer,
@@ -28714,7 +28700,7 @@ class $$FixedAssetsTableTableManager
           FixedAssetRow,
           PrefetchHooks Function({bool shopId, bool sourceProductId})
         > {
-  $$FixedAssetsTableTableManager(_$AppDatabaseV2 db, $FixedAssetsTable table)
+  $$FixedAssetsTableTableManager(_$AppDatabase db, $FixedAssetsTable table)
     : super(
         TableManagerState(
           db: db,
@@ -28849,7 +28835,7 @@ class $$FixedAssetsTableTableManager
 
 typedef $$FixedAssetsTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $FixedAssetsTable,
       FixedAssetRow,
       $$FixedAssetsTableFilterComposer,
@@ -28890,14 +28876,14 @@ typedef $$QuickCapturesTableUpdateCompanionBuilder =
 
 final class $$QuickCapturesTableReferences
     extends
-        BaseReferences<_$AppDatabaseV2, $QuickCapturesTable, QuickCaptureRow> {
+        BaseReferences<_$AppDatabase, $QuickCapturesTable, QuickCaptureRow> {
   $$QuickCapturesTableReferences(
     super.$_db,
     super.$_table,
     super.$_typedResult,
   );
 
-  static $ShopsTable _shopIdTable(_$AppDatabaseV2 db) =>
+  static $ShopsTable _shopIdTable(_$AppDatabase db) =>
       db.shops.createAlias('quick_captures__shop_id__shops__id');
 
   $$ShopsTableProcessedTableManager get shopId {
@@ -28916,7 +28902,7 @@ final class $$QuickCapturesTableReferences
 }
 
 class $$QuickCapturesTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $QuickCapturesTable> {
+    extends Composer<_$AppDatabase, $QuickCapturesTable> {
   $$QuickCapturesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -28991,7 +28977,7 @@ class $$QuickCapturesTableFilterComposer
 }
 
 class $$QuickCapturesTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $QuickCapturesTable> {
+    extends Composer<_$AppDatabase, $QuickCapturesTable> {
   $$QuickCapturesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -29064,7 +29050,7 @@ class $$QuickCapturesTableOrderingComposer
 }
 
 class $$QuickCapturesTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $QuickCapturesTable> {
+    extends Composer<_$AppDatabase, $QuickCapturesTable> {
   $$QuickCapturesTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -29129,7 +29115,7 @@ class $$QuickCapturesTableAnnotationComposer
 class $$QuickCapturesTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $QuickCapturesTable,
           QuickCaptureRow,
           $$QuickCapturesTableFilterComposer,
@@ -29141,10 +29127,8 @@ class $$QuickCapturesTableTableManager
           QuickCaptureRow,
           PrefetchHooks Function({bool shopId})
         > {
-  $$QuickCapturesTableTableManager(
-    _$AppDatabaseV2 db,
-    $QuickCapturesTable table,
-  ) : super(
+  $$QuickCapturesTableTableManager(_$AppDatabase db, $QuickCapturesTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
@@ -29257,7 +29241,7 @@ class $$QuickCapturesTableTableManager
 
 typedef $$QuickCapturesTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $QuickCapturesTable,
       QuickCaptureRow,
       $$QuickCapturesTableFilterComposer,
@@ -29301,7 +29285,7 @@ typedef $$CashLedgerEntriesTableUpdateCompanionBuilder =
 final class $$CashLedgerEntriesTableReferences
     extends
         BaseReferences<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $CashLedgerEntriesTable,
           CashLedgerEntryRow
         > {
@@ -29311,7 +29295,7 @@ final class $$CashLedgerEntriesTableReferences
     super.$_typedResult,
   );
 
-  static $ShopsTable _shopIdTable(_$AppDatabaseV2 db) =>
+  static $ShopsTable _shopIdTable(_$AppDatabase db) =>
       db.shops.createAlias('cash_ledger_entries__shop_id__shops__id');
 
   $$ShopsTableProcessedTableManager get shopId {
@@ -29330,7 +29314,7 @@ final class $$CashLedgerEntriesTableReferences
 }
 
 class $$CashLedgerEntriesTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $CashLedgerEntriesTable> {
+    extends Composer<_$AppDatabase, $CashLedgerEntriesTable> {
   $$CashLedgerEntriesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -29409,7 +29393,7 @@ class $$CashLedgerEntriesTableFilterComposer
 }
 
 class $$CashLedgerEntriesTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $CashLedgerEntriesTable> {
+    extends Composer<_$AppDatabase, $CashLedgerEntriesTable> {
   $$CashLedgerEntriesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -29487,7 +29471,7 @@ class $$CashLedgerEntriesTableOrderingComposer
 }
 
 class $$CashLedgerEntriesTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $CashLedgerEntriesTable> {
+    extends Composer<_$AppDatabase, $CashLedgerEntriesTable> {
   $$CashLedgerEntriesTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -29558,7 +29542,7 @@ class $$CashLedgerEntriesTableAnnotationComposer
 class $$CashLedgerEntriesTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $CashLedgerEntriesTable,
           CashLedgerEntryRow,
           $$CashLedgerEntriesTableFilterComposer,
@@ -29571,7 +29555,7 @@ class $$CashLedgerEntriesTableTableManager
           PrefetchHooks Function({bool shopId})
         > {
   $$CashLedgerEntriesTableTableManager(
-    _$AppDatabaseV2 db,
+    _$AppDatabase db,
     $CashLedgerEntriesTable table,
   ) : super(
         TableManagerState(
@@ -29695,7 +29679,7 @@ class $$CashLedgerEntriesTableTableManager
 
 typedef $$CashLedgerEntriesTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $CashLedgerEntriesTable,
       CashLedgerEntryRow,
       $$CashLedgerEntriesTableFilterComposer,
@@ -29736,18 +29720,14 @@ typedef $$StockMovementsTableUpdateCompanionBuilder =
 
 final class $$StockMovementsTableReferences
     extends
-        BaseReferences<
-          _$AppDatabaseV2,
-          $StockMovementsTable,
-          StockMovementRow
-        > {
+        BaseReferences<_$AppDatabase, $StockMovementsTable, StockMovementRow> {
   $$StockMovementsTableReferences(
     super.$_db,
     super.$_table,
     super.$_typedResult,
   );
 
-  static $ShopsTable _shopIdTable(_$AppDatabaseV2 db) =>
+  static $ShopsTable _shopIdTable(_$AppDatabase db) =>
       db.shops.createAlias('stock_movements__shop_id__shops__id');
 
   $$ShopsTableProcessedTableManager get shopId {
@@ -29764,7 +29744,7 @@ final class $$StockMovementsTableReferences
     );
   }
 
-  static $ProductsTable _productIdTable(_$AppDatabaseV2 db) =>
+  static $ProductsTable _productIdTable(_$AppDatabase db) =>
       db.products.createAlias('stock_movements__product_id__products__id');
 
   $$ProductsTableProcessedTableManager get productId {
@@ -29783,7 +29763,7 @@ final class $$StockMovementsTableReferences
 }
 
 class $$StockMovementsTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $StockMovementsTable> {
+    extends Composer<_$AppDatabase, $StockMovementsTable> {
   $$StockMovementsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -29874,7 +29854,7 @@ class $$StockMovementsTableFilterComposer
 }
 
 class $$StockMovementsTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $StockMovementsTable> {
+    extends Composer<_$AppDatabase, $StockMovementsTable> {
   $$StockMovementsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -29965,7 +29945,7 @@ class $$StockMovementsTableOrderingComposer
 }
 
 class $$StockMovementsTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $StockMovementsTable> {
+    extends Composer<_$AppDatabase, $StockMovementsTable> {
   $$StockMovementsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -30046,7 +30026,7 @@ class $$StockMovementsTableAnnotationComposer
 class $$StockMovementsTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $StockMovementsTable,
           StockMovementRow,
           $$StockMovementsTableFilterComposer,
@@ -30059,7 +30039,7 @@ class $$StockMovementsTableTableManager
           PrefetchHooks Function({bool shopId, bool productId})
         > {
   $$StockMovementsTableTableManager(
-    _$AppDatabaseV2 db,
+    _$AppDatabase db,
     $StockMovementsTable table,
   ) : super(
         TableManagerState(
@@ -30189,7 +30169,7 @@ class $$StockMovementsTableTableManager
 
 typedef $$StockMovementsTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $StockMovementsTable,
       StockMovementRow,
       $$StockMovementsTableFilterComposer,
@@ -30234,18 +30214,14 @@ typedef $$AuditLogEntriesTableUpdateCompanionBuilder =
 
 final class $$AuditLogEntriesTableReferences
     extends
-        BaseReferences<
-          _$AppDatabaseV2,
-          $AuditLogEntriesTable,
-          AuditLogEntryRow
-        > {
+        BaseReferences<_$AppDatabase, $AuditLogEntriesTable, AuditLogEntryRow> {
   $$AuditLogEntriesTableReferences(
     super.$_db,
     super.$_table,
     super.$_typedResult,
   );
 
-  static $ShopsTable _shopIdTable(_$AppDatabaseV2 db) =>
+  static $ShopsTable _shopIdTable(_$AppDatabase db) =>
       db.shops.createAlias('audit_log_entries__shop_id__shops__id');
 
   $$ShopsTableProcessedTableManager get shopId {
@@ -30264,7 +30240,7 @@ final class $$AuditLogEntriesTableReferences
 }
 
 class $$AuditLogEntriesTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $AuditLogEntriesTable> {
+    extends Composer<_$AppDatabase, $AuditLogEntriesTable> {
   $$AuditLogEntriesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -30347,7 +30323,7 @@ class $$AuditLogEntriesTableFilterComposer
 }
 
 class $$AuditLogEntriesTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $AuditLogEntriesTable> {
+    extends Composer<_$AppDatabase, $AuditLogEntriesTable> {
   $$AuditLogEntriesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -30430,7 +30406,7 @@ class $$AuditLogEntriesTableOrderingComposer
 }
 
 class $$AuditLogEntriesTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $AuditLogEntriesTable> {
+    extends Composer<_$AppDatabase, $AuditLogEntriesTable> {
   $$AuditLogEntriesTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -30501,7 +30477,7 @@ class $$AuditLogEntriesTableAnnotationComposer
 class $$AuditLogEntriesTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $AuditLogEntriesTable,
           AuditLogEntryRow,
           $$AuditLogEntriesTableFilterComposer,
@@ -30514,7 +30490,7 @@ class $$AuditLogEntriesTableTableManager
           PrefetchHooks Function({bool shopId})
         > {
   $$AuditLogEntriesTableTableManager(
-    _$AppDatabaseV2 db,
+    _$AppDatabase db,
     $AuditLogEntriesTable table,
   ) : super(
         TableManagerState(
@@ -30639,7 +30615,7 @@ class $$AuditLogEntriesTableTableManager
 
 typedef $$AuditLogEntriesTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $AuditLogEntriesTable,
       AuditLogEntryRow,
       $$AuditLogEntriesTableFilterComposer,
@@ -30679,7 +30655,7 @@ typedef $$SyncOutboxEntriesTableUpdateCompanionBuilder =
     });
 
 class $$SyncOutboxEntriesTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $SyncOutboxEntriesTable> {
+    extends Composer<_$AppDatabase, $SyncOutboxEntriesTable> {
   $$SyncOutboxEntriesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -30734,7 +30710,7 @@ class $$SyncOutboxEntriesTableFilterComposer
 }
 
 class $$SyncOutboxEntriesTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $SyncOutboxEntriesTable> {
+    extends Composer<_$AppDatabase, $SyncOutboxEntriesTable> {
   $$SyncOutboxEntriesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -30789,7 +30765,7 @@ class $$SyncOutboxEntriesTableOrderingComposer
 }
 
 class $$SyncOutboxEntriesTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $SyncOutboxEntriesTable> {
+    extends Composer<_$AppDatabase, $SyncOutboxEntriesTable> {
   $$SyncOutboxEntriesTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -30836,7 +30812,7 @@ class $$SyncOutboxEntriesTableAnnotationComposer
 class $$SyncOutboxEntriesTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $SyncOutboxEntriesTable,
           SyncOutboxEntryRow,
           $$SyncOutboxEntriesTableFilterComposer,
@@ -30847,7 +30823,7 @@ class $$SyncOutboxEntriesTableTableManager
           (
             SyncOutboxEntryRow,
             BaseReferences<
-              _$AppDatabaseV2,
+              _$AppDatabase,
               $SyncOutboxEntriesTable,
               SyncOutboxEntryRow
             >,
@@ -30856,7 +30832,7 @@ class $$SyncOutboxEntriesTableTableManager
           PrefetchHooks Function()
         > {
   $$SyncOutboxEntriesTableTableManager(
-    _$AppDatabaseV2 db,
+    _$AppDatabase db,
     $SyncOutboxEntriesTable table,
   ) : super(
         TableManagerState(
@@ -30929,7 +30905,7 @@ class $$SyncOutboxEntriesTableTableManager
 
 typedef $$SyncOutboxEntriesTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $SyncOutboxEntriesTable,
       SyncOutboxEntryRow,
       $$SyncOutboxEntriesTableFilterComposer,
@@ -30940,7 +30916,7 @@ typedef $$SyncOutboxEntriesTableProcessedTableManager =
       (
         SyncOutboxEntryRow,
         BaseReferences<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $SyncOutboxEntriesTable,
           SyncOutboxEntryRow
         >,
@@ -30978,7 +30954,7 @@ typedef $$SyncPendingUploadsTableUpdateCompanionBuilder =
     });
 
 class $$SyncPendingUploadsTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $SyncPendingUploadsTable> {
+    extends Composer<_$AppDatabase, $SyncPendingUploadsTable> {
   $$SyncPendingUploadsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -31038,7 +31014,7 @@ class $$SyncPendingUploadsTableFilterComposer
 }
 
 class $$SyncPendingUploadsTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $SyncPendingUploadsTable> {
+    extends Composer<_$AppDatabase, $SyncPendingUploadsTable> {
   $$SyncPendingUploadsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -31098,7 +31074,7 @@ class $$SyncPendingUploadsTableOrderingComposer
 }
 
 class $$SyncPendingUploadsTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $SyncPendingUploadsTable> {
+    extends Composer<_$AppDatabase, $SyncPendingUploadsTable> {
   $$SyncPendingUploadsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -31148,7 +31124,7 @@ class $$SyncPendingUploadsTableAnnotationComposer
 class $$SyncPendingUploadsTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $SyncPendingUploadsTable,
           SyncPendingUploadRow,
           $$SyncPendingUploadsTableFilterComposer,
@@ -31159,7 +31135,7 @@ class $$SyncPendingUploadsTableTableManager
           (
             SyncPendingUploadRow,
             BaseReferences<
-              _$AppDatabaseV2,
+              _$AppDatabase,
               $SyncPendingUploadsTable,
               SyncPendingUploadRow
             >,
@@ -31168,7 +31144,7 @@ class $$SyncPendingUploadsTableTableManager
           PrefetchHooks Function()
         > {
   $$SyncPendingUploadsTableTableManager(
-    _$AppDatabaseV2 db,
+    _$AppDatabase db,
     $SyncPendingUploadsTable table,
   ) : super(
         TableManagerState(
@@ -31245,7 +31221,7 @@ class $$SyncPendingUploadsTableTableManager
 
 typedef $$SyncPendingUploadsTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $SyncPendingUploadsTable,
       SyncPendingUploadRow,
       $$SyncPendingUploadsTableFilterComposer,
@@ -31256,7 +31232,7 @@ typedef $$SyncPendingUploadsTableProcessedTableManager =
       (
         SyncPendingUploadRow,
         BaseReferences<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $SyncPendingUploadsTable,
           SyncPendingUploadRow
         >,
@@ -31280,7 +31256,7 @@ typedef $$SyncCursorsTableUpdateCompanionBuilder =
     });
 
 class $$SyncCursorsTableFilterComposer
-    extends Composer<_$AppDatabaseV2, $SyncCursorsTable> {
+    extends Composer<_$AppDatabase, $SyncCursorsTable> {
   $$SyncCursorsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -31305,7 +31281,7 @@ class $$SyncCursorsTableFilterComposer
 }
 
 class $$SyncCursorsTableOrderingComposer
-    extends Composer<_$AppDatabaseV2, $SyncCursorsTable> {
+    extends Composer<_$AppDatabase, $SyncCursorsTable> {
   $$SyncCursorsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -31330,7 +31306,7 @@ class $$SyncCursorsTableOrderingComposer
 }
 
 class $$SyncCursorsTableAnnotationComposer
-    extends Composer<_$AppDatabaseV2, $SyncCursorsTable> {
+    extends Composer<_$AppDatabase, $SyncCursorsTable> {
   $$SyncCursorsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -31357,7 +31333,7 @@ class $$SyncCursorsTableAnnotationComposer
 class $$SyncCursorsTableTableManager
     extends
         RootTableManager<
-          _$AppDatabaseV2,
+          _$AppDatabase,
           $SyncCursorsTable,
           SyncCursorRow,
           $$SyncCursorsTableFilterComposer,
@@ -31367,12 +31343,12 @@ class $$SyncCursorsTableTableManager
           $$SyncCursorsTableUpdateCompanionBuilder,
           (
             SyncCursorRow,
-            BaseReferences<_$AppDatabaseV2, $SyncCursorsTable, SyncCursorRow>,
+            BaseReferences<_$AppDatabase, $SyncCursorsTable, SyncCursorRow>,
           ),
           SyncCursorRow,
           PrefetchHooks Function()
         > {
-  $$SyncCursorsTableTableManager(_$AppDatabaseV2 db, $SyncCursorsTable table)
+  $$SyncCursorsTableTableManager(_$AppDatabase db, $SyncCursorsTable table)
     : super(
         TableManagerState(
           db: db,
@@ -31417,7 +31393,7 @@ class $$SyncCursorsTableTableManager
 
 typedef $$SyncCursorsTableProcessedTableManager =
     ProcessedTableManager<
-      _$AppDatabaseV2,
+      _$AppDatabase,
       $SyncCursorsTable,
       SyncCursorRow,
       $$SyncCursorsTableFilterComposer,
@@ -31427,15 +31403,15 @@ typedef $$SyncCursorsTableProcessedTableManager =
       $$SyncCursorsTableUpdateCompanionBuilder,
       (
         SyncCursorRow,
-        BaseReferences<_$AppDatabaseV2, $SyncCursorsTable, SyncCursorRow>,
+        BaseReferences<_$AppDatabase, $SyncCursorsTable, SyncCursorRow>,
       ),
       SyncCursorRow,
       PrefetchHooks Function()
     >;
 
-class $AppDatabaseV2Manager {
-  final _$AppDatabaseV2 _db;
-  $AppDatabaseV2Manager(this._db);
+class $AppDatabaseManager {
+  final _$AppDatabase _db;
+  $AppDatabaseManager(this._db);
   $$ShopsTableTableManager get shops =>
       $$ShopsTableTableManager(_db, _db.shops);
   $$CategoriesTableTableManager get categories =>

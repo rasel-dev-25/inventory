@@ -9,14 +9,12 @@ import '../../../domain/entities/customer.dart';
 import '../../../domain/entities/enums.dart';
 import '../../../domain/entities/order.dart';
 
-/// Backs the v2 Order screen — customer pre-orders, per
-/// `notes/business_logic.md` §Order. See `CatalogScreen`'s doc comment
-/// for why this reads/writes the v2 database only, separate from v1's
-/// order-giver tab (embedded in v1's Customers screen; this is a
-/// dedicated screen instead, matching every other v2 module's one-
-/// feature-per-screen split).
+/// Backs the Order screen — customer pre-orders, per
+/// `notes/business_logic.md` §Order. A dedicated screen rather than a
+/// tab embedded inside Customers, matching every other module's
+/// one-feature-per-screen split.
 class OrderController extends GetxController {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
 
   OrderController(this.db);
 

@@ -14,7 +14,7 @@ import 'sync_enqueue_helper.dart';
 /// already-recorded history?) than a customer's, and the spec does not
 /// describe an investor-removal flow. Deferred rather than guessed at.
 class InvestorUseCases {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
 
   InvestorUseCases(this.db);
 

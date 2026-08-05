@@ -1,26 +1,22 @@
+/// Every route in the app is now what used to be called "v2" — there is
+/// no more v1 to disambiguate against (see `main.dart`'s legacy database
+/// cleanup and `ShellScreen`'s own doc comment for the removal this
+/// followed). The `V2`-suffixed constant names themselves are left as-is
+/// deliberately: renaming them would touch every screen/controller/test
+/// that references one, a large, purely cosmetic diff for zero
+/// functional benefit — a real cleanup worth doing on its own, not
+/// bundled into this change.
 abstract class AppRoutes {
   static const shell = '/';
-  static const dashboard = '/dashboard';
-  static const dailySales = '/daily-sales';
-  static const inventory = '/inventory';
-  static const dues = '/dues';
-  static const finance = '/finance';
-  static const investor = '/investor';
-  static const customers = '/customers';
-  static const assets = '/assets';
-  static const quickCapture = '/quick-capture';
-
-  // ── M1 v2 screens (read/write AppDatabaseV2, not v1's AppDatabase —
-  // see CatalogScreen's doc comment for why these are separate routes
-  // rather than replacing an existing v1 tab) ──────────────────────────
   static const catalogV2 = '/v2/catalog';
   static const purchaseEntryV2 = '/v2/purchase-entry';
   static const accountSettings = '/v2/account';
-  static const dailySalesV2 = '/v2/daily-sales';
-  static const duesV2 = '/v2/dues';
-  static const customersV2 = '/v2/customers';
-  static const stockV2 = '/v2/stock';
-  static const dashboardV2 = '/v2/dashboard';
+
+  // Dashboard/Daily Sales/Stock/Dues/Customers have no route of their
+  // own — ShellScreen embeds all 5 directly (an IndexedStack, switched
+  // via ShellController.switchTab), matching v1's exact original
+  // pattern for its own bottom-nav screens. See ShellScreen's own doc
+  // comment for why these 5 specifically.
   static const investorV2 = '/v2/investor';
   static const expenseV2 = '/v2/expense';
   static const rentV2 = '/v2/rent';

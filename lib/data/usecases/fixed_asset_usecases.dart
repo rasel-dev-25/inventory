@@ -20,7 +20,7 @@ import 'sync_enqueue_helper.dart';
 /// have entirely different validation (a value the owner types vs. a
 /// quantity that must not exceed on-hand stock).
 class FixedAssetUseCases {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
   static const _uuid = Uuid();
 
   FixedAssetUseCases(this.db);

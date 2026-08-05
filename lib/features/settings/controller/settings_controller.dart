@@ -1,11 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../core/database/app_database.dart';
-import '../../../core/database/daos/settings_dao.dart';
+import '../../../core/settings/settings_registry.dart';
 
+/// App-wide theme + language, read by [App] itself (`app/app.dart`) —
+/// this has to exist before any screen does, which is why it's a
+/// permanent `GetxService`, not a per-screen controller.
+///
+/// Backed by [SettingsRegistry] (the same v2 key-value store the pricing
+/// engine uses), not a bespoke DAO of its own — previously this read/
+/// wrote through v1's `AppDatabase`/`SettingsDao`, the last thing still
+/// pointed at that database once every v1 feature screen was removed.
+/// [SettingsRegistry] must already be registered (`main.dart` does this
+/// before constructing this class) since [_isDarkKey]/[_localeKey] are
+/// read synchronously via [SettingsRegistry.get] in [onInit], not
+/// awaited from a DAO call — a plain key-value read, not a query.
 class SettingsController extends GetxService {
-  final SettingsDao _dao = Get.find<AppDatabase>().settingsDao;
+  final SettingsRegistry _settings;
+
+  SettingsController(this._settings);
+
+  static final _isDarkKey = SettingKey.boolean('isDark', defaultValue: false);
+  static final _localeKey = SettingKey.string('locale', defaultValue: 'en');
 
   final isDark = false.obs;
   final currentLocale = 'en'.obs;
@@ -13,32 +29,28 @@ class SettingsController extends GetxService {
   @override
   void onInit() {
     super.onInit();
-    _loadSettings();
-  }
-
-  Future<void> _loadSettings() async {
-    isDark.value = await _dao.getBool('isDark', defaultValue: false);
-    currentLocale.value = await _dao.getValue('locale') ?? 'en';
+    isDark.value = _settings.get(_isDarkKey);
+    currentLocale.value = _settings.get(_localeKey);
     _applyTheme();
     _applyLocale();
   }
 
-  Future<void> toggleDarkMode(bool val) async {
+  void toggleDarkMode(bool val) {
     isDark.value = val;
-    await _dao.setBool('isDark', val);
+    _settings.set(_isDarkKey, val);
     _applyTheme();
   }
 
-  Future<void> toggleLanguage() async {
+  void toggleLanguage() {
     final next = currentLocale.value == 'en' ? 'bn' : 'en';
     currentLocale.value = next;
-    await _dao.setValue('locale', next);
+    _settings.set(_localeKey, next);
     _applyLocale();
   }
 
-  Future<void> setLanguage(String code) async {
+  void setLanguage(String code) {
     currentLocale.value = code;
-    await _dao.setValue('locale', code);
+    _settings.set(_localeKey, code);
     _applyLocale();
   }
 

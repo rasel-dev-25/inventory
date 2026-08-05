@@ -31,7 +31,7 @@ import '../../../domain/services/reminder_engine.dart';
 /// out-of-scope limitation this shares (foreground-triggered only, no
 /// exact-alarm wake-the-device scheduling).
 class ReminderController extends GetxController {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
   final NotificationService notificationService;
 
   ReminderController(this.db, this.notificationService);

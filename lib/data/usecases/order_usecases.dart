@@ -16,7 +16,7 @@ import 'sync_enqueue_helper.dart';
 /// this file, unlike almost everything else in this directory — an order
 /// is a request to track, not a transaction to reconcile.
 class OrderUseCases {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
   static const _uuid = Uuid();
 
   OrderUseCases(this.db);

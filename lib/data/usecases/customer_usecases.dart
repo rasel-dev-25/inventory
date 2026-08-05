@@ -19,7 +19,7 @@ import 'sync_enqueue_helper.dart';
 /// customer's other columns (same partial-update reasoning as
 /// `PayDueUseCase`'s `dues` upsert).
 class CustomerUseCases {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
 
   CustomerUseCases(this.db);
 

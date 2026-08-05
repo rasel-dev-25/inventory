@@ -11,11 +11,11 @@ import 'package:inventory/domain/entities/purchase.dart';
 import 'package:test/test.dart';
 
 void main() {
-  late AppDatabaseV2 db;
+  late AppDatabase db;
   late SavePurchaseTripUseCase useCase;
 
   setUp(() async {
-    db = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    db = AppDatabase.forTesting(NativeDatabase.memory());
     useCase = SavePurchaseTripUseCase(db);
 
     // Seed two real products — stock movements have a real FK to

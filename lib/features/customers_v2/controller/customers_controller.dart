@@ -8,13 +8,12 @@ import '../../../data/local/default_shop.dart';
 import '../../../data/usecases/customer_usecases.dart';
 import '../../../domain/entities/customer.dart';
 
-/// Backs the v2 Customers screen — list/create/edit/soft-delete plus the
+/// Backs the Customers screen — list/create/edit/soft-delete plus the
 /// flagged (suspicion/blocked) filter view from `notes/business_logic.md`
-/// §জ, via [CustomerUseCases]. See `CatalogScreen`'s doc comment for why
-/// this reads/writes the v2 database only, separate from v1's Customers
-/// tab.
+/// §জ, via [CustomerUseCases]. Embedded directly in `ShellScreen` — see
+/// that class's own doc comment.
 class CustomersController extends GetxController {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
   static const _uuid = Uuid();
 
   CustomersController(this.db);

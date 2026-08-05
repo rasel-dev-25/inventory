@@ -3,7 +3,7 @@
 part of 'audit_log_dao.dart';
 
 // ignore_for_file: type=lint
-mixin _$AuditLogDaoMixin on DatabaseAccessor<AppDatabaseV2> {
+mixin _$AuditLogDaoMixin on DatabaseAccessor<AppDatabase> {
   $ShopsTable get shops => attachedDatabase.shops;
   $AuditLogEntriesTable get auditLogEntries => attachedDatabase.auditLogEntries;
   AuditLogDaoManager get managers => AuditLogDaoManager(this);

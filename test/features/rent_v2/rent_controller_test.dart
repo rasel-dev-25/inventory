@@ -11,11 +11,11 @@ import 'package:inventory/features/rent_v2/controller/rent_controller.dart';
 import 'package:test/test.dart';
 
 void main() {
-  late AppDatabaseV2 db;
+  late AppDatabase db;
   late RentController controller;
 
   setUp(() async {
-    db = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    db = AppDatabase.forTesting(NativeDatabase.memory());
 
     await db.customerDao.create(
       const Customer(id: 'cust-1', name: 'Test Customer'),

@@ -11,11 +11,11 @@ import 'package:inventory/features/stock_v2/controller/stock_controller.dart';
 import 'package:test/test.dart';
 
 void main() {
-  late AppDatabaseV2 db;
+  late AppDatabase db;
   late StockController controller;
 
   setUp(() async {
-    db = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    db = AppDatabase.forTesting(NativeDatabase.memory());
     final now = DateTime.now().toUtc();
 
     await db.investorDao.create(

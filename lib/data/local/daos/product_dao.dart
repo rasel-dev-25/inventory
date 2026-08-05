@@ -56,8 +56,7 @@ extension _ProductRowMapping on ProductRow {
 /// constraints. [softDelete]/[restore] (hide/un-hide) are as far as this
 /// DAO goes; `RetentionPolicyUseCase` does not prune this table.
 @DriftAccessor(tables: [Products])
-class ProductDao extends DatabaseAccessor<AppDatabaseV2>
-    with _$ProductDaoMixin {
+class ProductDao extends DatabaseAccessor<AppDatabase> with _$ProductDaoMixin {
   ProductDao(super.db);
 
   Future<domain.Product?> getById(String id) async {

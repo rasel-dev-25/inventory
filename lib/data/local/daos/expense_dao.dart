@@ -32,8 +32,7 @@ extension _ExpenseRowMapping on ExpenseRow {
 /// method alone (hides the row, no reversal) should only ever be called
 /// from there, never on its own.
 @DriftAccessor(tables: [Expenses])
-class ExpenseDao extends DatabaseAccessor<AppDatabaseV2>
-    with _$ExpenseDaoMixin {
+class ExpenseDao extends DatabaseAccessor<AppDatabase> with _$ExpenseDaoMixin {
   ExpenseDao(super.db);
 
   Future<domain.Expense?> getById(String id) async {

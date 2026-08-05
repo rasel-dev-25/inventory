@@ -6,11 +6,11 @@ import 'package:inventory/data/usecases/category_usecases.dart';
 import 'package:test/test.dart';
 
 void main() {
-  late AppDatabaseV2 db;
+  late AppDatabase db;
   late CategoryUseCases useCases;
 
   setUp(() {
-    db = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    db = AppDatabase.forTesting(NativeDatabase.memory());
     useCases = CategoryUseCases(db);
   });
 

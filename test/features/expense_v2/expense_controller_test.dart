@@ -6,11 +6,11 @@ import 'package:inventory/features/expense_v2/controller/expense_controller.dart
 import 'package:test/test.dart';
 
 void main() {
-  late AppDatabaseV2 db;
+  late AppDatabase db;
   late ExpenseController controller;
 
   setUp(() {
-    db = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    db = AppDatabase.forTesting(NativeDatabase.memory());
     controller = ExpenseController(db);
     controller.onInit();
   });

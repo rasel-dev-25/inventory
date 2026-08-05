@@ -21,7 +21,7 @@ const _uuid = Uuid();
 /// how that's built alongside the typed DAO call so the two can't drift
 /// apart from having been computed independently.
 Future<void> writeAndEnqueue({
-  required AppDatabaseV2 db,
+  required AppDatabase db,
   required String eventType,
   required List<TableUpsert> upserts,
   required Future<void> Function() localWrite,

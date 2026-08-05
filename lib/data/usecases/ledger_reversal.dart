@@ -35,7 +35,7 @@ class ReversalWrite {
 /// own validation, but this doesn't assume that) — returns
 /// [ReversalWrite.empty] in that case.
 Future<ReversalWrite> buildCashLedgerReversal({
-  required AppDatabaseV2 db,
+  required AppDatabase db,
   required String shopId,
   required String sourceType,
   required String sourceId,
@@ -98,7 +98,7 @@ Future<ReversalWrite> buildCashLedgerReversal({
 /// (via `ProductDao.adjustQty`), so a deleted trip's stock impact doesn't
 /// silently stay on the shelf.
 Future<ReversalWrite> buildStockMovementReversal({
-  required AppDatabaseV2 db,
+  required AppDatabase db,
   required String shopId,
   required String sourceType,
   required String sourceId,

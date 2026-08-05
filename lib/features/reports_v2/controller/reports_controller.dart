@@ -22,15 +22,13 @@ import '../../../domain/services/period_report.dart';
 /// yesterday and one opened today both mean "today" correctly.
 enum ReportPeriod { today, thisWeek, thisMonth, custom }
 
-/// Backs the v2 Reports screen — a period-selectable accounting summary
+/// Backs the Reports screen — a period-selectable accounting summary
 /// building on the exact same [computeDashboardTotals] the Dashboard
 /// screen already uses (it's already `DateRange`-agnostic — see its own
 /// doc comment), plus the two period-specific breakdowns in
-/// `period_report.dart` the Dashboard has no need for. See
-/// `CatalogScreen`'s doc comment for why this reads the v2 database
-/// only, separate from v1's Finance tab.
+/// `period_report.dart` the Dashboard has no need for.
 class ReportsController extends GetxController {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
 
   ReportsController(this.db);
 

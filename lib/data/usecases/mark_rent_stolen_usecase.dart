@@ -23,7 +23,7 @@ import 'sync_enqueue_helper.dart';
 /// elsewhere in this directory that share a transaction to guarantee
 /// atomicity.
 class MarkRentStolenUseCase {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
 
   MarkRentStolenUseCase(this.db);
 

@@ -1,24 +1,24 @@
 import 'dart:io';
 
-/// Deletes the v1 app's local database file (and its SQLite WAL/SHM
-/// sidecar files) once v1 screens are fully retired.
+/// Deletes the old v1 app's local database file (and its SQLite WAL/SHM
+/// sidecar files) — now actually invoked from `main.dart` on every
+/// startup, since every v1 screen has been removed (this app was new
+/// enough that there was no real production data to preserve, so v1 was
+/// deleted outright rather than migrated — see `AppDatabase`'s own doc
+/// comment in `lib/data/local/app_database.dart`).
 ///
-/// **Not yet called from app startup.** v1 screens still read and write
-/// this exact file during the M1–M3 transition — deleting it now would
-/// destroy data still in active use. The call site for this function
-/// belongs in the PR that removes the last v1 screen, not this one. See
-/// `AppDatabaseV2`'s doc comment in `lib/data/local/app_database.dart` for
-/// the same note from the other side.
-///
-/// The v1 database's base name, as configured in the old
-/// `lib/core/database/app_database.dart`'s
+/// The v1 database's base name, as it was configured in the old (now
+/// deleted) `lib/core/database/app_database.dart`'s
 /// `driftDatabase(name: 'inventory_db')`. `drift_flutter`'s exact on-disk
 /// naming convention (extension, if any) was not independently confirmed
 /// against a real device in this environment — [candidateFileNames] is
 /// deliberately defensive (checks every plausible extension/sidecar
 /// combination) rather than assuming one. Deleting a file that was never
 /// there is a no-op, not an error, so over-including candidates here is
-/// safe.
+/// safe — a device that never had v1 installed just finds nothing to
+/// delete, every time, forever. (A one-time "already ran" flag was
+/// considered and rejected for exactly that reason: the no-op cost of
+/// checking is lower than the complexity of tracking whether it's needed.)
 abstract final class LegacyDatabaseCleanup {
   static const legacyDatabaseBaseName = 'inventory_db';
 

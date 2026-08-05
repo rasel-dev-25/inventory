@@ -32,7 +32,7 @@ extension _DueRowMapping on DueRow {
 /// `applyDuePayment` documents for why the two must never update
 /// independently.
 @DriftAccessor(tables: [Dues, DuePayments])
-class DueDao extends DatabaseAccessor<AppDatabaseV2> with _$DueDaoMixin {
+class DueDao extends DatabaseAccessor<AppDatabase> with _$DueDaoMixin {
   DueDao(super.db);
 
   Future<domain.Due?> getById(String id) async {

@@ -27,7 +27,7 @@ extension _OrderRowMapping on OrderRow {
 /// the way `ExpenseDao`/`SaleDao` are, since there is no paired ledger
 /// entry that a later edit could ever leave stale).
 @DriftAccessor(tables: [Orders])
-class OrderDao extends DatabaseAccessor<AppDatabaseV2> with _$OrderDaoMixin {
+class OrderDao extends DatabaseAccessor<AppDatabase> with _$OrderDaoMixin {
   OrderDao(super.db);
 
   Future<domain.Order?> getById(String id) async {

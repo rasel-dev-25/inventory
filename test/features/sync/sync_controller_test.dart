@@ -96,7 +96,7 @@ class _FakeSyncTransport implements SyncTransport {
 }
 
 void main() {
-  late AppDatabaseV2 db;
+  late AppDatabase db;
   late _FakeAuthRepository authRepo;
   late AuthController authController;
   late _FakeSyncTransport transport;
@@ -105,7 +105,7 @@ void main() {
 
   setUp(() {
     Get.testMode = true;
-    db = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    db = AppDatabase.forTesting(NativeDatabase.memory());
     authRepo = _FakeAuthRepository();
     transport = _FakeSyncTransport();
     connectivityController =

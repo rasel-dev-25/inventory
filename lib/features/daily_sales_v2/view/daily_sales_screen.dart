@@ -10,17 +10,26 @@ import '../../../domain/entities/product.dart';
 import '../../../domain/services/barcode_lookup.dart';
 import '../controller/daily_sales_controller.dart';
 
-/// The v2 Daily Sales screen — product autosuggest, qty/price entry, the
+/// The Daily Sales screen — product autosuggest, qty/price entry, the
 /// cash/due payment-method router, and a live gross-profit preview
 /// (`notes/business_logic.md` §গ / §ঘ), backed by
-/// [DailySalesController.logSale] → `SaveSaleUseCase`.
+/// [DailySalesController.logSale] → `SaveSaleUseCase`. One of the 5
+/// screens `ShellScreen` embeds directly — see [DashboardScreen]'s own
+/// doc comment for why [onMenuTap] exists.
 class DailySalesScreen extends GetView<DailySalesController> {
-  const DailySalesScreen({super.key});
+  final VoidCallback? onMenuTap;
+
+  const DailySalesScreen({super.key, this.onMenuTap});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('${'dailySales'.tr} (v2)')),
+      appBar: AppBar(
+        title: Text('dailySales'.tr),
+        leading: onMenuTap == null
+            ? null
+            : IconButton(icon: const Icon(Icons.menu), onPressed: onMenuTap),
+      ),
       body: Obx(() {
         if (controller.products.isEmpty) {
           return Center(child: Text('noProductsYet'.tr));

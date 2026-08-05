@@ -67,7 +67,7 @@ extension _LegacySettlementRowMapping on LegacySettlementRow {
 /// `Investors.totalBought`/`totalSold`/`totalProfit`/`remainingBalance`
 /// columns are exactly the bug this avoids repeating — see ARCHITECTURE.md.
 @DriftAccessor(tables: [Investors, InvestorRepayments, LegacySettlements])
-class InvestorDao extends DatabaseAccessor<AppDatabaseV2>
+class InvestorDao extends DatabaseAccessor<AppDatabase>
     with _$InvestorDaoMixin {
   InvestorDao(super.db);
 

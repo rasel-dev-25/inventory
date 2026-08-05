@@ -15,13 +15,13 @@ import 'package:inventory/features/investor_v2/controller/investor_controller.da
 import 'package:test/test.dart';
 
 void main() {
-  late AppDatabaseV2 db;
+  late AppDatabase db;
   late InvestorController controller;
 
   final now = DateTime.now().toUtc();
 
   setUp(() async {
-    db = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    db = AppDatabase.forTesting(NativeDatabase.memory());
 
     await InvestorUseCases(db).create(
       const Investor(

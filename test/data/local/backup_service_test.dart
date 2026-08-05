@@ -19,18 +19,18 @@ import 'package:inventory/domain/entities/purchase.dart';
 import 'package:test/test.dart';
 
 void main() {
-  // This file deliberately opens two independent in-memory `AppDatabaseV2`
+  // This file deliberately opens two independent in-memory `AppDatabase`
   // instances at once (a source and a restore target) to prove a backup
   // genuinely round-trips across separate databases, not just within one
   // — exactly the case drift's own "opened multiple times" warning
   // suggests silencing when it's intentional.
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
 
-  late AppDatabaseV2 sourceDb;
+  late AppDatabase sourceDb;
   final now = DateTime.now().toUtc();
 
   setUp(() async {
-    sourceDb = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    sourceDb = AppDatabase.forTesting(NativeDatabase.memory());
 
     await InvestorUseCases(sourceDb).create(
       const Investor(
@@ -128,7 +128,7 @@ void main() {
     'restoring a backup onto a completely different, fresh database reproduces every row',
     () async {
       final payload = await BackupService(sourceDb).buildBackupPayload();
-      final targetDb = AppDatabaseV2.forTesting(NativeDatabase.memory());
+      final targetDb = AppDatabase.forTesting(NativeDatabase.memory());
 
       final result = await BackupService(targetDb).restoreFromBackup(payload);
 
@@ -158,7 +158,7 @@ void main() {
     'restoring replaces existing data rather than merging with it',
     () async {
       final payload = await BackupService(sourceDb).buildBackupPayload();
-      final targetDb = AppDatabaseV2.forTesting(NativeDatabase.memory());
+      final targetDb = AppDatabase.forTesting(NativeDatabase.memory());
 
       // The target already has its own, completely different investor
       // before the restore.
@@ -187,7 +187,7 @@ void main() {
   );
 
   test('rejects a payload with an unrecognized version', () async {
-    final targetDb = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    final targetDb = AppDatabase.forTesting(NativeDatabase.memory());
     final result = await BackupService(
       targetDb,
     ).restoreFromBackup({'version': 999, 'tables': <String, dynamic>{}});
@@ -198,7 +198,7 @@ void main() {
   });
 
   test('rejects a payload with no "tables" map', () async {
-    final targetDb = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    final targetDb = AppDatabase.forTesting(NativeDatabase.memory());
     final result = await BackupService(
       targetDb,
     ).restoreFromBackup({'version': BackupService.currentVersion});
@@ -212,7 +212,7 @@ void main() {
     'a failure partway through leaves the target database completely unchanged (crash-safety)',
     () async {
       final payload = await BackupService(sourceDb).buildBackupPayload();
-      final targetDb = AppDatabaseV2.forTesting(NativeDatabase.memory());
+      final targetDb = AppDatabase.forTesting(NativeDatabase.memory());
 
       // The target starts with its own investor already in place.
       await InvestorUseCases(targetDb).create(

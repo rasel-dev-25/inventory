@@ -11,11 +11,11 @@ import 'package:inventory/domain/entities/enums.dart';
 import 'package:test/test.dart';
 
 void main() {
-  late AppDatabaseV2 db;
+  late AppDatabase db;
   late PayDueUseCase useCase;
 
   setUp(() async {
-    db = AppDatabaseV2.forTesting(NativeDatabase.memory());
+    db = AppDatabase.forTesting(NativeDatabase.memory());
     useCase = PayDueUseCase(db);
 
     await db.customerDao.create(

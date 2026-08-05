@@ -14,7 +14,7 @@ import '../../../domain/entities/product.dart';
 import '../../pricing_settings_v2/controller/pricing_settings_controller.dart';
 
 /// Backs the new v2 categories/products screens
-/// (`lib/features/catalog/view/`). Reads live from [AppDatabaseV2] via
+/// (`lib/features/catalog/view/`). Reads live from [AppDatabase] via
 /// `CategoryDao`/`ProductDao`'s `watch*` streams, and writes through
 /// `CategoryUseCases`/`ProductUseCases` so every create/rename/reorder
 /// also enqueues its outbox event — see `SYNC.md`.
@@ -24,7 +24,7 @@ import '../../pricing_settings_v2/controller/pricing_settings_controller.dart';
 /// picker regardless, and there is no independent categories screen a
 /// user reaches without also caring about products.
 class CatalogController extends GetxController {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
 
   /// The pricing-engine controller — a permanent, app-wide singleton (see
   /// its own doc comment), injected here rather than looked up ad hoc so

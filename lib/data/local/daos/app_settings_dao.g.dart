@@ -3,7 +3,7 @@
 part of 'app_settings_dao.dart';
 
 // ignore_for_file: type=lint
-mixin _$AppSettingsDaoMixin on DatabaseAccessor<AppDatabaseV2> {
+mixin _$AppSettingsDaoMixin on DatabaseAccessor<AppDatabase> {
   $AppSettingsTable get appSettings => attachedDatabase.appSettings;
   AppSettingsDaoManager get managers => AppSettingsDaoManager(this);
 }

@@ -14,7 +14,7 @@ part 'audit_log_dao.g.dart';
 /// audit entry that could itself be edited after the fact would defeat
 /// the entire point of an audit log.
 @DriftAccessor(tables: [AuditLogEntries])
-class AuditLogDao extends DatabaseAccessor<AppDatabaseV2>
+class AuditLogDao extends DatabaseAccessor<AppDatabase>
     with _$AuditLogDaoMixin {
   AuditLogDao(super.db);
 

@@ -23,7 +23,7 @@ const shopFundFilterValue = '__shop__';
 /// already the single source of truth for quantity changes, see
 /// `LedgerDao`'s own doc comment).
 class StockController extends GetxController {
-  final AppDatabaseV2 db;
+  final AppDatabase db;
 
   StockController(this.db);
 

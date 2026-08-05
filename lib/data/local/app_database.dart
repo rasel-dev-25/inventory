@@ -42,18 +42,19 @@ import 'tables/sync.dart';
 
 part 'app_database.g.dart';
 
-/// The v2 local Drift database — a clean-slate schema (schemaVersion 1),
-/// not a migration path from the v1 app's database. Per the working plan's
-/// "clean schema reset" decision, the old `inventory_db` file is deleted
-/// once v1 screens are fully retired, not migrated — see
-/// `lib/core/db/legacy_cleanup.dart` for that (deliberately not yet
-/// invoked from app startup; v1 screens still read/write that file).
+/// The local Drift database — a clean-slate schema (schemaVersion 1), not
+/// a migration path from the v1 app's database. This app is new enough
+/// that there was no real production data to preserve, so the old v1
+/// database (`lib/core/database/`, `inventory_db`) and every v1 feature
+/// screen were deleted outright rather than migrated — see
+/// `lib/core/db/legacy_cleanup.dart` (now actually invoked from
+/// `main.dart`) for the on-disk file cleanup, and `ShellScreen`'s own doc
+/// comment for the UI side.
 ///
-/// Named `AppDatabaseV2`, not `AppDatabase`, for exactly as long as the v1
-/// `lib/core/database/app_database.dart` class of the same short name
-/// still exists — both must be importable in the same file (`main.dart`)
-/// during the transition. Rename back to `AppDatabase` in the PR that
-/// deletes the v1 file.
+/// This class was named `AppDatabaseV2` until that deletion — it needed a
+/// distinct name for exactly as long as the v1 `AppDatabase` class (same
+/// short name) also existed and both had to be importable in the same
+/// file (`main.dart`). With v1 gone, there is no more ambiguity to avoid.
 ///
 /// Every table declared in `lib/data/local/tables/` is verified against
 /// real Drift codegen and a runtime smoke test against an in-memory
@@ -120,12 +121,12 @@ part 'app_database.g.dart';
     AuditLogDao,
   ],
 )
-class AppDatabaseV2 extends _$AppDatabaseV2 {
-  AppDatabaseV2() : super(_openConnection());
+class AppDatabase extends _$AppDatabase {
+  AppDatabase() : super(_openConnection());
 
   /// For unit/integration tests — accepts any [QueryExecutor], most often
   /// an in-memory `NativeDatabase`, so tests never touch a real file.
-  AppDatabaseV2.forTesting(super.executor);
+  AppDatabase.forTesting(super.executor);
 
   static QueryExecutor _openConnection() {
     return driftDatabase(name: 'al_ashab_v2');
@@ -150,7 +151,7 @@ class AppDatabaseV2 extends _$AppDatabaseV2 {
 /// the book-rental pricing tiers from `notes/business_logic.md`
 /// §RentPricingTier — a real, owner-editable table now, not the v1 app's
 /// hardcoded, non-configurable formula.
-Future<void> _seed(AppDatabaseV2 db) async {
+Future<void> _seed(AppDatabase db) async {
   final now = DateTime.now().toUtc();
 
   await db
