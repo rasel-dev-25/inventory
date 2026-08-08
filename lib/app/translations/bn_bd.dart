@@ -407,6 +407,7 @@ const Map<String, String> bnBD = {
   'noAccountSignUp': 'অ্যাকাউন্ট নেই? সাইন আপ করুন',
   'haveAccountSignIn': 'আগে থেকেই অ্যাকাউন্ট আছে? সাইন ইন করুন',
   'passwordsDontMatch': 'পাসওয়ার্ড মিলছে না',
+  'accountCreated': 'অ্যাকাউন্ট তৈরি হয়েছে! সাইন ইনে ফিরে যাচ্ছে…',
   'createYourShop': 'আপনার দোকান তৈরি করুন',
   'shopName': 'দোকানের নাম',
   'createShop': 'দোকান তৈরি করুন',

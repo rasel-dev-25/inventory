@@ -21,10 +21,16 @@ class SignUpScreen extends GetView<AuthController> {
         controller.errorMessage.value = 'passwordsDontMatch'.tr;
         return;
       }
-      await controller.signUp(
+      final ok = await controller.signUp(
         email: emailController.text.trim(),
         password: passwordController.text,
       );
+      if (ok) {
+        // Small delay so the user reads the success banner, then go back
+        // to sign-in.
+        await Future.delayed(const Duration(seconds: 2));
+        Get.off(() => const SignInScreen());
+      }
     }
 
     return Scaffold(
@@ -41,58 +47,102 @@ class SignUpScreen extends GetView<AuthController> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    TextFormField(
-                      controller: emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      autofillHints: const [AutofillHints.email],
-                      decoration: InputDecoration(labelText: 'email'.tr),
-                      validator: (value) =>
-                          (value == null || !value.contains('@'))
-                          ? 'email'.tr
-                          : null,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    TextFormField(
-                      controller: passwordController,
-                      obscureText: true,
-                      decoration: InputDecoration(labelText: 'password'.tr),
-                      validator: (value) => (value == null || value.length < 6)
-                          ? 'password'.tr
-                          : null,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    TextFormField(
-                      controller: confirmController,
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        labelText: 'confirmPassword'.tr,
-                      ),
-                      onFieldSubmitted: (_) => submit(),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    Obx(() => errorText(controller.errorMessage.value)),
-                    const SizedBox(height: AppSpacing.sm),
-                    Obx(
-                      () => FilledButton(
-                        onPressed: controller.isSubmitting.value
-                            ? null
-                            : submit,
-                        child: controller.isSubmitting.value
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
+                    // Success banner — shown instead of the form fields
+                    // while the user waits to be redirected.
+                    Obx(() {
+                      if (!controller.signUpSuccess.value) {
+                        return const SizedBox.shrink();
+                      }
+                      return Container(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          border: Border.all(color: Colors.green.shade300),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.check_circle_outline,
+                              color: Colors.green.shade700,
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: Text(
+                                'accountCreated'.tr,
+                                style: TextStyle(
+                                  color: Colors.green.shade800,
+                                  fontWeight: FontWeight.w500,
                                 ),
-                              )
-                            : Text('signUp'.tr),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    TextButton(
-                      onPressed: () => Get.off(() => const SignInScreen()),
-                      child: Text('haveAccountSignIn'.tr),
-                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                    Obx(() => controller.signUpSuccess.value
+                        ? const SizedBox.shrink()
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              TextFormField(
+                                controller: emailController,
+                                keyboardType: TextInputType.emailAddress,
+                                autofillHints: const [AutofillHints.email],
+                                decoration:
+                                    InputDecoration(labelText: 'email'.tr),
+                                validator: (value) =>
+                                    (value == null || !value.contains('@'))
+                                    ? 'email'.tr
+                                    : null,
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              TextFormField(
+                                controller: passwordController,
+                                obscureText: true,
+                                decoration: InputDecoration(
+                                    labelText: 'password'.tr),
+                                validator: (value) =>
+                                    (value == null || value.length < 6)
+                                    ? 'password'.tr
+                                    : null,
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              TextFormField(
+                                controller: confirmController,
+                                obscureText: true,
+                                decoration: InputDecoration(
+                                  labelText: 'confirmPassword'.tr,
+                                ),
+                                onFieldSubmitted: (_) => submit(),
+                              ),
+                              const SizedBox(height: AppSpacing.lg),
+                              Obx(() => errorText(controller.errorMessage.value)),
+                              const SizedBox(height: AppSpacing.sm),
+                              Obx(
+                                () => FilledButton(
+                                  onPressed: controller.isSubmitting.value
+                                      ? null
+                                      : submit,
+                                  child: controller.isSubmitting.value
+                                      ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : Text('signUp'.tr),
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              TextButton(
+                                onPressed: () =>
+                                    Get.off(() => const SignInScreen()),
+                                child: Text('haveAccountSignIn'.tr),
+                              ),
+                            ],
+                          )),
                   ],
                 ),
               ),

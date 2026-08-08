@@ -39,6 +39,11 @@ dependencies:
   connectivity_plus: ^6.1.5
   flutter_secure_storage: ^10.3.1
 
+  # --- Logging ---
+  # Lightweight, coloured debug logging. AppLogger (see lib/core/utils/)
+  # wraps this so the rest of the app only touches our own API.
+  logger: ^2.5.0
+
   # --- Images ---
   # Native-encoder compression (fast enough for camera-resolution photos,
   # unlike the pure-Dart `image` package) for the two-tier thumbnail/full
@@ -75,9 +80,28 @@ dev_dependencies:
   # Test doubles for repository/use-case tests in M1 onward — avoids hand
   # writing a fake implementation of every repository interface.
   mocktail: ^1.0.4
+  flutter_launcher_icons: ^0.14.3
 
 flutter:
   uses-material-design: true
 
   assets:
     - assets/shop_logo.jpeg
+
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: false
+  image_path: "assets/shop_logo.jpeg"
+  min_sdk_android: 21
+  web:
+    generate: true
+    image_path: "assets/shop_logo.jpeg"
+    background_color: "#ffffff"
+    theme_color: "#ffffff"
+  windows:
+    generate: true
+    image_path: "assets/shop_logo.jpeg"
+    icon_size: 48
+  adaptive_icon_background: "#ffffff"
+  adaptive_icon_foreground: "assets/shop_logo.jpeg"
+

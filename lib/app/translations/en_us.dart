@@ -410,6 +410,7 @@ const Map<String, String> enUS = {
   'noAccountSignUp': "Don't have an account? Sign up",
   'haveAccountSignIn': 'Already have an account? Sign in',
   'passwordsDontMatch': 'Passwords do not match',
+  'accountCreated': 'Account created! Redirecting to sign in…',
   'createYourShop': 'Create Your Shop',
   'shopName': 'Shop Name',
   'createShop': 'Create Shop',

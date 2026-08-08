@@ -48,3 +48,7 @@ windows/flutter/ephemeral/
 
 # FVM Version Cache
 .fvm/
+
+# Android build artifacts & Kotlin cache
+/android/build/
+.kotlin/
