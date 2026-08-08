@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.alashab" "\0"
-            VALUE "FileDescription", "inventory" "\0"
+            VALUE "FileDescription", "AL ASHAB Inventory" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "inventory" "\0"
+            VALUE "InternalName", "AL ASHAB Inventory" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.alashab. All rights reserved." "\0"
-            VALUE "OriginalFilename", "inventory.exe" "\0"
-            VALUE "ProductName", "inventory" "\0"
+            VALUE "OriginalFilename", "AL ASHAB Inventory.exe" "\0"
+            VALUE "ProductName", "AL ASHAB Inventory" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

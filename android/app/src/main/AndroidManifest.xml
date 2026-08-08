@@ -6,7 +6,7 @@
          lib/core/notifications/notification_service.dart. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
-        android:label="inventory"
+        android:label="AL ASHAB Inventory"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

@@ -14,7 +14,7 @@ class App extends StatelessWidget {
     final settings = Get.find<SettingsController>();
     return Obx(
       () => GetMaterialApp(
-        title: 'AL ASHAB',
+        title: 'AL ASHAB Inventory',
         debugShowCheckedModeBanner: false,
         initialRoute: AppRoutes.shell,
         getPages: AppPages.pages,
