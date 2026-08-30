@@ -61,6 +61,7 @@ void main() {
         date: DateTime.utc(2026, 1, 1),
         transportCost: Money.fromMinor(200),
         cashReturned: Money.zero(),
+        actualCashTakenOut: Money.fromMinor(10200),
         items: [
           PurchaseItem(
             id: 'item-1',
@@ -84,6 +85,7 @@ void main() {
       expect(storedTrip, isNotNull);
       expect(storedTrip!.items, hasLength(1));
       expect(storedTrip.transportCost.minorUnits, 200);
+      expect(storedTrip.actualCashTakenOut, Money.fromMinor(10200));
 
       // Product qty increased by the item's qty.
       final product = await db.productDao.getById('prod-book');

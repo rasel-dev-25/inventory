@@ -53,6 +53,7 @@ class OrderScreen extends GetView<OrderController> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'order_fab',
         onPressed: () => _openAddDialog(context),
         child: const Icon(Icons.add),
       ),

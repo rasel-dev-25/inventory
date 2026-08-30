@@ -4,7 +4,7 @@ import 'package:iconsax/iconsax.dart';
 import '../../controller/shell_controller.dart';
 
 /// One item per screen `ShellScreen`'s `IndexedStack` embeds, in the same
-/// order — see that class's own doc comment for which 5 and why.
+/// order — see that class's own doc comment for which 6 and why.
 class AppBottomNav extends GetView<ShellController> {
   const AppBottomNav({super.key});
 
@@ -34,6 +34,10 @@ class AppBottomNav extends GetView<ShellController> {
           BottomNavigationBarItem(
             icon: const Icon(Iconsax.people),
             label: 'customers'.tr,
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Iconsax.truck),
+            label: 'purchase'.tr,
           ),
         ],
       ),

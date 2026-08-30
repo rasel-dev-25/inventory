@@ -91,6 +91,7 @@ class _ReminderCard extends StatelessWidget {
       SuspiciousCustomerReminder _ => Icons.warning_amber,
       OverdueRentReminder _ => Icons.menu_book,
       OrderDeadlineReminder _ => Icons.shopping_bag_outlined,
+      LowStockReminder _ => Icons.inventory_2_outlined,
     };
   }
 
@@ -103,6 +104,7 @@ class _ReminderCard extends StatelessWidget {
       OverdueRentReminder v => '${v.customerName} · ${v.bookName}',
       OrderDeadlineReminder v =>
         '${v.customerName} · ${v.order.itemDescription}',
+      LowStockReminder v => v.product.name,
     };
   }
 
@@ -116,6 +118,7 @@ class _ReminderCard extends StatelessWidget {
       OverdueRentReminder v =>
         '${'overdueRentReminderLabel'.tr}${v.extraDaysAsOf(DateTime.now().toUtc())}',
       OrderDeadlineReminder _ => 'orderDeadlineReminderLabel'.tr,
+      LowStockReminder v => '${'lowStockReminderLabel'.tr}: ${v.product.qty}',
     };
   }
 

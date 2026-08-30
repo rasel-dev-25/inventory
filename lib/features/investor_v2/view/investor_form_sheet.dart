@@ -63,8 +63,13 @@ class LegacySettlementFormResult {
 /// `Navigator.pop`.
 class InvestorFormSheet extends StatefulWidget {
   final Investor? existing;
+  final bool includeLegacySettlement;
 
-  const InvestorFormSheet({super.key, this.existing});
+  const InvestorFormSheet({
+    super.key,
+    this.existing,
+    this.includeLegacySettlement = true,
+  });
 
   @override
   State<InvestorFormSheet> createState() => _InvestorFormSheetState();
@@ -186,9 +191,14 @@ class _InvestorFormSheetState extends State<InvestorFormSheet> {
               const SizedBox(height: AppSpacing.md),
               TextFormField(
                 controller: _termDaysController,
-                keyboardType: TextInputType.number,
+                readOnly: true,
                 decoration: InputDecoration(
                   labelText: 'capitalReturnTermDays'.tr,
+                  suffixIcon: IconButton(
+                    tooltip: 'date'.tr,
+                    icon: const Icon(Icons.calendar_today),
+                    onPressed: _pickCapitalReturnDate,
+                  ),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -217,7 +227,8 @@ class _InvestorFormSheetState extends State<InvestorFormSheet> {
                 maxLines: 3,
                 decoration: InputDecoration(labelText: 'notes'.tr),
               ),
-              if (widget.existing == null) ...[
+              if (widget.existing == null &&
+                  widget.includeLegacySettlement) ...[
                 const SizedBox(height: AppSpacing.lg),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
@@ -300,6 +311,24 @@ class _InvestorFormSheetState extends State<InvestorFormSheet> {
     if (picked != null) {
       setState(() => _legacySettlementDate = picked);
     }
+  }
+
+  Future<void> _pickCapitalReturnDate() async {
+    final today = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: today.add(
+        Duration(days: int.tryParse(_termDaysController.text) ?? 30),
+      ),
+      firstDate: today,
+      lastDate: DateTime(today.year + 20),
+    );
+    if (picked == null) return;
+    final start = DateTime(today.year, today.month, today.day);
+    final end = DateTime(picked.year, picked.month, picked.day);
+    setState(() {
+      _termDaysController.text = end.difference(start).inDays.toString();
+    });
   }
 
   void _submit() {

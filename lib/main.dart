@@ -16,8 +16,10 @@ import 'data/local/app_database.dart';
 import 'data/local/drift_key_value_store.dart';
 import 'data/remote/supabase_auth_repository.dart';
 import 'data/remote/supabase_sync_transport.dart';
+import 'data/remote/supabase_storage_upload_transport.dart';
 import 'data/sync/sync_pull_service.dart';
 import 'data/sync/sync_push_service.dart';
+import 'data/sync/pending_upload_service.dart';
 import 'domain/repositories/auth_repository.dart';
 import 'features/auth/controller/auth_controller.dart';
 import 'features/backup_v2/controller/backup_controller.dart';
@@ -26,6 +28,9 @@ import 'features/reminders_v2/controller/reminder_controller.dart';
 import 'features/settings/controller/settings_controller.dart';
 import 'features/sync/controller/sync_controller.dart';
 import 'data/local/local_row_upserter.dart';
+import 'data/local/local_storage_metrics_service.dart';
+import 'data/remote/supabase_storage_metrics_service.dart';
+import 'features/storage_usage/controller/storage_usage_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -67,6 +72,8 @@ void main() async {
   // since the "Sync Now" affordance and its pending-outbox-count badge
   // need to exist app-wide, not just on whichever screen last opened it.
   final syncTransport = SupabaseSyncTransport();
+  final storageTransport = SupabaseStorageUploadTransport();
+  Get.put<SupabaseStorageUploadTransport>(storageTransport, permanent: true);
   Get.put<SyncController>(
     SyncController(
       db: dbV2,
@@ -75,6 +82,11 @@ void main() async {
         dbV2.syncMetadataDao,
         syncTransport,
         LocalRowUpserter(dbV2),
+      ),
+      uploadService: PendingUploadService(
+        dbV2,
+        dbV2.syncMetadataDao,
+        storageTransport,
       ),
       authController: Get.find<AuthController>(),
       connectivityChanges: Connectivity().onConnectivityChanged,
@@ -129,6 +141,18 @@ void main() async {
   await notificationService.initialize();
   Get.put<ReminderController>(
     ReminderController(dbV2, notificationService),
+    permanent: true,
+  );
+
+  // --- Storage usage metrics (drawer & cloud breakdown) ---
+  final storageMetricsService = SupabaseStorageMetricsService();
+  final localMetricsService = LocalStorageMetricsService(dbV2);
+  Get.put<StorageUsageController>(
+    StorageUsageController(
+      remoteService: storageMetricsService,
+      localService: localMetricsService,
+      authController: Get.find<AuthController>(),
+    ),
     permanent: true,
   );
 

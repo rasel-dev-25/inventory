@@ -119,6 +119,7 @@ class ReminderController extends GetxController {
       rentals: rentals,
       bookNameOf: _bookNameOf,
       orders: orders,
+      products: products,
       now: DateTime.now().toUtc(),
     );
   }
@@ -157,6 +158,8 @@ class ReminderController extends GetxController {
       OrderDeadlineReminder r =>
         '${'reminderOrderDeadlineBody'.tr}${r.customerName} · '
             '${r.order.itemDescription}',
+      LowStockReminder r =>
+        '${'reminderLowStockBody'.tr}${r.product.name} · ${r.product.qty}',
     };
   }
 }

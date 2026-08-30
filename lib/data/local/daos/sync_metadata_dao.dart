@@ -11,7 +11,7 @@ part 'sync_metadata_dao.g.dart';
 /// aggregate, neither table has a meaningful domain entity of its own;
 /// both are pure sync-engine plumbing consumed only by
 /// `lib/data/sync/sync_push_service.dart` and `sync_pull_service.dart`.
-@DriftAccessor(tables: [SyncOutboxEntries, SyncCursors])
+@DriftAccessor(tables: [SyncOutboxEntries, SyncPendingUploads, SyncCursors])
 class SyncMetadataDao extends DatabaseAccessor<AppDatabase>
     with _$SyncMetadataDaoMixin {
   SyncMetadataDao(super.db);
@@ -94,6 +94,59 @@ class SyncMetadataDao extends DatabaseAccessor<AppDatabase>
   Future<void> incrementAttemptCount(String id) {
     return customStatement(
       'UPDATE sync_outbox_entries SET attempt_count = attempt_count + 1 WHERE id = ?',
+      [id],
+    );
+  }
+
+  Future<void> enqueueUpload({
+    required String id,
+    required String localPath,
+    required String storagePath,
+    required String bucketName,
+    required String entityType,
+    required String entityId,
+    required int priority,
+    required DateTime now,
+  }) {
+    return into(syncPendingUploads).insert(
+      SyncPendingUploadsCompanion.insert(
+        id: id,
+        localPath: localPath,
+        storagePath: storagePath,
+        bucketName: bucketName,
+        entityType: entityType,
+        entityId: entityId,
+        priority: Value(priority),
+        createdAt: now,
+      ),
+    );
+  }
+
+  Future<List<SyncPendingUploadRow>> pendingUploads({int limit = 10}) {
+    return (select(syncPendingUploads)
+          ..where((upload) => upload.uploaded.equals(false))
+          ..orderBy([
+            (upload) => OrderingTerm.desc(upload.priority),
+            (upload) => OrderingTerm.asc(upload.createdAt),
+          ])
+          ..limit(limit))
+        .get();
+  }
+
+  Stream<int> watchPendingUploadCount() {
+    final query = select(syncPendingUploads)
+      ..where((upload) => upload.uploaded.equals(false));
+    return query.watch().map((rows) => rows.length);
+  }
+
+  Future<void> markUploadDone(String id) {
+    return (update(syncPendingUploads)..where((upload) => upload.id.equals(id)))
+        .write(const SyncPendingUploadsCompanion(uploaded: Value(true)));
+  }
+
+  Future<void> incrementUploadAttemptCount(String id) {
+    return customStatement(
+      'UPDATE sync_pending_uploads SET attempt_count = attempt_count + 1 WHERE id = ?',
       [id],
     );
   }

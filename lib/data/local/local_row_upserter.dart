@@ -71,7 +71,16 @@ class LocalRowUpserter {
     }
 
     final localColumnTypes = await _localColumnTypes(table);
-    final columns = row.keys.where(localColumnTypes.containsKey).toList();
+    final deviceLocalColumns =
+        table == 'product_images' ||
+            table == 'customer_images' ||
+            table == 'fixed_asset_images'
+        ? const {'local_path', 'thumbnail_local_path'}
+        : const <String>{};
+    final columns = row.keys
+        .where(localColumnTypes.containsKey)
+        .where((column) => !deviceLocalColumns.contains(column))
+        .toList();
     if (columns.isEmpty) {
       throw ArgumentError(
         'none of row keys ${row.keys} match any local column of "$table" '

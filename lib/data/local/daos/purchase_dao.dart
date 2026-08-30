@@ -76,6 +76,9 @@ class PurchaseDao extends DatabaseAccessor<AppDatabase>
           ),
       ],
       cashReturned: Money.fromMinor(tripRow.cashReturnedMinor),
+      actualCashTakenOut: tripRow.actualCashTakenOutMinor == null
+          ? null
+          : Money.fromMinor(tripRow.actualCashTakenOutMinor!),
       items: [for (final i in itemRows) i.toDomain()],
     );
   }
@@ -139,6 +142,7 @@ class PurchaseDao extends DatabaseAccessor<AppDatabase>
           date: trip.date,
           transportCostMinor: Value(trip.transportCost.minorUnits),
           cashReturnedMinor: Value(trip.cashReturned.minorUnits),
+          actualCashTakenOutMinor: Value(trip.actualCashTakenOut?.minorUnits),
           createdAt: now,
           updatedAt: now,
           syncedAt: now,

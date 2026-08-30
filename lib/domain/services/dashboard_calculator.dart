@@ -16,27 +16,11 @@
 /// filters every list it passes in by a `DateRange` (day or all-time)
 /// before calling this, exactly like `calculateCashBalances` already
 /// establishes for the cash sub-balances.
-///
-/// **totalCash is exact** — it is literally `calculateCashBalances`'s
-/// total over whatever [CashLedgerEntry] rows are in range, and every
-/// cash-moving event this app can record today (a sale's cash portion, a
-/// due payment, a purchase trip's cash-out, an expense, an investor
-/// repayment) already writes one. It will automatically pick up rent
-/// income too, with no change to this function, the moment that v2 use
-/// case exists (M3) and starts writing its own ledger entries — see
-/// `lib/data/local/tables/ledger.dart`'s doc comment for why this table
-/// is deliberately the one place that can never happen.
-///
-/// **netProfit is now true net profit** — [expensesInRange] is populated
-/// from `ExpenseDao.watchAll` by `DashboardController`. It used to always
-/// be `[]` (gross-profit-only) before the Expense module existed; kept
-/// as its own parameter rather than folded into the ledger sum because
-/// `calculateShopNetProfit` needs the raw expense amounts, not their
-/// already-negated cash-ledger form.
 library;
 
 import '../../core/money/money.dart';
 import '../entities/cash_ledger_entry.dart';
+import '../entities/due.dart';
 import '../entities/purchase.dart';
 import '../entities/sale.dart';
 import 'cash_balance_calculator.dart';
@@ -63,6 +47,10 @@ class DashboardTotals {
   final Money totalPurchaseCashOut;
   final Money netProfit;
   final Money stockValue;
+  final Money totalDue;
+  final Money totalExpense;
+  final Money totalInvestorRemaining;
+  final Money dailyInvestorObligation;
 
   const DashboardTotals({
     required this.totalCash,
@@ -70,6 +58,10 @@ class DashboardTotals {
     required this.totalPurchaseCashOut,
     required this.netProfit,
     required this.stockValue,
+    required this.totalDue,
+    required this.totalExpense,
+    required this.totalInvestorRemaining,
+    required this.dailyInvestorObligation,
   });
 }
 
@@ -77,24 +69,15 @@ class DashboardTotals {
 /// has already filtered into a `DateRange` (day or all-time) — this
 /// function itself has no knowledge of dates at all, matching the spec's
 /// "one calculation, two views" instruction exactly.
-///
-/// [stockMovementsInRange] must carry each movement's *current* product
-/// cost price, not the price at the time the movement happened. That is
-/// deliberate, not a simplification: because `Products.qty` is defined as
-/// the sum of all its movements (`lib/data/local/tables/ledger.dart`),
-/// `Σ(deltaQty × currentCostPrice)` over *every* movement a product has
-/// ever had collapses to exactly `currentQty × currentCostPrice` — i.e.
-/// today's on-hand stock value, the same number `StockController`
-/// already shows. Filtering that same sum down to only today's movements
-/// gives exactly the spec's Day-view "stock added minus stock sold
-/// today" figure, via the identical formula. One formula, two ranges, no
-/// second stock-valuation code path to drift out of sync with the first.
 DashboardTotals computeDashboardTotals({
   required List<CashLedgerEntry> ledgerEntriesInRange,
   required List<Sale> salesInRange,
   required List<PurchaseTrip> purchaseTripsInRange,
   required List<ValuedStockMovement> stockMovementsInRange,
   List<Money> expensesInRange = const [],
+  List<Due> duesInRange = const [],
+  Money? totalInvestorRemaining,
+  Money? dailyInvestorObligation,
   Currency currency = Currency.bdt,
 }) {
   final zero = Money.zero(currency: currency);
@@ -125,11 +108,25 @@ DashboardTotals computeDashboardTotals({
     (sum, movement) => sum + movement.costPriceNow * movement.deltaQty,
   );
 
+  final totalExpense = expensesInRange.fold(
+    zero,
+    (sum, amount) => sum + amount,
+  );
+
+  final totalDue = duesInRange.fold(
+    zero,
+    (sum, due) => sum + (due.originalAmount - due.paidAmount),
+  );
+
   return DashboardTotals(
     totalCash: totalCash,
     totalSaleRevenue: totalSaleRevenue,
     totalPurchaseCashOut: totalPurchaseCashOut,
     netProfit: netProfit,
     stockValue: stockValue,
+    totalDue: totalDue,
+    totalExpense: totalExpense,
+    totalInvestorRemaining: totalInvestorRemaining ?? zero,
+    dailyInvestorObligation: dailyInvestorObligation ?? zero,
   );
 }

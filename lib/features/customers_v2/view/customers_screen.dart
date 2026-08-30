@@ -1,9 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../core/design/tokens.dart';
+import '../../../core/widgets/shop_app_bar_title.dart';
 import '../../../domain/entities/customer.dart';
 import '../controller/customers_controller.dart';
+import 'customer_detail_sheet.dart';
 import 'customer_form_sheet.dart';
 
 /// The Customers screen — list/create/edit/delete plus the flagged
@@ -20,7 +24,7 @@ class CustomersScreen extends GetView<CustomersController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('customers'.tr),
+        title: ShopAppBarTitle(pageTitle: 'customers'.tr),
         leading: onMenuTap == null
             ? null
             : IconButton(icon: const Icon(Icons.menu), onPressed: onMenuTap),
@@ -71,7 +75,8 @@ class CustomersScreen extends GetView<CustomersController> {
                   final customer = items[index];
                   return _CustomerTile(
                     customer: customer,
-                    onTap: () => _openForm(context, existing: customer),
+                    onTap: () => _openDetails(context, customer),
+                    onEdit: () => _openForm(context, existing: customer),
                   );
                 },
               );
@@ -80,6 +85,7 @@ class CustomersScreen extends GetView<CustomersController> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'customers_fab',
         onPressed: () => _openForm(context),
         child: const Icon(Icons.add),
       ),
@@ -90,7 +96,18 @@ class CustomersScreen extends GetView<CustomersController> {
     final result = await showModalBottomSheet<CustomerFormResult>(
       context: context,
       isScrollControlled: true,
-      builder: (context) => CustomerFormSheet(existing: existing),
+      builder: (context) {
+        final image = existing == null
+            ? null
+            : controller.primaryImageFor(existing.id);
+        return CustomerFormSheet(
+          existing: existing,
+          onCapturePhoto: controller.captureCustomerPhoto,
+          existingPhotoSource: image == null
+              ? null
+              : controller.imageSourceFor(image),
+        );
+      },
     );
     if (result == null) return;
 
@@ -101,6 +118,7 @@ class CustomersScreen extends GetView<CustomersController> {
         contact: result.contact,
         suspicionFlag: result.suspicionFlag,
         isBlocked: result.isBlocked,
+        photoLocalPath: result.photoLocalPath,
       );
     } else {
       await controller.updateCustomer(
@@ -110,15 +128,35 @@ class CustomersScreen extends GetView<CustomersController> {
         contact: result.contact,
         suspicionFlag: result.suspicionFlag,
         isBlocked: result.isBlocked,
+        photoLocalPath: result.photoLocalPath,
       );
     }
+  }
+
+  Future<void> _openDetails(BuildContext context, Customer customer) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => CustomerDetailSheet(
+        customer: customer,
+        onEdit: () {
+          Navigator.of(context).pop();
+          _openForm(context, existing: customer);
+        },
+      ),
+    );
   }
 }
 
 class _CustomerTile extends GetView<CustomersController> {
   final Customer customer;
   final VoidCallback onTap;
-  const _CustomerTile({required this.customer, required this.onTap});
+  final VoidCallback onEdit;
+  const _CustomerTile({
+    required this.customer,
+    required this.onTap,
+    required this.onEdit,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -137,6 +175,7 @@ class _CustomerTile extends GetView<CustomersController> {
       confirmDismiss: (_) => _confirmDelete(context),
       onDismissed: (_) => controller.deleteCustomer(customer.id),
       child: ListTile(
+        leading: _customerAvatar(context),
         title: Row(
           children: [
             Flexible(child: Text(customer.name)),
@@ -158,7 +197,31 @@ class _CustomerTile extends GetView<CustomersController> {
                 ].join(' · '),
               ),
         onTap: onTap,
+        trailing: IconButton(
+          tooltip: 'edit'.tr,
+          onPressed: onEdit,
+          icon: const Icon(Icons.edit_outlined),
+        ),
       ),
+    );
+  }
+
+  Widget _customerAvatar(BuildContext context) {
+    final image = controller.primaryImageFor(customer.id);
+    final source = image == null ? null : controller.imageSourceFor(image);
+    if (source == null) {
+      return CircleAvatar(
+        child: Text(
+          customer.name.trim().isEmpty
+              ? '?'
+              : customer.name.trim().characters.first.toUpperCase(),
+        ),
+      );
+    }
+    return ClipOval(
+      child: source.startsWith('http')
+          ? Image.network(source, width: 44, height: 44, fit: BoxFit.cover)
+          : Image.file(File(source), width: 44, height: 44, fit: BoxFit.cover),
     );
   }
 

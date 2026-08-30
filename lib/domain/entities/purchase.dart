@@ -63,6 +63,11 @@ class PurchaseTrip {
   /// reconciliation formula.
   final Money cashReturned;
 
+  /// The amount the owner says was physically taken out for this trip.
+  /// Kept separately from the calculated cash-out so reconciliation can
+  /// preserve and audit a mismatch instead of silently discarding it.
+  final Money? actualCashTakenOut;
+
   final List<PurchaseItem> items;
 
   const PurchaseTrip({
@@ -71,6 +76,7 @@ class PurchaseTrip {
     required this.transportCost,
     this.otherCosts = const [],
     required this.cashReturned,
+    this.actualCashTakenOut,
     required this.items,
   });
 

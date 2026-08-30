@@ -9,14 +9,15 @@ import '../../daily_sales_v2/view/daily_sales_screen.dart';
 import '../../stock_v2/view/stock_screen.dart';
 import '../../dues_v2/view/dues_screen.dart';
 import '../../customers_v2/view/customers_screen.dart';
+import '../../purchase_entry/view/purchase_entry_screen.dart';
 
-/// The app's real home — one `IndexedStack` of the 5 screens a shop
+/// The app's real home — one `IndexedStack` of the 6 screens a shop
 /// owner opens most often day to day (Dashboard, Daily Sales, Stock,
-/// Dues, Customers), matching v1's exact original shape (a bottom nav +
+/// Dues, Customers, Purchase Entry), matching v1's exact original shape (a bottom nav +
 /// drawer shell) now that v1 itself is gone (see `main.dart`'s legacy
 /// database cleanup).
 ///
-/// **Which 5, and why these specifically — a judgment call, flagged for
+/// **Which 6, and why these specifically — a judgment call, flagged for
 /// reconsideration, not asserted as the only right answer:** v1's own
 /// bottom nav had 7 slots (it also included Finance and Investor); v2 has
 /// far more screens overall (~18) than v1 ever did, too many for any
@@ -56,6 +57,7 @@ class ShellScreen extends GetView<ShellController> {
               StockScreen(onMenuTap: controller.openDrawer),
               DuesScreen(onMenuTap: controller.openDrawer),
               CustomersScreen(onMenuTap: controller.openDrawer),
+              PurchaseEntryScreen(onMenuTap: controller.openDrawer),
             ],
           ),
           bottomNavigationBar: const AppBottomNav(),

@@ -60,6 +60,20 @@ void main() {
       expect(result.failureOrNull, isA<ValidationFailure>());
       expect(await (db.select(db.quickCaptures)).get(), isEmpty);
     });
+
+    test('accepts a photo path without requiring a text note', () async {
+      final result = await useCases.create(
+        type: QuickCaptureType.photoNote,
+        note: '',
+        fileLocalPath: 'quick_captures/photo.jpg',
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+
+      expect(result.isOk, isTrue, reason: result.failureOrNull?.toString());
+      final capture = (await (db.select(db.quickCaptures)).get()).single;
+      expect(capture.fileLocalPath, 'quick_captures/photo.jpg');
+    });
   });
 
   group('markConverted', () {

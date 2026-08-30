@@ -28,7 +28,7 @@ class FixedAssetUseCases {
   /// Path 1 — "সরাসরি কেনা": bought outright with the shop's cash. Pairs
   /// the asset with a negative `cash_ledger_entries` row, same shape as
   /// every other cash-out use case in this directory.
-  Future<Result<void>> createFromCashPurchase({
+  Future<Result<String>> createFromCashPurchase({
     required String name,
     required Money value,
     required DateTime dateAcquired,
@@ -102,7 +102,7 @@ class FixedAssetUseCases {
       now: now,
     );
 
-    return const Result.ok(null);
+    return Result.ok(asset.id);
   }
 
   /// Path 2 — "স্টক থেকে কনভার্ট": pulls [qty] units of [productId] off
@@ -116,7 +116,7 @@ class FixedAssetUseCases {
   /// independent price being paid right now to record; the product's own
   /// cost price is the only real number describing what this asset is
   /// worth.
-  Future<Result<void>> createFromStock({
+  Future<Result<String>> createFromStock({
     required String productId,
     required double qty,
     required String shopId,
@@ -199,7 +199,7 @@ class FixedAssetUseCases {
       now: now,
     );
 
-    return const Result.ok(null);
+    return Result.ok(asset.id);
   }
 
   /// Soft-deletes the asset *and* reverses whichever paired write its

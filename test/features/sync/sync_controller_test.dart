@@ -9,9 +9,11 @@ import 'package:inventory/data/local/app_database.dart';
 import 'package:inventory/data/local/default_shop.dart';
 import 'package:inventory/data/local/local_row_upserter.dart';
 import 'package:inventory/data/sync/outbox_event.dart';
+import 'package:inventory/data/sync/pending_upload_service.dart';
 import 'package:inventory/data/sync/sync_pull_service.dart';
 import 'package:inventory/data/sync/sync_push_service.dart';
 import 'package:inventory/data/sync/sync_transport.dart';
+import 'package:inventory/data/sync/storage_upload_transport.dart';
 import 'package:inventory/data/usecases/category_usecases.dart';
 import 'package:inventory/domain/entities/auth_session.dart';
 import 'package:inventory/domain/entities/enums.dart';
@@ -95,6 +97,22 @@ class _FakeSyncTransport implements SyncTransport {
   }
 }
 
+class _FakeStorageUploadTransport implements StorageUploadTransport {
+  @override
+  Future<Result<void>> upload({
+    required String bucketName,
+    required String storagePath,
+    required String localPath,
+  }) async => const Result.ok(null);
+
+  @override
+  Future<Result<String>> createSignedUrl({
+    required String bucketName,
+    required String storagePath,
+    Duration expiresIn = const Duration(hours: 1),
+  }) async => Result.ok('https://example.test/$storagePath');
+}
+
 void main() {
   late AppDatabase db;
   late _FakeAuthRepository authRepo;
@@ -152,6 +170,11 @@ void main() {
         db.syncMetadataDao,
         transport,
         LocalRowUpserter(db),
+      ),
+      uploadService: PendingUploadService(
+        db,
+        db.syncMetadataDao,
+        _FakeStorageUploadTransport(),
       ),
       authController: authController,
       connectivityChanges: connectivityController.stream,

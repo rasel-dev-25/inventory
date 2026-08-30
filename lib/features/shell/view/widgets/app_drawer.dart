@@ -7,8 +7,9 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../../core/widgets/shop_logo.dart';
 import '../../../backup_v2/controller/backup_controller.dart';
-import '../../controller/shell_controller.dart';
 import '../../../settings/controller/settings_controller.dart';
+import '../../../storage_usage/view/widgets/drawer_storage_summary_widget.dart';
+import '../../controller/shell_controller.dart';
 
 /// Everything that isn't one of `ShellScreen`'s 5 embedded tabs — see
 /// that class's own doc comment for which 5 those are. The first 5
@@ -32,6 +33,7 @@ class AppDrawer extends GetView<ShellController> {
               child: shopLogo(size: 24, color: Colors.white),
             ),
           ),
+          const DrawerStorageSummaryWidget(),
           _tile(Iconsax.category, 'overview'.tr, () => controller.switchTab(0)),
           _tile(
             Iconsax.hashtag,
@@ -41,14 +43,15 @@ class AppDrawer extends GetView<ShellController> {
           _tile(Iconsax.box, 'stock'.tr, () => controller.switchTab(2)),
           _tile(Iconsax.book, 'dues'.tr, () => controller.switchTab(3)),
           _tile(Iconsax.people, 'customers'.tr, () => controller.switchTab(4)),
+          _tile(
+            Iconsax.truck,
+            'purchaseEntry'.tr,
+            () => controller.switchTab(5),
+          ),
           const Divider(),
           _tile(Iconsax.category_2, 'products'.tr, () {
             Navigator.pop(context);
             Get.toNamed(AppRoutes.catalogV2);
-          }),
-          _tile(Iconsax.truck, 'purchaseEntry'.tr, () {
-            Navigator.pop(context);
-            Get.toNamed(AppRoutes.purchaseEntryV2);
           }),
           _tile(Iconsax.chart, 'investor'.tr, () {
             Navigator.pop(context);

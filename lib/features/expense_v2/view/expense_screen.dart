@@ -55,6 +55,7 @@ class ExpenseScreen extends GetView<ExpenseController> {
         );
       }),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'expense_fab',
         onPressed: () => _showAddDialog(context),
         child: const Icon(Icons.add),
       ),

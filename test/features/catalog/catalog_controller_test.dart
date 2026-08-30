@@ -66,4 +66,24 @@ void main() {
     expect(ok, isTrue);
     expect(controller.products, isEmpty);
   });
+
+  test('createProduct with a photo queues it for Supabase upload', () async {
+    final ok = await controller.createProduct(
+      name: 'Notebook',
+      category: 'Book',
+      costPrice: Money.fromMinor(5000),
+      suggestedSellPrice: Money.fromMinor(8000),
+      fundSource: FundSource.shop(),
+      photoLocalPath: 'product_images/notebook.jpg',
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(ok, isTrue);
+    expect(controller.productImages, hasLength(1));
+    expect(
+      controller.productImages.single.localPath,
+      'product_images/notebook.jpg',
+    );
+    expect(await db.syncMetadataDao.pendingUploads(), hasLength(1));
+  });
 }

@@ -7,7 +7,10 @@ import '../../../core/money/money.dart';
 import '../../../data/local/app_database.dart';
 import '../../../data/local/default_shop.dart';
 import '../../../data/usecases/delete_purchase_trip_usecase.dart';
+import '../../../data/usecases/edit_purchase_trip_usecase.dart';
+import '../../../data/usecases/investor_usecases.dart';
 import '../../../data/usecases/save_purchase_trip_usecase.dart';
+import '../../../domain/entities/enums.dart';
 import '../../../domain/entities/fund_source.dart';
 import '../../../domain/entities/investor.dart';
 import '../../../domain/entities/product.dart';
@@ -18,13 +21,15 @@ import '../../../domain/services/purchase_reconciliation.dart';
 /// working-state holder for the form, not the domain [PurchaseItem]
 /// itself (which is immutable and only constructed once, on save).
 class DraftPurchaseItem {
-  final String id = const Uuid().v7();
+  final String id;
   String? productId;
   String shopName = '';
   double qty = 1;
   Money unitPrice = Money.zero();
   FundSource fundSource = FundSource.shop();
   bool isInKind = false;
+
+  DraftPurchaseItem({String? id}) : id = id ?? const Uuid().v7();
 }
 
 class DraftOtherCost {
@@ -45,11 +50,16 @@ class PurchaseEntryController extends GetxController {
   late final SavePurchaseTripUseCase _useCase = SavePurchaseTripUseCase(db);
   late final DeletePurchaseTripUseCase _deleteUseCase =
       DeletePurchaseTripUseCase(db);
+  late final EditPurchaseTripUseCase _editUseCase = EditPurchaseTripUseCase(db);
+  late final InvestorUseCases _investorUseCases = InvestorUseCases(db);
   static const _uuid = Uuid();
 
   final tripDate = DateTime.now().obs;
   final transportCost = Money.zero().obs;
   final cashReturned = Money.zero().obs;
+  final actualCashTakenOut = Rxn<Money>();
+  final editingOriginalTripId = RxnString();
+  String? _replacementTripId;
   final otherCosts = <DraftOtherCost>[].obs;
   final items = <DraftPurchaseItem>[].obs;
 
@@ -106,6 +116,48 @@ class PurchaseEntryController extends GetxController {
 
   void removeOtherCost(DraftOtherCost cost) => otherCosts.remove(cost);
 
+  Future<Investor?> createInvestor({
+    required String name,
+    required InvestmentType investmentType,
+    required double profitSharePercent,
+    required ProfitPayoutCycle profitPayoutCycle,
+    String? contact,
+    int? capitalReturnTermDays,
+    String? notes,
+  }) async {
+    errorMessage.value = null;
+    if (name.trim().isEmpty) {
+      errorMessage.value = 'nameRequired'.tr;
+      return null;
+    }
+    final investor = Investor(
+      id: _uuid.v7(),
+      name: name.trim(),
+      contact: contact,
+      investmentType: investmentType,
+      profitSharePercent: investmentType == InvestmentType.cashLoan
+          ? 0
+          : profitSharePercent,
+      capitalReturnTermDays: capitalReturnTermDays,
+      profitPayoutCycle: profitPayoutCycle,
+      notes: notes,
+    );
+    try {
+      await _investorUseCases.create(
+        investor,
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+      if (!investors.any((existing) => existing.id == investor.id)) {
+        investors.add(investor);
+      }
+      return investor;
+    } catch (e) {
+      errorMessage.value = e.toString();
+      return null;
+    }
+  }
+
   /// A live preview of `reconcilePurchaseTrip`'s result over the current
   /// draft — built from the exact same domain entities [save] will
   /// construct, so what the form shows and what actually gets recorded
@@ -122,7 +174,7 @@ class PurchaseEntryController extends GetxController {
     if (validItems.isEmpty) return null;
 
     return PurchaseTrip(
-      id: _uuid.v7(),
+      id: _replacementTripId ??= _uuid.v7(),
       date: tripDate.value,
       transportCost: transportCost.value,
       otherCosts: [
@@ -131,6 +183,7 @@ class PurchaseEntryController extends GetxController {
             OtherCost(description: c.description, amount: c.amount),
       ],
       cashReturned: cashReturned.value,
+      actualCashTakenOut: actualCashTakenOut.value,
       items: [
         for (final i in validItems)
           PurchaseItem(
@@ -153,14 +206,28 @@ class PurchaseEntryController extends GetxController {
       errorMessage.value = 'itemsRequired'.tr;
       return false;
     }
+    if (actualCashTakenOut.value == null) {
+      errorMessage.value = 'actualCashRequired'.tr;
+      return false;
+    }
 
     isSaving.value = true;
     try {
-      await _useCase.call(
-        trip,
-        shopId: defaultShopId,
-        now: DateTime.now().toUtc(),
-      );
+      final now = DateTime.now().toUtc();
+      if (editingOriginalTripId.value == null) {
+        await _useCase.call(trip, shopId: defaultShopId, now: now);
+      } else {
+        final result = await _editUseCase.call(
+          originalTripId: editingOriginalTripId.value!,
+          replacement: trip,
+          shopId: defaultShopId,
+          now: now,
+        );
+        if (result.isErr) {
+          errorMessage.value = result.failureOrNull!.message;
+          return false;
+        }
+      }
       _resetDraft();
       return true;
     } catch (e) {
@@ -175,8 +242,37 @@ class PurchaseEntryController extends GetxController {
     tripDate.value = DateTime.now();
     transportCost.value = Money.zero();
     cashReturned.value = Money.zero();
+    actualCashTakenOut.value = null;
     otherCosts.clear();
     items.clear();
+    editingOriginalTripId.value = null;
+    _replacementTripId = null;
+  }
+
+  void editTrip(PurchaseTrip trip) {
+    errorMessage.value = null;
+    editingOriginalTripId.value = trip.id;
+    _replacementTripId = _uuid.v7();
+    tripDate.value = trip.date;
+    transportCost.value = trip.transportCost;
+    cashReturned.value = trip.cashReturned;
+    actualCashTakenOut.value = trip.actualCashTakenOut;
+    otherCosts.assignAll([
+      for (final cost in trip.otherCosts)
+        (DraftOtherCost()
+          ..description = cost.description
+          ..amount = cost.amount),
+    ]);
+    items.assignAll([
+      for (final item in trip.items)
+        (DraftPurchaseItem()
+          ..productId = item.productId
+          ..shopName = item.shopName
+          ..qty = item.qty
+          ..unitPrice = item.unitPrice
+          ..fundSource = item.fundSource
+          ..isInKind = item.isInKind),
+    ]);
   }
 
   /// See `DeletePurchaseTripUseCase`'s own doc comment for exactly what

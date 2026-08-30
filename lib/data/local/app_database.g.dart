@@ -3014,6 +3014,476 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
   }
 }
 
+class $CustomerImagesTable extends CustomerImages
+    with TableInfo<$CustomerImagesTable, CustomerImageRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CustomerImagesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _customerIdMeta = const VerificationMeta(
+    'customerId',
+  );
+  @override
+  late final GeneratedColumn<String> customerId = GeneratedColumn<String>(
+    'customer_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES customers (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _localPathMeta = const VerificationMeta(
+    'localPath',
+  );
+  @override
+  late final GeneratedColumn<String> localPath = GeneratedColumn<String>(
+    'local_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _remoteUrlMeta = const VerificationMeta(
+    'remoteUrl',
+  );
+  @override
+  late final GeneratedColumn<String> remoteUrl = GeneratedColumn<String>(
+    'remote_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> syncedAt = GeneratedColumn<DateTime>(
+    'synced_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    customerId,
+    localPath,
+    remoteUrl,
+    sortOrder,
+    createdAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'customer_images';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CustomerImageRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('customer_id')) {
+      context.handle(
+        _customerIdMeta,
+        customerId.isAcceptableOrUnknown(data['customer_id']!, _customerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_customerIdMeta);
+    }
+    if (data.containsKey('local_path')) {
+      context.handle(
+        _localPathMeta,
+        localPath.isAcceptableOrUnknown(data['local_path']!, _localPathMeta),
+      );
+    }
+    if (data.containsKey('remote_url')) {
+      context.handle(
+        _remoteUrlMeta,
+        remoteUrl.isAcceptableOrUnknown(data['remote_url']!, _remoteUrlMeta),
+      );
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_syncedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CustomerImageRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CustomerImageRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      customerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}customer_id'],
+      )!,
+      localPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}local_path'],
+      ),
+      remoteUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remote_url'],
+      ),
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}synced_at'],
+      )!,
+    );
+  }
+
+  @override
+  $CustomerImagesTable createAlias(String alias) {
+    return $CustomerImagesTable(attachedDatabase, alias);
+  }
+}
+
+class CustomerImageRow extends DataClass
+    implements Insertable<CustomerImageRow> {
+  final String id;
+  final String customerId;
+  final String? localPath;
+  final String? remoteUrl;
+  final int sortOrder;
+  final DateTime createdAt;
+  final DateTime syncedAt;
+  const CustomerImageRow({
+    required this.id,
+    required this.customerId,
+    this.localPath,
+    this.remoteUrl,
+    required this.sortOrder,
+    required this.createdAt,
+    required this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['customer_id'] = Variable<String>(customerId);
+    if (!nullToAbsent || localPath != null) {
+      map['local_path'] = Variable<String>(localPath);
+    }
+    if (!nullToAbsent || remoteUrl != null) {
+      map['remote_url'] = Variable<String>(remoteUrl);
+    }
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['synced_at'] = Variable<DateTime>(syncedAt);
+    return map;
+  }
+
+  CustomerImagesCompanion toCompanion(bool nullToAbsent) {
+    return CustomerImagesCompanion(
+      id: Value(id),
+      customerId: Value(customerId),
+      localPath: localPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(localPath),
+      remoteUrl: remoteUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remoteUrl),
+      sortOrder: Value(sortOrder),
+      createdAt: Value(createdAt),
+      syncedAt: Value(syncedAt),
+    );
+  }
+
+  factory CustomerImageRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CustomerImageRow(
+      id: serializer.fromJson<String>(json['id']),
+      customerId: serializer.fromJson<String>(json['customerId']),
+      localPath: serializer.fromJson<String?>(json['localPath']),
+      remoteUrl: serializer.fromJson<String?>(json['remoteUrl']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      syncedAt: serializer.fromJson<DateTime>(json['syncedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'customerId': serializer.toJson<String>(customerId),
+      'localPath': serializer.toJson<String?>(localPath),
+      'remoteUrl': serializer.toJson<String?>(remoteUrl),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'syncedAt': serializer.toJson<DateTime>(syncedAt),
+    };
+  }
+
+  CustomerImageRow copyWith({
+    String? id,
+    String? customerId,
+    Value<String?> localPath = const Value.absent(),
+    Value<String?> remoteUrl = const Value.absent(),
+    int? sortOrder,
+    DateTime? createdAt,
+    DateTime? syncedAt,
+  }) => CustomerImageRow(
+    id: id ?? this.id,
+    customerId: customerId ?? this.customerId,
+    localPath: localPath.present ? localPath.value : this.localPath,
+    remoteUrl: remoteUrl.present ? remoteUrl.value : this.remoteUrl,
+    sortOrder: sortOrder ?? this.sortOrder,
+    createdAt: createdAt ?? this.createdAt,
+    syncedAt: syncedAt ?? this.syncedAt,
+  );
+  CustomerImageRow copyWithCompanion(CustomerImagesCompanion data) {
+    return CustomerImageRow(
+      id: data.id.present ? data.id.value : this.id,
+      customerId: data.customerId.present
+          ? data.customerId.value
+          : this.customerId,
+      localPath: data.localPath.present ? data.localPath.value : this.localPath,
+      remoteUrl: data.remoteUrl.present ? data.remoteUrl.value : this.remoteUrl,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CustomerImageRow(')
+          ..write('id: $id, ')
+          ..write('customerId: $customerId, ')
+          ..write('localPath: $localPath, ')
+          ..write('remoteUrl: $remoteUrl, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    customerId,
+    localPath,
+    remoteUrl,
+    sortOrder,
+    createdAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CustomerImageRow &&
+          other.id == this.id &&
+          other.customerId == this.customerId &&
+          other.localPath == this.localPath &&
+          other.remoteUrl == this.remoteUrl &&
+          other.sortOrder == this.sortOrder &&
+          other.createdAt == this.createdAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class CustomerImagesCompanion extends UpdateCompanion<CustomerImageRow> {
+  final Value<String> id;
+  final Value<String> customerId;
+  final Value<String?> localPath;
+  final Value<String?> remoteUrl;
+  final Value<int> sortOrder;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> syncedAt;
+  final Value<int> rowid;
+  const CustomerImagesCompanion({
+    this.id = const Value.absent(),
+    this.customerId = const Value.absent(),
+    this.localPath = const Value.absent(),
+    this.remoteUrl = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CustomerImagesCompanion.insert({
+    required String id,
+    required String customerId,
+    this.localPath = const Value.absent(),
+    this.remoteUrl = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime syncedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       customerId = Value(customerId),
+       createdAt = Value(createdAt),
+       syncedAt = Value(syncedAt);
+  static Insertable<CustomerImageRow> custom({
+    Expression<String>? id,
+    Expression<String>? customerId,
+    Expression<String>? localPath,
+    Expression<String>? remoteUrl,
+    Expression<int>? sortOrder,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (customerId != null) 'customer_id': customerId,
+      if (localPath != null) 'local_path': localPath,
+      if (remoteUrl != null) 'remote_url': remoteUrl,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (createdAt != null) 'created_at': createdAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CustomerImagesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? customerId,
+    Value<String?>? localPath,
+    Value<String?>? remoteUrl,
+    Value<int>? sortOrder,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return CustomerImagesCompanion(
+      id: id ?? this.id,
+      customerId: customerId ?? this.customerId,
+      localPath: localPath ?? this.localPath,
+      remoteUrl: remoteUrl ?? this.remoteUrl,
+      sortOrder: sortOrder ?? this.sortOrder,
+      createdAt: createdAt ?? this.createdAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (customerId.present) {
+      map['customer_id'] = Variable<String>(customerId.value);
+    }
+    if (localPath.present) {
+      map['local_path'] = Variable<String>(localPath.value);
+    }
+    if (remoteUrl.present) {
+      map['remote_url'] = Variable<String>(remoteUrl.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<DateTime>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CustomerImagesCompanion(')
+          ..write('id: $id, ')
+          ..write('customerId: $customerId, ')
+          ..write('localPath: $localPath, ')
+          ..write('remoteUrl: $remoteUrl, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $InvestorsTable extends Investors
     with TableInfo<$InvestorsTable, InvestorRow> {
   @override
@@ -5238,6 +5708,17 @@ class $PurchaseTripsTable extends PurchaseTrips
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _actualCashTakenOutMinorMeta =
+      const VerificationMeta('actualCashTakenOutMinor');
+  @override
+  late final GeneratedColumn<int> actualCashTakenOutMinor =
+      GeneratedColumn<int>(
+        'actual_cash_taken_out_minor',
+        aliasedName,
+        true,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _notesMeta = const VerificationMeta('notes');
   @override
   late final GeneratedColumn<String> notes = GeneratedColumn<String>(
@@ -5298,6 +5779,7 @@ class $PurchaseTripsTable extends PurchaseTrips
     date,
     transportCostMinor,
     cashReturnedMinor,
+    actualCashTakenOutMinor,
     notes,
     createdAt,
     updatedAt,
@@ -5352,6 +5834,15 @@ class $PurchaseTripsTable extends PurchaseTrips
         cashReturnedMinor.isAcceptableOrUnknown(
           data['cash_returned_minor']!,
           _cashReturnedMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('actual_cash_taken_out_minor')) {
+      context.handle(
+        _actualCashTakenOutMinorMeta,
+        actualCashTakenOutMinor.isAcceptableOrUnknown(
+          data['actual_cash_taken_out_minor']!,
+          _actualCashTakenOutMinorMeta,
         ),
       );
     }
@@ -5420,6 +5911,10 @@ class $PurchaseTripsTable extends PurchaseTrips
         DriftSqlType.int,
         data['${effectivePrefix}cash_returned_minor'],
       )!,
+      actualCashTakenOutMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}actual_cash_taken_out_minor'],
+      ),
       notes: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}notes'],
@@ -5455,6 +5950,7 @@ class PurchaseTripRow extends DataClass implements Insertable<PurchaseTripRow> {
   final DateTime date;
   final int transportCostMinor;
   final int cashReturnedMinor;
+  final int? actualCashTakenOutMinor;
   final String? notes;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -5466,6 +5962,7 @@ class PurchaseTripRow extends DataClass implements Insertable<PurchaseTripRow> {
     required this.date,
     required this.transportCostMinor,
     required this.cashReturnedMinor,
+    this.actualCashTakenOutMinor,
     this.notes,
     required this.createdAt,
     required this.updatedAt,
@@ -5480,6 +5977,11 @@ class PurchaseTripRow extends DataClass implements Insertable<PurchaseTripRow> {
     map['date'] = Variable<DateTime>(date);
     map['transport_cost_minor'] = Variable<int>(transportCostMinor);
     map['cash_returned_minor'] = Variable<int>(cashReturnedMinor);
+    if (!nullToAbsent || actualCashTakenOutMinor != null) {
+      map['actual_cash_taken_out_minor'] = Variable<int>(
+        actualCashTakenOutMinor,
+      );
+    }
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
     }
@@ -5499,6 +6001,9 @@ class PurchaseTripRow extends DataClass implements Insertable<PurchaseTripRow> {
       date: Value(date),
       transportCostMinor: Value(transportCostMinor),
       cashReturnedMinor: Value(cashReturnedMinor),
+      actualCashTakenOutMinor: actualCashTakenOutMinor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(actualCashTakenOutMinor),
       notes: notes == null && nullToAbsent
           ? const Value.absent()
           : Value(notes),
@@ -5522,6 +6027,9 @@ class PurchaseTripRow extends DataClass implements Insertable<PurchaseTripRow> {
       date: serializer.fromJson<DateTime>(json['date']),
       transportCostMinor: serializer.fromJson<int>(json['transportCostMinor']),
       cashReturnedMinor: serializer.fromJson<int>(json['cashReturnedMinor']),
+      actualCashTakenOutMinor: serializer.fromJson<int?>(
+        json['actualCashTakenOutMinor'],
+      ),
       notes: serializer.fromJson<String?>(json['notes']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -5538,6 +6046,9 @@ class PurchaseTripRow extends DataClass implements Insertable<PurchaseTripRow> {
       'date': serializer.toJson<DateTime>(date),
       'transportCostMinor': serializer.toJson<int>(transportCostMinor),
       'cashReturnedMinor': serializer.toJson<int>(cashReturnedMinor),
+      'actualCashTakenOutMinor': serializer.toJson<int?>(
+        actualCashTakenOutMinor,
+      ),
       'notes': serializer.toJson<String?>(notes),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -5552,6 +6063,7 @@ class PurchaseTripRow extends DataClass implements Insertable<PurchaseTripRow> {
     DateTime? date,
     int? transportCostMinor,
     int? cashReturnedMinor,
+    Value<int?> actualCashTakenOutMinor = const Value.absent(),
     Value<String?> notes = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -5563,6 +6075,9 @@ class PurchaseTripRow extends DataClass implements Insertable<PurchaseTripRow> {
     date: date ?? this.date,
     transportCostMinor: transportCostMinor ?? this.transportCostMinor,
     cashReturnedMinor: cashReturnedMinor ?? this.cashReturnedMinor,
+    actualCashTakenOutMinor: actualCashTakenOutMinor.present
+        ? actualCashTakenOutMinor.value
+        : this.actualCashTakenOutMinor,
     notes: notes.present ? notes.value : this.notes,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -5580,6 +6095,9 @@ class PurchaseTripRow extends DataClass implements Insertable<PurchaseTripRow> {
       cashReturnedMinor: data.cashReturnedMinor.present
           ? data.cashReturnedMinor.value
           : this.cashReturnedMinor,
+      actualCashTakenOutMinor: data.actualCashTakenOutMinor.present
+          ? data.actualCashTakenOutMinor.value
+          : this.actualCashTakenOutMinor,
       notes: data.notes.present ? data.notes.value : this.notes,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -5596,6 +6114,7 @@ class PurchaseTripRow extends DataClass implements Insertable<PurchaseTripRow> {
           ..write('date: $date, ')
           ..write('transportCostMinor: $transportCostMinor, ')
           ..write('cashReturnedMinor: $cashReturnedMinor, ')
+          ..write('actualCashTakenOutMinor: $actualCashTakenOutMinor, ')
           ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -5612,6 +6131,7 @@ class PurchaseTripRow extends DataClass implements Insertable<PurchaseTripRow> {
     date,
     transportCostMinor,
     cashReturnedMinor,
+    actualCashTakenOutMinor,
     notes,
     createdAt,
     updatedAt,
@@ -5627,6 +6147,7 @@ class PurchaseTripRow extends DataClass implements Insertable<PurchaseTripRow> {
           other.date == this.date &&
           other.transportCostMinor == this.transportCostMinor &&
           other.cashReturnedMinor == this.cashReturnedMinor &&
+          other.actualCashTakenOutMinor == this.actualCashTakenOutMinor &&
           other.notes == this.notes &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -5640,6 +6161,7 @@ class PurchaseTripsCompanion extends UpdateCompanion<PurchaseTripRow> {
   final Value<DateTime> date;
   final Value<int> transportCostMinor;
   final Value<int> cashReturnedMinor;
+  final Value<int?> actualCashTakenOutMinor;
   final Value<String?> notes;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -5652,6 +6174,7 @@ class PurchaseTripsCompanion extends UpdateCompanion<PurchaseTripRow> {
     this.date = const Value.absent(),
     this.transportCostMinor = const Value.absent(),
     this.cashReturnedMinor = const Value.absent(),
+    this.actualCashTakenOutMinor = const Value.absent(),
     this.notes = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -5665,6 +6188,7 @@ class PurchaseTripsCompanion extends UpdateCompanion<PurchaseTripRow> {
     required DateTime date,
     this.transportCostMinor = const Value.absent(),
     this.cashReturnedMinor = const Value.absent(),
+    this.actualCashTakenOutMinor = const Value.absent(),
     this.notes = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -5683,6 +6207,7 @@ class PurchaseTripsCompanion extends UpdateCompanion<PurchaseTripRow> {
     Expression<DateTime>? date,
     Expression<int>? transportCostMinor,
     Expression<int>? cashReturnedMinor,
+    Expression<int>? actualCashTakenOutMinor,
     Expression<String>? notes,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -5697,6 +6222,8 @@ class PurchaseTripsCompanion extends UpdateCompanion<PurchaseTripRow> {
       if (transportCostMinor != null)
         'transport_cost_minor': transportCostMinor,
       if (cashReturnedMinor != null) 'cash_returned_minor': cashReturnedMinor,
+      if (actualCashTakenOutMinor != null)
+        'actual_cash_taken_out_minor': actualCashTakenOutMinor,
       if (notes != null) 'notes': notes,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -5712,6 +6239,7 @@ class PurchaseTripsCompanion extends UpdateCompanion<PurchaseTripRow> {
     Value<DateTime>? date,
     Value<int>? transportCostMinor,
     Value<int>? cashReturnedMinor,
+    Value<int?>? actualCashTakenOutMinor,
     Value<String?>? notes,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -5725,6 +6253,8 @@ class PurchaseTripsCompanion extends UpdateCompanion<PurchaseTripRow> {
       date: date ?? this.date,
       transportCostMinor: transportCostMinor ?? this.transportCostMinor,
       cashReturnedMinor: cashReturnedMinor ?? this.cashReturnedMinor,
+      actualCashTakenOutMinor:
+          actualCashTakenOutMinor ?? this.actualCashTakenOutMinor,
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -5751,6 +6281,11 @@ class PurchaseTripsCompanion extends UpdateCompanion<PurchaseTripRow> {
     }
     if (cashReturnedMinor.present) {
       map['cash_returned_minor'] = Variable<int>(cashReturnedMinor.value);
+    }
+    if (actualCashTakenOutMinor.present) {
+      map['actual_cash_taken_out_minor'] = Variable<int>(
+        actualCashTakenOutMinor.value,
+      );
     }
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
@@ -5781,6 +6316,7 @@ class PurchaseTripsCompanion extends UpdateCompanion<PurchaseTripRow> {
           ..write('date: $date, ')
           ..write('transportCostMinor: $transportCostMinor, ')
           ..write('cashReturnedMinor: $cashReturnedMinor, ')
+          ..write('actualCashTakenOutMinor: $actualCashTakenOutMinor, ')
           ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -12561,6 +13097,474 @@ class FixedAssetsCompanion extends UpdateCompanion<FixedAssetRow> {
   }
 }
 
+class $FixedAssetImagesTable extends FixedAssetImages
+    with TableInfo<$FixedAssetImagesTable, FixedAssetImageRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FixedAssetImagesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _assetIdMeta = const VerificationMeta(
+    'assetId',
+  );
+  @override
+  late final GeneratedColumn<String> assetId = GeneratedColumn<String>(
+    'asset_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES fixed_assets (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _localPathMeta = const VerificationMeta(
+    'localPath',
+  );
+  @override
+  late final GeneratedColumn<String> localPath = GeneratedColumn<String>(
+    'local_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _remoteUrlMeta = const VerificationMeta(
+    'remoteUrl',
+  );
+  @override
+  late final GeneratedColumn<String> remoteUrl = GeneratedColumn<String>(
+    'remote_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> syncedAt = GeneratedColumn<DateTime>(
+    'synced_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    assetId,
+    localPath,
+    remoteUrl,
+    sortOrder,
+    createdAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'fixed_asset_images';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FixedAssetImageRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('asset_id')) {
+      context.handle(
+        _assetIdMeta,
+        assetId.isAcceptableOrUnknown(data['asset_id']!, _assetIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_assetIdMeta);
+    }
+    if (data.containsKey('local_path')) {
+      context.handle(
+        _localPathMeta,
+        localPath.isAcceptableOrUnknown(data['local_path']!, _localPathMeta),
+      );
+    }
+    if (data.containsKey('remote_url')) {
+      context.handle(
+        _remoteUrlMeta,
+        remoteUrl.isAcceptableOrUnknown(data['remote_url']!, _remoteUrlMeta),
+      );
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_syncedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FixedAssetImageRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FixedAssetImageRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      assetId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}asset_id'],
+      )!,
+      localPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}local_path'],
+      ),
+      remoteUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remote_url'],
+      ),
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}synced_at'],
+      )!,
+    );
+  }
+
+  @override
+  $FixedAssetImagesTable createAlias(String alias) {
+    return $FixedAssetImagesTable(attachedDatabase, alias);
+  }
+}
+
+class FixedAssetImageRow extends DataClass
+    implements Insertable<FixedAssetImageRow> {
+  final String id;
+  final String assetId;
+  final String? localPath;
+  final String? remoteUrl;
+  final int sortOrder;
+  final DateTime createdAt;
+  final DateTime syncedAt;
+  const FixedAssetImageRow({
+    required this.id,
+    required this.assetId,
+    this.localPath,
+    this.remoteUrl,
+    required this.sortOrder,
+    required this.createdAt,
+    required this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['asset_id'] = Variable<String>(assetId);
+    if (!nullToAbsent || localPath != null) {
+      map['local_path'] = Variable<String>(localPath);
+    }
+    if (!nullToAbsent || remoteUrl != null) {
+      map['remote_url'] = Variable<String>(remoteUrl);
+    }
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['synced_at'] = Variable<DateTime>(syncedAt);
+    return map;
+  }
+
+  FixedAssetImagesCompanion toCompanion(bool nullToAbsent) {
+    return FixedAssetImagesCompanion(
+      id: Value(id),
+      assetId: Value(assetId),
+      localPath: localPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(localPath),
+      remoteUrl: remoteUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remoteUrl),
+      sortOrder: Value(sortOrder),
+      createdAt: Value(createdAt),
+      syncedAt: Value(syncedAt),
+    );
+  }
+
+  factory FixedAssetImageRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FixedAssetImageRow(
+      id: serializer.fromJson<String>(json['id']),
+      assetId: serializer.fromJson<String>(json['assetId']),
+      localPath: serializer.fromJson<String?>(json['localPath']),
+      remoteUrl: serializer.fromJson<String?>(json['remoteUrl']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      syncedAt: serializer.fromJson<DateTime>(json['syncedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'assetId': serializer.toJson<String>(assetId),
+      'localPath': serializer.toJson<String?>(localPath),
+      'remoteUrl': serializer.toJson<String?>(remoteUrl),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'syncedAt': serializer.toJson<DateTime>(syncedAt),
+    };
+  }
+
+  FixedAssetImageRow copyWith({
+    String? id,
+    String? assetId,
+    Value<String?> localPath = const Value.absent(),
+    Value<String?> remoteUrl = const Value.absent(),
+    int? sortOrder,
+    DateTime? createdAt,
+    DateTime? syncedAt,
+  }) => FixedAssetImageRow(
+    id: id ?? this.id,
+    assetId: assetId ?? this.assetId,
+    localPath: localPath.present ? localPath.value : this.localPath,
+    remoteUrl: remoteUrl.present ? remoteUrl.value : this.remoteUrl,
+    sortOrder: sortOrder ?? this.sortOrder,
+    createdAt: createdAt ?? this.createdAt,
+    syncedAt: syncedAt ?? this.syncedAt,
+  );
+  FixedAssetImageRow copyWithCompanion(FixedAssetImagesCompanion data) {
+    return FixedAssetImageRow(
+      id: data.id.present ? data.id.value : this.id,
+      assetId: data.assetId.present ? data.assetId.value : this.assetId,
+      localPath: data.localPath.present ? data.localPath.value : this.localPath,
+      remoteUrl: data.remoteUrl.present ? data.remoteUrl.value : this.remoteUrl,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FixedAssetImageRow(')
+          ..write('id: $id, ')
+          ..write('assetId: $assetId, ')
+          ..write('localPath: $localPath, ')
+          ..write('remoteUrl: $remoteUrl, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    assetId,
+    localPath,
+    remoteUrl,
+    sortOrder,
+    createdAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FixedAssetImageRow &&
+          other.id == this.id &&
+          other.assetId == this.assetId &&
+          other.localPath == this.localPath &&
+          other.remoteUrl == this.remoteUrl &&
+          other.sortOrder == this.sortOrder &&
+          other.createdAt == this.createdAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class FixedAssetImagesCompanion extends UpdateCompanion<FixedAssetImageRow> {
+  final Value<String> id;
+  final Value<String> assetId;
+  final Value<String?> localPath;
+  final Value<String?> remoteUrl;
+  final Value<int> sortOrder;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> syncedAt;
+  final Value<int> rowid;
+  const FixedAssetImagesCompanion({
+    this.id = const Value.absent(),
+    this.assetId = const Value.absent(),
+    this.localPath = const Value.absent(),
+    this.remoteUrl = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FixedAssetImagesCompanion.insert({
+    required String id,
+    required String assetId,
+    this.localPath = const Value.absent(),
+    this.remoteUrl = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime syncedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       assetId = Value(assetId),
+       createdAt = Value(createdAt),
+       syncedAt = Value(syncedAt);
+  static Insertable<FixedAssetImageRow> custom({
+    Expression<String>? id,
+    Expression<String>? assetId,
+    Expression<String>? localPath,
+    Expression<String>? remoteUrl,
+    Expression<int>? sortOrder,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (assetId != null) 'asset_id': assetId,
+      if (localPath != null) 'local_path': localPath,
+      if (remoteUrl != null) 'remote_url': remoteUrl,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (createdAt != null) 'created_at': createdAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FixedAssetImagesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? assetId,
+    Value<String?>? localPath,
+    Value<String?>? remoteUrl,
+    Value<int>? sortOrder,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return FixedAssetImagesCompanion(
+      id: id ?? this.id,
+      assetId: assetId ?? this.assetId,
+      localPath: localPath ?? this.localPath,
+      remoteUrl: remoteUrl ?? this.remoteUrl,
+      sortOrder: sortOrder ?? this.sortOrder,
+      createdAt: createdAt ?? this.createdAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (assetId.present) {
+      map['asset_id'] = Variable<String>(assetId.value);
+    }
+    if (localPath.present) {
+      map['local_path'] = Variable<String>(localPath.value);
+    }
+    if (remoteUrl.present) {
+      map['remote_url'] = Variable<String>(remoteUrl.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<DateTime>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FixedAssetImagesCompanion(')
+          ..write('id: $id, ')
+          ..write('assetId: $assetId, ')
+          ..write('localPath: $localPath, ')
+          ..write('remoteUrl: $remoteUrl, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $QuickCapturesTable extends QuickCaptures
     with TableInfo<$QuickCapturesTable, QuickCaptureRow> {
   @override
@@ -16530,6 +17534,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ProductsTable products = $ProductsTable(this);
   late final $ProductImagesTable productImages = $ProductImagesTable(this);
   late final $CustomersTable customers = $CustomersTable(this);
+  late final $CustomerImagesTable customerImages = $CustomerImagesTable(this);
   late final $InvestorsTable investors = $InvestorsTable(this);
   late final $InvestorRepaymentsTable investorRepayments =
       $InvestorRepaymentsTable(this);
@@ -16551,6 +17556,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ExpensesTable expenses = $ExpensesTable(this);
   late final $OrdersTable orders = $OrdersTable(this);
   late final $FixedAssetsTable fixedAssets = $FixedAssetsTable(this);
+  late final $FixedAssetImagesTable fixedAssetImages = $FixedAssetImagesTable(
+    this,
+  );
   late final $QuickCapturesTable quickCaptures = $QuickCapturesTable(this);
   late final $CashLedgerEntriesTable cashLedgerEntries =
       $CashLedgerEntriesTable(this);
@@ -16567,7 +17575,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this as AppDatabase,
   );
   late final ProductDao productDao = ProductDao(this as AppDatabase);
+  late final ProductImageDao productImageDao = ProductImageDao(
+    this as AppDatabase,
+  );
   late final CustomerDao customerDao = CustomerDao(this as AppDatabase);
+  late final CustomerImageDao customerImageDao = CustomerImageDao(
+    this as AppDatabase,
+  );
   late final InvestorDao investorDao = InvestorDao(this as AppDatabase);
   late final PurchaseDao purchaseDao = PurchaseDao(this as AppDatabase);
   late final SyncMetadataDao syncMetadataDao = SyncMetadataDao(
@@ -16581,6 +17595,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final RentDao rentDao = RentDao(this as AppDatabase);
   late final OrderDao orderDao = OrderDao(this as AppDatabase);
   late final FixedAssetDao fixedAssetDao = FixedAssetDao(this as AppDatabase);
+  late final FixedAssetImageDao fixedAssetImageDao = FixedAssetImageDao(
+    this as AppDatabase,
+  );
   late final QuickCaptureDao quickCaptureDao = QuickCaptureDao(
     this as AppDatabase,
   );
@@ -16596,6 +17613,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     products,
     productImages,
     customers,
+    customerImages,
     investors,
     investorRepayments,
     legacySettlements,
@@ -16610,6 +17628,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     expenses,
     orders,
     fixedAssets,
+    fixedAssetImages,
     quickCaptures,
     cashLedgerEntries,
     stockMovements,
@@ -16618,6 +17637,23 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     syncPendingUploads,
     syncCursors,
   ];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'customers',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('customer_images', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'fixed_assets',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('fixed_asset_images', kind: UpdateKind.delete)],
+    ),
+  ]);
 }
 
 typedef $$ShopsTableCreateCompanionBuilder =
@@ -20498,6 +21534,24 @@ final class $$CustomersTableReferences
     );
   }
 
+  static MultiTypedResultKey<$CustomerImagesTable, List<CustomerImageRow>>
+  _customerImagesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.customerImages,
+    aliasName: 'customers__id__customer_images__customer_id',
+  );
+
+  $$CustomerImagesTableProcessedTableManager get customerImagesRefs {
+    final manager = $$CustomerImagesTableTableManager(
+      $_db,
+      $_db.customerImages,
+    ).filter((f) => f.customerId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_customerImagesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
   static MultiTypedResultKey<$SalesTable, List<SaleRow>> _salesRefsTable(
     _$AppDatabase db,
   ) => MultiTypedResultKey.fromTable(
@@ -20656,6 +21710,31 @@ class $$CustomersTableFilterComposer
           ),
     );
     return composer;
+  }
+
+  Expression<bool> customerImagesRefs(
+    Expression<bool> Function($$CustomerImagesTableFilterComposer f) f,
+  ) {
+    final $$CustomerImagesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.customerImages,
+      getReferencedColumn: (t) => t.customerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CustomerImagesTableFilterComposer(
+            $db: $db,
+            $table: $db.customerImages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 
   Expression<bool> salesRefs(
@@ -20906,6 +21985,31 @@ class $$CustomersTableAnnotationComposer
     return composer;
   }
 
+  Expression<T> customerImagesRefs<T extends Object>(
+    Expression<T> Function($$CustomerImagesTableAnnotationComposer a) f,
+  ) {
+    final $$CustomerImagesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.customerImages,
+      getReferencedColumn: (t) => t.customerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CustomerImagesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.customerImages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<T> salesRefs<T extends Object>(
     Expression<T> Function($$SalesTableAnnotationComposer a) f,
   ) {
@@ -21022,6 +22126,7 @@ class $$CustomersTableTableManager
           CustomerRow,
           PrefetchHooks Function({
             bool shopId,
+            bool customerImagesRefs,
             bool salesRefs,
             bool duesRefs,
             bool rentTransactionsRefs,
@@ -21106,6 +22211,7 @@ class $$CustomersTableTableManager
           prefetchHooksCallback:
               ({
                 shopId = false,
+                customerImagesRefs = false,
                 salesRefs = false,
                 duesRefs = false,
                 rentTransactionsRefs = false,
@@ -21114,6 +22220,7 @@ class $$CustomersTableTableManager
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
+                    if (customerImagesRefs) db.customerImages,
                     if (salesRefs) db.sales,
                     if (duesRefs) db.dues,
                     if (rentTransactionsRefs) db.rentTransactions,
@@ -21153,6 +22260,27 @@ class $$CustomersTableTableManager
                       },
                   getPrefetchedDataCallback: (items) async {
                     return [
+                      if (customerImagesRefs)
+                        await $_getPrefetchedData<
+                          CustomerRow,
+                          $CustomersTable,
+                          CustomerImageRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$CustomersTableReferences
+                              ._customerImagesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$CustomersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).customerImagesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.customerId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                       if (salesRefs)
                         await $_getPrefetchedData<
                           CustomerRow,
@@ -21259,11 +22387,375 @@ typedef $$CustomersTableProcessedTableManager =
       CustomerRow,
       PrefetchHooks Function({
         bool shopId,
+        bool customerImagesRefs,
         bool salesRefs,
         bool duesRefs,
         bool rentTransactionsRefs,
         bool ordersRefs,
       })
+    >;
+typedef $$CustomerImagesTableCreateCompanionBuilder =
+    CustomerImagesCompanion Function({
+      required String id,
+      required String customerId,
+      Value<String?> localPath,
+      Value<String?> remoteUrl,
+      Value<int> sortOrder,
+      required DateTime createdAt,
+      required DateTime syncedAt,
+      Value<int> rowid,
+    });
+typedef $$CustomerImagesTableUpdateCompanionBuilder =
+    CustomerImagesCompanion Function({
+      Value<String> id,
+      Value<String> customerId,
+      Value<String?> localPath,
+      Value<String?> remoteUrl,
+      Value<int> sortOrder,
+      Value<DateTime> createdAt,
+      Value<DateTime> syncedAt,
+      Value<int> rowid,
+    });
+
+final class $$CustomerImagesTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $CustomerImagesTable, CustomerImageRow> {
+  $$CustomerImagesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $CustomersTable _customerIdTable(_$AppDatabase db) =>
+      db.customers.createAlias('customer_images__customer_id__customers__id');
+
+  $$CustomersTableProcessedTableManager get customerId {
+    final $_column = $_itemColumn<String>('customer_id')!;
+
+    final manager = $$CustomersTableTableManager(
+      $_db,
+      $_db.customers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_customerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$CustomerImagesTableFilterComposer
+    extends Composer<_$AppDatabase, $CustomerImagesTable> {
+  $$CustomerImagesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get localPath => $composableBuilder(
+    column: $table.localPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remoteUrl => $composableBuilder(
+    column: $table.remoteUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$CustomersTableFilterComposer get customerId {
+    final $$CustomersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.customerId,
+      referencedTable: $db.customers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CustomersTableFilterComposer(
+            $db: $db,
+            $table: $db.customers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CustomerImagesTableOrderingComposer
+    extends Composer<_$AppDatabase, $CustomerImagesTable> {
+  $$CustomerImagesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get localPath => $composableBuilder(
+    column: $table.localPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remoteUrl => $composableBuilder(
+    column: $table.remoteUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$CustomersTableOrderingComposer get customerId {
+    final $$CustomersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.customerId,
+      referencedTable: $db.customers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CustomersTableOrderingComposer(
+            $db: $db,
+            $table: $db.customers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CustomerImagesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CustomerImagesTable> {
+  $$CustomerImagesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get localPath =>
+      $composableBuilder(column: $table.localPath, builder: (column) => column);
+
+  GeneratedColumn<String> get remoteUrl =>
+      $composableBuilder(column: $table.remoteUrl, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+
+  $$CustomersTableAnnotationComposer get customerId {
+    final $$CustomersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.customerId,
+      referencedTable: $db.customers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CustomersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.customers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CustomerImagesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CustomerImagesTable,
+          CustomerImageRow,
+          $$CustomerImagesTableFilterComposer,
+          $$CustomerImagesTableOrderingComposer,
+          $$CustomerImagesTableAnnotationComposer,
+          $$CustomerImagesTableCreateCompanionBuilder,
+          $$CustomerImagesTableUpdateCompanionBuilder,
+          (CustomerImageRow, $$CustomerImagesTableReferences),
+          CustomerImageRow,
+          PrefetchHooks Function({bool customerId})
+        > {
+  $$CustomerImagesTableTableManager(
+    _$AppDatabase db,
+    $CustomerImagesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CustomerImagesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CustomerImagesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CustomerImagesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> customerId = const Value.absent(),
+                Value<String?> localPath = const Value.absent(),
+                Value<String?> remoteUrl = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CustomerImagesCompanion(
+                id: id,
+                customerId: customerId,
+                localPath: localPath,
+                remoteUrl: remoteUrl,
+                sortOrder: sortOrder,
+                createdAt: createdAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String customerId,
+                Value<String?> localPath = const Value.absent(),
+                Value<String?> remoteUrl = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime syncedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => CustomerImagesCompanion.insert(
+                id: id,
+                customerId: customerId,
+                localPath: localPath,
+                remoteUrl: remoteUrl,
+                sortOrder: sortOrder,
+                createdAt: createdAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$CustomerImagesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({customerId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (customerId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.customerId,
+                                referencedTable: $$CustomerImagesTableReferences
+                                    ._customerIdTable(db),
+                                referencedColumn:
+                                    $$CustomerImagesTableReferences
+                                        ._customerIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$CustomerImagesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CustomerImagesTable,
+      CustomerImageRow,
+      $$CustomerImagesTableFilterComposer,
+      $$CustomerImagesTableOrderingComposer,
+      $$CustomerImagesTableAnnotationComposer,
+      $$CustomerImagesTableCreateCompanionBuilder,
+      $$CustomerImagesTableUpdateCompanionBuilder,
+      (CustomerImageRow, $$CustomerImagesTableReferences),
+      CustomerImageRow,
+      PrefetchHooks Function({bool customerId})
     >;
 typedef $$InvestorsTableCreateCompanionBuilder =
     InvestorsCompanion Function({
@@ -23032,6 +24524,7 @@ typedef $$PurchaseTripsTableCreateCompanionBuilder =
       required DateTime date,
       Value<int> transportCostMinor,
       Value<int> cashReturnedMinor,
+      Value<int?> actualCashTakenOutMinor,
       Value<String?> notes,
       required DateTime createdAt,
       required DateTime updatedAt,
@@ -23046,6 +24539,7 @@ typedef $$PurchaseTripsTableUpdateCompanionBuilder =
       Value<DateTime> date,
       Value<int> transportCostMinor,
       Value<int> cashReturnedMinor,
+      Value<int?> actualCashTakenOutMinor,
       Value<String?> notes,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -23149,6 +24643,11 @@ class $$PurchaseTripsTableFilterComposer
 
   ColumnFilters<int> get cashReturnedMinor => $composableBuilder(
     column: $table.cashReturnedMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get actualCashTakenOutMinor => $composableBuilder(
+    column: $table.actualCashTakenOutMinor,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -23280,6 +24779,11 @@ class $$PurchaseTripsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get actualCashTakenOutMinor => $composableBuilder(
+    column: $table.actualCashTakenOutMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get notes => $composableBuilder(
     column: $table.notes,
     builder: (column) => ColumnOrderings(column),
@@ -23351,6 +24855,11 @@ class $$PurchaseTripsTableAnnotationComposer
 
   GeneratedColumn<int> get cashReturnedMinor => $composableBuilder(
     column: $table.cashReturnedMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get actualCashTakenOutMinor => $composableBuilder(
+    column: $table.actualCashTakenOutMinor,
     builder: (column) => column,
   );
 
@@ -23481,6 +24990,7 @@ class $$PurchaseTripsTableTableManager
                 Value<DateTime> date = const Value.absent(),
                 Value<int> transportCostMinor = const Value.absent(),
                 Value<int> cashReturnedMinor = const Value.absent(),
+                Value<int?> actualCashTakenOutMinor = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -23493,6 +25003,7 @@ class $$PurchaseTripsTableTableManager
                 date: date,
                 transportCostMinor: transportCostMinor,
                 cashReturnedMinor: cashReturnedMinor,
+                actualCashTakenOutMinor: actualCashTakenOutMinor,
                 notes: notes,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -23507,6 +25018,7 @@ class $$PurchaseTripsTableTableManager
                 required DateTime date,
                 Value<int> transportCostMinor = const Value.absent(),
                 Value<int> cashReturnedMinor = const Value.absent(),
+                Value<int?> actualCashTakenOutMinor = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
@@ -23519,6 +25031,7 @@ class $$PurchaseTripsTableTableManager
                 date: date,
                 transportCostMinor: transportCostMinor,
                 cashReturnedMinor: cashReturnedMinor,
+                actualCashTakenOutMinor: actualCashTakenOutMinor,
                 notes: notes,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -28390,6 +29903,26 @@ final class $$FixedAssetsTableReferences
       manager.$state.copyWith(prefetchedData: [item]),
     );
   }
+
+  static MultiTypedResultKey<$FixedAssetImagesTable, List<FixedAssetImageRow>>
+  _fixedAssetImagesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.fixedAssetImages,
+    aliasName: 'fixed_assets__id__fixed_asset_images__asset_id',
+  );
+
+  $$FixedAssetImagesTableProcessedTableManager get fixedAssetImagesRefs {
+    final manager = $$FixedAssetImagesTableTableManager(
+      $_db,
+      $_db.fixedAssetImages,
+    ).filter((f) => f.assetId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _fixedAssetImagesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$FixedAssetsTableFilterComposer
@@ -28491,6 +30024,31 @@ class $$FixedAssetsTableFilterComposer
           ),
     );
     return composer;
+  }
+
+  Expression<bool> fixedAssetImagesRefs(
+    Expression<bool> Function($$FixedAssetImagesTableFilterComposer f) f,
+  ) {
+    final $$FixedAssetImagesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.fixedAssetImages,
+      getReferencedColumn: (t) => t.assetId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FixedAssetImagesTableFilterComposer(
+            $db: $db,
+            $table: $db.fixedAssetImages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 }
 
@@ -28683,6 +30241,31 @@ class $$FixedAssetsTableAnnotationComposer
     );
     return composer;
   }
+
+  Expression<T> fixedAssetImagesRefs<T extends Object>(
+    Expression<T> Function($$FixedAssetImagesTableAnnotationComposer a) f,
+  ) {
+    final $$FixedAssetImagesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.fixedAssetImages,
+      getReferencedColumn: (t) => t.assetId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FixedAssetImagesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.fixedAssetImages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$FixedAssetsTableTableManager
@@ -28698,7 +30281,11 @@ class $$FixedAssetsTableTableManager
           $$FixedAssetsTableUpdateCompanionBuilder,
           (FixedAssetRow, $$FixedAssetsTableReferences),
           FixedAssetRow,
-          PrefetchHooks Function({bool shopId, bool sourceProductId})
+          PrefetchHooks Function({
+            bool shopId,
+            bool sourceProductId,
+            bool fixedAssetImagesRefs,
+          })
         > {
   $$FixedAssetsTableTableManager(_$AppDatabase db, $FixedAssetsTable table)
     : super(
@@ -28775,7 +30362,423 @@ class $$FixedAssetsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({shopId = false, sourceProductId = false}) {
+          prefetchHooksCallback:
+              ({
+                shopId = false,
+                sourceProductId = false,
+                fixedAssetImagesRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (fixedAssetImagesRefs) db.fixedAssetImages,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (shopId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.shopId,
+                                    referencedTable:
+                                        $$FixedAssetsTableReferences
+                                            ._shopIdTable(db),
+                                    referencedColumn:
+                                        $$FixedAssetsTableReferences
+                                            ._shopIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (sourceProductId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.sourceProductId,
+                                    referencedTable:
+                                        $$FixedAssetsTableReferences
+                                            ._sourceProductIdTable(db),
+                                    referencedColumn:
+                                        $$FixedAssetsTableReferences
+                                            ._sourceProductIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (fixedAssetImagesRefs)
+                        await $_getPrefetchedData<
+                          FixedAssetRow,
+                          $FixedAssetsTable,
+                          FixedAssetImageRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$FixedAssetsTableReferences
+                              ._fixedAssetImagesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$FixedAssetsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).fixedAssetImagesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.assetId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$FixedAssetsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $FixedAssetsTable,
+      FixedAssetRow,
+      $$FixedAssetsTableFilterComposer,
+      $$FixedAssetsTableOrderingComposer,
+      $$FixedAssetsTableAnnotationComposer,
+      $$FixedAssetsTableCreateCompanionBuilder,
+      $$FixedAssetsTableUpdateCompanionBuilder,
+      (FixedAssetRow, $$FixedAssetsTableReferences),
+      FixedAssetRow,
+      PrefetchHooks Function({
+        bool shopId,
+        bool sourceProductId,
+        bool fixedAssetImagesRefs,
+      })
+    >;
+typedef $$FixedAssetImagesTableCreateCompanionBuilder =
+    FixedAssetImagesCompanion Function({
+      required String id,
+      required String assetId,
+      Value<String?> localPath,
+      Value<String?> remoteUrl,
+      Value<int> sortOrder,
+      required DateTime createdAt,
+      required DateTime syncedAt,
+      Value<int> rowid,
+    });
+typedef $$FixedAssetImagesTableUpdateCompanionBuilder =
+    FixedAssetImagesCompanion Function({
+      Value<String> id,
+      Value<String> assetId,
+      Value<String?> localPath,
+      Value<String?> remoteUrl,
+      Value<int> sortOrder,
+      Value<DateTime> createdAt,
+      Value<DateTime> syncedAt,
+      Value<int> rowid,
+    });
+
+final class $$FixedAssetImagesTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $FixedAssetImagesTable,
+          FixedAssetImageRow
+        > {
+  $$FixedAssetImagesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $FixedAssetsTable _assetIdTable(_$AppDatabase db) => db.fixedAssets
+      .createAlias('fixed_asset_images__asset_id__fixed_assets__id');
+
+  $$FixedAssetsTableProcessedTableManager get assetId {
+    final $_column = $_itemColumn<String>('asset_id')!;
+
+    final manager = $$FixedAssetsTableTableManager(
+      $_db,
+      $_db.fixedAssets,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_assetIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$FixedAssetImagesTableFilterComposer
+    extends Composer<_$AppDatabase, $FixedAssetImagesTable> {
+  $$FixedAssetImagesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get localPath => $composableBuilder(
+    column: $table.localPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remoteUrl => $composableBuilder(
+    column: $table.remoteUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$FixedAssetsTableFilterComposer get assetId {
+    final $$FixedAssetsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.assetId,
+      referencedTable: $db.fixedAssets,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FixedAssetsTableFilterComposer(
+            $db: $db,
+            $table: $db.fixedAssets,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FixedAssetImagesTableOrderingComposer
+    extends Composer<_$AppDatabase, $FixedAssetImagesTable> {
+  $$FixedAssetImagesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get localPath => $composableBuilder(
+    column: $table.localPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remoteUrl => $composableBuilder(
+    column: $table.remoteUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$FixedAssetsTableOrderingComposer get assetId {
+    final $$FixedAssetsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.assetId,
+      referencedTable: $db.fixedAssets,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FixedAssetsTableOrderingComposer(
+            $db: $db,
+            $table: $db.fixedAssets,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FixedAssetImagesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $FixedAssetImagesTable> {
+  $$FixedAssetImagesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get localPath =>
+      $composableBuilder(column: $table.localPath, builder: (column) => column);
+
+  GeneratedColumn<String> get remoteUrl =>
+      $composableBuilder(column: $table.remoteUrl, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+
+  $$FixedAssetsTableAnnotationComposer get assetId {
+    final $$FixedAssetsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.assetId,
+      referencedTable: $db.fixedAssets,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FixedAssetsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.fixedAssets,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FixedAssetImagesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $FixedAssetImagesTable,
+          FixedAssetImageRow,
+          $$FixedAssetImagesTableFilterComposer,
+          $$FixedAssetImagesTableOrderingComposer,
+          $$FixedAssetImagesTableAnnotationComposer,
+          $$FixedAssetImagesTableCreateCompanionBuilder,
+          $$FixedAssetImagesTableUpdateCompanionBuilder,
+          (FixedAssetImageRow, $$FixedAssetImagesTableReferences),
+          FixedAssetImageRow,
+          PrefetchHooks Function({bool assetId})
+        > {
+  $$FixedAssetImagesTableTableManager(
+    _$AppDatabase db,
+    $FixedAssetImagesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FixedAssetImagesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FixedAssetImagesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FixedAssetImagesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> assetId = const Value.absent(),
+                Value<String?> localPath = const Value.absent(),
+                Value<String?> remoteUrl = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FixedAssetImagesCompanion(
+                id: id,
+                assetId: assetId,
+                localPath: localPath,
+                remoteUrl: remoteUrl,
+                sortOrder: sortOrder,
+                createdAt: createdAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String assetId,
+                Value<String?> localPath = const Value.absent(),
+                Value<String?> remoteUrl = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime syncedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => FixedAssetImagesCompanion.insert(
+                id: id,
+                assetId: assetId,
+                localPath: localPath,
+                remoteUrl: remoteUrl,
+                sortOrder: sortOrder,
+                createdAt: createdAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$FixedAssetImagesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({assetId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -28795,29 +30798,18 @@ class $$FixedAssetsTableTableManager
                       dynamic
                     >
                   >(state) {
-                    if (shopId) {
+                    if (assetId) {
                       state =
                           state.withJoin(
                                 currentTable: table,
-                                currentColumn: table.shopId,
-                                referencedTable: $$FixedAssetsTableReferences
-                                    ._shopIdTable(db),
-                                referencedColumn: $$FixedAssetsTableReferences
-                                    ._shopIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
-                    if (sourceProductId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.sourceProductId,
-                                referencedTable: $$FixedAssetsTableReferences
-                                    ._sourceProductIdTable(db),
-                                referencedColumn: $$FixedAssetsTableReferences
-                                    ._sourceProductIdTable(db)
-                                    .id,
+                                currentColumn: table.assetId,
+                                referencedTable:
+                                    $$FixedAssetImagesTableReferences
+                                        ._assetIdTable(db),
+                                referencedColumn:
+                                    $$FixedAssetImagesTableReferences
+                                        ._assetIdTable(db)
+                                        .id,
                               )
                               as T;
                     }
@@ -28833,19 +30825,19 @@ class $$FixedAssetsTableTableManager
       );
 }
 
-typedef $$FixedAssetsTableProcessedTableManager =
+typedef $$FixedAssetImagesTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $FixedAssetsTable,
-      FixedAssetRow,
-      $$FixedAssetsTableFilterComposer,
-      $$FixedAssetsTableOrderingComposer,
-      $$FixedAssetsTableAnnotationComposer,
-      $$FixedAssetsTableCreateCompanionBuilder,
-      $$FixedAssetsTableUpdateCompanionBuilder,
-      (FixedAssetRow, $$FixedAssetsTableReferences),
-      FixedAssetRow,
-      PrefetchHooks Function({bool shopId, bool sourceProductId})
+      $FixedAssetImagesTable,
+      FixedAssetImageRow,
+      $$FixedAssetImagesTableFilterComposer,
+      $$FixedAssetImagesTableOrderingComposer,
+      $$FixedAssetImagesTableAnnotationComposer,
+      $$FixedAssetImagesTableCreateCompanionBuilder,
+      $$FixedAssetImagesTableUpdateCompanionBuilder,
+      (FixedAssetImageRow, $$FixedAssetImagesTableReferences),
+      FixedAssetImageRow,
+      PrefetchHooks Function({bool assetId})
     >;
 typedef $$QuickCapturesTableCreateCompanionBuilder =
     QuickCapturesCompanion Function({
@@ -31424,6 +33416,8 @@ class $AppDatabaseManager {
       $$ProductImagesTableTableManager(_db, _db.productImages);
   $$CustomersTableTableManager get customers =>
       $$CustomersTableTableManager(_db, _db.customers);
+  $$CustomerImagesTableTableManager get customerImages =>
+      $$CustomerImagesTableTableManager(_db, _db.customerImages);
   $$InvestorsTableTableManager get investors =>
       $$InvestorsTableTableManager(_db, _db.investors);
   $$InvestorRepaymentsTableTableManager get investorRepayments =>
@@ -31451,6 +33445,8 @@ class $AppDatabaseManager {
       $$OrdersTableTableManager(_db, _db.orders);
   $$FixedAssetsTableTableManager get fixedAssets =>
       $$FixedAssetsTableTableManager(_db, _db.fixedAssets);
+  $$FixedAssetImagesTableTableManager get fixedAssetImages =>
+      $$FixedAssetImagesTableTableManager(_db, _db.fixedAssetImages);
   $$QuickCapturesTableTableManager get quickCaptures =>
       $$QuickCapturesTableTableManager(_db, _db.quickCaptures);
   $$CashLedgerEntriesTableTableManager get cashLedgerEntries =>

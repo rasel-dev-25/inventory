@@ -24,7 +24,10 @@ class SupabaseSyncTransport implements SyncTransport {
     required String idempotencyKey,
     required List<TableUpsert> upserts,
   }) async {
-    AppLogger.d(_tag, 'push  key=$idempotencyKey  tables=${upserts.map((u) => u.table).toList()}');
+    AppLogger.d(
+      _tag,
+      'push  key=$idempotencyKey  tables=${upserts.map((u) => u.table).toList()}',
+    );
     try {
       await _client.rpc(
         'apply_outbox_event',
@@ -36,7 +39,10 @@ class SupabaseSyncTransport implements SyncTransport {
       AppLogger.i(_tag, 'push OK  key=$idempotencyKey');
       return const Result.ok(null);
     } on sb.PostgrestException catch (e) {
-      AppLogger.e(_tag, 'push FAILED  key=$idempotencyKey  code=${e.code}  msg=${e.message}');
+      AppLogger.e(
+        _tag,
+        'push FAILED  key=$idempotencyKey  code=${e.code}  msg=${e.message}',
+      );
       // RLS rejection (e.g. a staff device somehow still has a
       // non-empty outbox) and the allow-list guard both surface here as
       // a plain Postgres exception — see apply_jsonb_upsert's body.
@@ -45,7 +51,12 @@ class SupabaseSyncTransport implements SyncTransport {
       }
       return Result.err(UnknownFailure(e.message));
     } catch (e, st) {
-      AppLogger.e(_tag, 'push FAILED  key=$idempotencyKey', error: e, stackTrace: st);
+      AppLogger.e(
+        _tag,
+        'push FAILED  key=$idempotencyKey',
+        error: e,
+        stackTrace: st,
+      );
       return Result.err(UnknownFailure(e, stackTrace: st));
     }
   }
@@ -69,6 +80,16 @@ class SupabaseSyncTransport implements SyncTransport {
       parent: 'products',
       fk: 'product_id',
       joinField: 'products',
+    ),
+    'customer_images': _IndirectTable(
+      parent: 'customers',
+      fk: 'customer_id',
+      joinField: 'customers',
+    ),
+    'fixed_asset_images': _IndirectTable(
+      parent: 'fixed_assets',
+      fk: 'asset_id',
+      joinField: 'fixed_assets',
     ),
     'purchase_items': _IndirectTable(
       parent: 'purchase_trips',
@@ -107,11 +128,10 @@ class SupabaseSyncTransport implements SyncTransport {
       // (synced_at, id) > (afterSyncedAt, afterId) as a single PostgREST
       // `or` — tie-breaking on id matters because two rows can share the
       // same synced_at under load; a bare synced_at.gt. would skip them.
-      final String? cursorFilter =
-          (afterSyncedAt != null && afterId != null)
+      final String? cursorFilter = (afterSyncedAt != null && afterId != null)
           ? 'synced_at.gt.${afterSyncedAt.toUtc().toIso8601String()},'
-            'and(synced_at.eq.${afterSyncedAt.toUtc().toIso8601String()},'
-            'id.gt.$afterId)'
+                'and(synced_at.eq.${afterSyncedAt.toUtc().toIso8601String()},'
+                'id.gt.$afterId)'
           : null;
 
       final List rawRows;
@@ -120,7 +140,10 @@ class SupabaseSyncTransport implements SyncTransport {
         // Tables without a direct shop_id are scoped through a parent via
         // an embedded-resource join (PostgREST: parent!inner(shop_id)).
         // The nested parent object is stripped from the result before upsert.
-        AppLogger.d(_tag, 'pull  $table uses indirect shop_id via ${indirect.parent}');
+        AppLogger.d(
+          _tag,
+          'pull  $table uses indirect shop_id via ${indirect.parent}',
+        );
         var q = _client
             .from(table)
             .select('*, ${indirect.parent}!inner(shop_id)')
@@ -148,11 +171,13 @@ class SupabaseSyncTransport implements SyncTransport {
             .toList();
       }
 
-
       AppLogger.d(_tag, 'pull  table=$table  got ${typedRows.length} rows');
       return Result.ok(RemotePage(rows: typedRows));
     } on sb.PostgrestException catch (e) {
-      AppLogger.e(_tag, 'pull FAILED  table=$table  code=${e.code}  msg=${e.message}');
+      AppLogger.e(
+        _tag,
+        'pull FAILED  table=$table  code=${e.code}  msg=${e.message}',
+      );
       return Result.err(UnknownFailure(e.message));
     } catch (e, st) {
       AppLogger.e(_tag, 'pull FAILED  table=$table', error: e, stackTrace: st);
@@ -163,8 +188,8 @@ class SupabaseSyncTransport implements SyncTransport {
 
 /// Metadata for a syncable table that reaches its shop via a parent FK.
 class _IndirectTable {
-  final String parent;    // parent table name
-  final String fk;        // FK column on this table pointing at parent.id
+  final String parent; // parent table name
+  final String fk; // FK column on this table pointing at parent.id
   final String joinField; // key PostgREST adds to the row (same as parent)
 
   const _IndirectTable({

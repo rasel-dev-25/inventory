@@ -4,9 +4,11 @@ import 'package:intl/intl.dart';
 
 import '../../../core/design/tokens.dart';
 import '../../../core/money/money.dart';
+import '../../../core/widgets/shop_app_bar_title.dart';
 import '../../../domain/entities/fund_source.dart';
 import '../../../domain/entities/purchase.dart';
 import '../../../domain/services/purchase_reconciliation.dart';
+import '../../investor_v2/view/investor_form_sheet.dart';
 import '../controller/purchase_entry_controller.dart';
 
 /// The purchase-entry screen — records a full trip (transport/other
@@ -15,12 +17,19 @@ import '../controller/purchase_entry_controller.dart';
 /// `SavePurchaseTripUseCase` end-to-end (trip + items + stock movements +
 /// cash-ledger entries, one outbox event).
 class PurchaseEntryScreen extends GetView<PurchaseEntryController> {
-  const PurchaseEntryScreen({super.key});
+  final VoidCallback? onMenuTap;
+
+  const PurchaseEntryScreen({super.key, this.onMenuTap});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('${'purchaseEntry'.tr} (v2)')),
+      appBar: AppBar(
+        title: ShopAppBarTitle(pageTitle: 'purchaseEntry'.tr),
+        leading: onMenuTap == null
+            ? null
+            : IconButton(icon: const Icon(Icons.menu), onPressed: onMenuTap),
+      ),
       body: Obx(() {
         if (controller.products.isEmpty) {
           return Center(child: Text('noProductsYet'.tr));
@@ -79,9 +88,8 @@ class PurchaseEntryScreen extends GetView<PurchaseEntryController> {
 /// The first real UI trigger for `DeletePurchaseTripUseCase` — see
 /// `PurchaseEntryController.recentTrips`'s own doc comment for why this
 /// list exists at all (that use case was previously dead code with no
-/// reachable delete action anywhere). Read-only otherwise: tapping a row
-/// does nothing, since this v2 screen has no "edit an existing trip"
-/// flow — only delete.
+/// reachable delete action anywhere). Existing trips can also be corrected;
+/// the controller records that correction through the append-only ledger.
 class _RecentTripsSection extends GetView<PurchaseEntryController> {
   @override
   Widget build(BuildContext context) {
@@ -130,6 +138,11 @@ class _RecentTripTile extends GetView<PurchaseEntryController> {
         child: ListTile(
           title: Text(DateFormat.yMMMd().format(trip.date)),
           subtitle: Text('${trip.items.length} ${'items'.tr}'),
+          leading: IconButton(
+            tooltip: 'edit'.tr,
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () => controller.editTrip(trip),
+          ),
           trailing: Text(
             total.format(),
             style: Theme.of(context).textTheme.titleMedium,
@@ -205,6 +218,8 @@ class _TripHeaderSection extends GetView<PurchaseEntryController> {
               value: controller.cashReturned,
               onChanged: (m) => controller.cashReturned.value = m,
             ),
+            const SizedBox(height: AppSpacing.sm),
+            _ActualCashField(),
           ],
         ),
       ),
@@ -326,6 +341,11 @@ class _ItemCard extends GetView<PurchaseEntryController> {
                   ),
                 ),
                 IconButton(
+                  tooltip: 'addInvestor'.tr,
+                  icon: const Icon(Icons.person_add_alt_1_outlined),
+                  onPressed: () => _addInvestor(context),
+                ),
+                IconButton(
                   icon: const Icon(Icons.delete_outline),
                   onPressed: () => controller.removeItem(item),
                 ),
@@ -411,6 +431,28 @@ class _ItemCard extends GetView<PurchaseEntryController> {
       ),
     );
   }
+
+  Future<void> _addInvestor(BuildContext context) async {
+    final result = await showModalBottomSheet<InvestorFormResult>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => const InvestorFormSheet(includeLegacySettlement: false),
+    );
+    if (result == null) return;
+
+    final investor = await controller.createInvestor(
+      name: result.name,
+      contact: result.contact,
+      investmentType: result.investmentType,
+      profitSharePercent: result.profitSharePercent,
+      capitalReturnTermDays: result.capitalReturnTermDays,
+      profitPayoutCycle: result.profitPayoutCycle,
+      notes: result.notes,
+    );
+    if (investor == null || !context.mounted) return;
+    item.fundSource = FundSource.investor(investor.id);
+    controller.items.refresh();
+  }
 }
 
 class _ReconciliationPreview extends GetView<PurchaseEntryController> {
@@ -419,8 +461,18 @@ class _ReconciliationPreview extends GetView<PurchaseEntryController> {
     return Obx(() {
       final preview = controller.reconciliationPreview;
       if (preview == null) return const SizedBox.shrink();
+      final actual = controller.actualCashTakenOut.value;
+      final reconciles = actual != null && preview.reconciles(actual);
+      final difference = actual == null
+          ? null
+          : actual.minorUnits - preview.totalCashOut.minorUnits;
+      final scheme = Theme.of(context).colorScheme;
       return Card(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        color: actual == null
+            ? scheme.surfaceContainerHighest
+            : reconciles
+            ? scheme.primaryContainer
+            : scheme.errorContainer,
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
@@ -428,7 +480,7 @@ class _ReconciliationPreview extends GetView<PurchaseEntryController> {
             children: [
               Row(
                 children: [
-                  Text('grandTotal'.tr),
+                  Text('calculatedCashOut'.tr),
                   const Spacer(),
                   Text(
                     preview.totalCashOut.format(),
@@ -436,6 +488,38 @@ class _ReconciliationPreview extends GetView<PurchaseEntryController> {
                   ),
                 ],
               ),
+              if (actual != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    Text('actualCashTaken'.tr),
+                    const Spacer(),
+                    Text(actual.format()),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  reconciles
+                      ? 'cashReconciles'.tr
+                      : difference! < 0
+                      ? 'cashShortBy'.trParams({
+                          'amount': Money.fromMinor(-difference).format(),
+                        })
+                      : 'cashOverBy'.trParams({
+                          'amount': Money.fromMinor(difference).format(),
+                        }),
+                  key: const Key('purchase-reconciliation-status'),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: reconciles
+                        ? scheme.onPrimaryContainer
+                        : scheme.onErrorContainer,
+                  ),
+                ),
+              ] else ...[
+                const SizedBox(height: AppSpacing.sm),
+                Text('enterActualCashForCheck'.tr),
+              ],
               for (final bucket in preview.byFundSource)
                 Padding(
                   padding: const EdgeInsets.only(top: AppSpacing.xs),
@@ -456,6 +540,34 @@ class _ReconciliationPreview extends GetView<PurchaseEntryController> {
         ),
       );
     });
+  }
+}
+
+class _ActualCashField extends GetView<PurchaseEntryController> {
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      () => TextFormField(
+        key: ValueKey(controller.actualCashTakenOut.value?.minorUnits),
+        initialValue: controller.actualCashTakenOut.value?.format(
+          showSymbol: false,
+        ),
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: InputDecoration(
+          labelText: 'actualCashTaken'.tr,
+          helperText: 'actualCashTakenHelp'.tr,
+        ),
+        onChanged: (text) {
+          try {
+            controller.actualCashTakenOut.value = text.trim().isEmpty
+                ? null
+                : Money.parse(text);
+          } on MoneyException {
+            // Keep the previous valid value while the user is mid-edit.
+          }
+        },
+      ),
+    );
   }
 }
 

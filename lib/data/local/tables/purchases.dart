@@ -21,6 +21,7 @@ class PurchaseTrips extends Table {
   IntColumn get transportCostMinor =>
       integer().withDefault(const Constant(0))();
   IntColumn get cashReturnedMinor => integer().withDefault(const Constant(0))();
+  IntColumn get actualCashTakenOutMinor => integer().nullable()();
   TextColumn get notes => text().nullable()();
 
   DateTimeColumn get createdAt => dateTime()();

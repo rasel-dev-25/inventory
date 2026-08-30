@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -78,6 +80,7 @@ class _CategoriesTab extends GetView<CatalogController> {
                 },
               ),
         floatingActionButton: FloatingActionButton(
+          heroTag: 'catalog_categories_fab',
           onPressed: () => _showRenameDialog(context, null, ''),
           child: const Icon(Icons.add),
         ),
@@ -131,6 +134,10 @@ class _ProductsTab extends GetView<CatalogController> {
                 itemCount: items.length,
                 itemBuilder: (context, index) {
                   final product = items[index];
+                  final productImage = controller.primaryImageFor(product.id);
+                  final imageSource = productImage == null
+                      ? null
+                      : controller.imageSourceFor(productImage);
                   return Dismissible(
                     key: ValueKey(product.id),
                     direction: DismissDirection.endToStart,
@@ -147,6 +154,26 @@ class _ProductsTab extends GetView<CatalogController> {
                         _confirmDelete(context, product.name),
                     onDismissed: (_) => controller.deleteProduct(product.id),
                     child: ListTile(
+                      leading: imageSource == null
+                          ? const CircleAvatar(
+                              child: Icon(Icons.inventory_2_outlined),
+                            )
+                          : ClipRRect(
+                              borderRadius: BorderRadius.circular(AppRadius.sm),
+                              child: imageSource.startsWith('http')
+                                  ? Image.network(
+                                      imageSource,
+                                      width: 48,
+                                      height: 48,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Image.file(
+                                      File(imageSource),
+                                      width: 48,
+                                      height: 48,
+                                      fit: BoxFit.cover,
+                                    ),
+                            ),
                       title: Text(product.name),
                       subtitle: Text(
                         '${product.category} · ${product.suggestedSellPrice.format()}',
@@ -162,6 +189,7 @@ class _ProductsTab extends GetView<CatalogController> {
                 },
               ),
         floatingActionButton: FloatingActionButton(
+          heroTag: 'catalog_products_fab',
           onPressed: () => _openForm(context),
           child: const Icon(Icons.add),
         ),
@@ -177,7 +205,15 @@ class _ProductsTab extends GetView<CatalogController> {
         existing: existing,
         categories: controller.categories.map((c) => c.name).toList(),
         investors: controller.investors,
+        onCreateCategory: (name) async {
+          final ok = await controller.createCategory(name);
+          return ok ? name.trim() : null;
+        },
         overheadMarkupPercent: controller.overheadMarkupPercent,
+        onCapturePhoto: controller.captureProductPhoto,
+        existingPhotoPath: existing == null
+            ? null
+            : controller.primaryImageFor(existing.id)?.localPath,
       ),
     );
     if (result == null) return;
@@ -190,9 +226,11 @@ class _ProductsTab extends GetView<CatalogController> {
         suggestedSellPrice: result.suggestedSellPrice,
         fundSource: result.fundSource,
         isRentable: result.isRentable,
+        initialQty: result.initialQty,
         barcode: result.barcode,
         sku: result.sku,
         pageCount: result.pageCount,
+        photoLocalPath: result.photoLocalPath,
       );
     } else {
       await controller.updateProduct(
@@ -201,11 +239,13 @@ class _ProductsTab extends GetView<CatalogController> {
         category: result.category,
         costPrice: result.costPrice,
         suggestedSellPrice: result.suggestedSellPrice,
+        qty: result.initialQty,
         fundSource: result.fundSource,
         isRentable: result.isRentable,
         barcode: result.barcode,
         sku: result.sku,
         pageCount: result.pageCount,
+        photoLocalPath: result.photoLocalPath,
       );
     }
   }

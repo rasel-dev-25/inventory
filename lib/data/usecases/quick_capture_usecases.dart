@@ -25,8 +25,10 @@ class QuickCaptureUseCases {
     required String note,
     required String shopId,
     required DateTime now,
+    String? fileLocalPath,
   }) async {
-    if (note.trim().isEmpty) {
+    final capturedPath = fileLocalPath?.trim();
+    if (note.trim().isEmpty && (capturedPath == null || capturedPath.isEmpty)) {
       return const Result.err(
         ValidationFailure('note', 'Write or attach something to capture'),
       );
@@ -35,7 +37,9 @@ class QuickCaptureUseCases {
     final capture = QuickCapture(
       id: _uuid.v7(),
       type: type,
-      fileLocalPath: note.trim(),
+      fileLocalPath: capturedPath?.isNotEmpty == true
+          ? capturedPath!
+          : note.trim(),
       status: QuickCaptureStatus.pending,
       createdAt: now,
     );

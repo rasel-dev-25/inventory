@@ -29,3 +29,17 @@ class Customers extends Table {
   @override
   Set<Column> get primaryKey => {id};
 }
+
+@DataClassName('CustomerImageRow')
+class CustomerImages extends Table {
+  TextColumn get id => text()();
+  TextColumn get customerId =>
+      text().references(Customers, #id, onDelete: KeyAction.cascade)();
+  TextColumn get localPath => text().nullable()();
+  TextColumn get remoteUrl => text().nullable()();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get syncedAt => dateTime()();
+  @override
+  Set<Column> get primaryKey => {id};
+}

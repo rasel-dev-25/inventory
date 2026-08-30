@@ -56,6 +56,7 @@ class SavePurchaseTripUseCase {
           'date': tripDateIso,
           'transport_cost_minor': trip.transportCost.minorUnits,
           'cash_returned_minor': trip.cashReturned.minorUnits,
+          'actual_cash_taken_out_minor': trip.actualCashTakenOut?.minorUnits,
         },
       ),
     ];

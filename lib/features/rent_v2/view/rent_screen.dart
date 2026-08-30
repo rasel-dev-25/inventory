@@ -52,6 +52,7 @@ class RentScreen extends GetView<RentController> {
         );
       }),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'rent_fab',
         onPressed: () => _openIssueSheet(context),
         child: const Icon(Icons.add),
       ),

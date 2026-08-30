@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -44,6 +46,7 @@ class FixedAssetScreen extends GetView<FixedAssetController> {
               child: Card(
                 margin: const EdgeInsets.only(bottom: AppSpacing.sm),
                 child: ListTile(
+                  leading: _assetThumbnail(asset.id),
                   title: Text(asset.name),
                   subtitle: Text(
                     fromStock ? 'convertFromStock'.tr : 'directPurchase'.tr,
@@ -59,6 +62,7 @@ class FixedAssetScreen extends GetView<FixedAssetController> {
         );
       }),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'fixed_asset_fab',
         onPressed: () => _openSourceChoice(context),
         child: const Icon(Icons.add),
       ),
@@ -98,6 +102,7 @@ class FixedAssetScreen extends GetView<FixedAssetController> {
     final nameController = TextEditingController();
     final valueController = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    String? photoLocalPath;
 
     await showDialog<void>(
       context: context,
@@ -130,6 +135,38 @@ class FixedAssetScreen extends GetView<FixedAssetController> {
                           ? 'invalidQty'.tr
                           : null,
                     ),
+                    const SizedBox(height: AppSpacing.md),
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        final path = await controller.captureFixedAssetPhoto();
+                        if (path != null) {
+                          setState(() => photoLocalPath = path);
+                        }
+                      },
+                      icon: const Icon(Icons.camera_alt_outlined),
+                      label: Text(
+                        photoLocalPath == null
+                            ? 'addAssetPhoto'.tr
+                            : 'changeAssetPhoto'.tr,
+                      ),
+                    ),
+                    if (photoLocalPath case final photoPath?) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        child: Image.file(
+                          File(photoPath),
+                          height: 140,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => const SizedBox(
+                            height: 140,
+                            child: Center(
+                              child: Icon(Icons.broken_image_outlined),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                     Obx(
                       () => controller.errorMessage.value == null
                           ? const SizedBox.shrink()
@@ -158,6 +195,7 @@ class FixedAssetScreen extends GetView<FixedAssetController> {
                       name: nameController.text,
                       value: _parseMoneyOrNull(valueController.text)!,
                       dateAcquired: DateTime.now(),
+                      photoLocalPath: photoLocalPath,
                     );
                     if (ok && dialogContext.mounted) {
                       Navigator.of(dialogContext).pop();
@@ -180,6 +218,7 @@ class FixedAssetScreen extends GetView<FixedAssetController> {
     final qtyController = TextEditingController(text: '1');
     final nameController = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    String? photoLocalPath;
 
     await showDialog<void>(
       context: context,
@@ -236,6 +275,38 @@ class FixedAssetScreen extends GetView<FixedAssetController> {
                       controller: nameController,
                       decoration: InputDecoration(labelText: 'assetName'.tr),
                     ),
+                    const SizedBox(height: AppSpacing.md),
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        final path = await controller.captureFixedAssetPhoto();
+                        if (path != null) {
+                          setState(() => photoLocalPath = path);
+                        }
+                      },
+                      icon: const Icon(Icons.camera_alt_outlined),
+                      label: Text(
+                        photoLocalPath == null
+                            ? 'addAssetPhoto'.tr
+                            : 'changeAssetPhoto'.tr,
+                      ),
+                    ),
+                    if (photoLocalPath case final photoPath?) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        child: Image.file(
+                          File(photoPath),
+                          height: 140,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => const SizedBox(
+                            height: 140,
+                            child: Center(
+                              child: Icon(Icons.broken_image_outlined),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                     Obx(
                       () => controller.errorMessage.value == null
                           ? const SizedBox.shrink()
@@ -266,6 +337,7 @@ class FixedAssetScreen extends GetView<FixedAssetController> {
                       name: nameController.text.trim().isEmpty
                           ? null
                           : nameController.text.trim(),
+                      photoLocalPath: photoLocalPath,
                     );
                     if (ok && dialogContext.mounted) {
                       Navigator.of(dialogContext).pop();
@@ -306,6 +378,20 @@ class FixedAssetScreen extends GetView<FixedAssetController> {
       ),
     );
     return confirmed ?? false;
+  }
+
+  Widget _assetThumbnail(String assetId) {
+    final image = controller.primaryImageFor(assetId);
+    final source = image == null ? null : controller.imageSourceFor(image);
+    if (source == null) {
+      return const CircleAvatar(child: Icon(Icons.business_center_outlined));
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppRadius.sm),
+      child: source.startsWith('http')
+          ? Image.network(source, width: 48, height: 48, fit: BoxFit.cover)
+          : Image.file(File(source), width: 48, height: 48, fit: BoxFit.cover),
+    );
   }
 }
 

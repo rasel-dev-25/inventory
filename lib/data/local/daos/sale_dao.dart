@@ -90,4 +90,35 @@ class SaleDao extends DatabaseAccessor<AppDatabase> with _$SaleDaoMixin {
       ),
     );
   }
+
+  Future<void> softDelete(String id, DateTime now) {
+    return (update(sales)..where((s) => s.id.equals(id))).write(
+      SalesCompanion(
+        deletedAt: Value(now),
+        updatedAt: Value(now),
+      ),
+    );
+  }
+
+  Future<void> updateSale(
+    domain.Sale sale, {
+    required String shopId,
+    required DateTime now,
+  }) {
+    return (update(sales)..where((s) => s.id.equals(sale.id))).write(
+      SalesCompanion(
+        productId: Value(sale.productId),
+        qty: Value(sale.qty),
+        actualSellPriceMinor: Value(sale.actualSellPrice.minorUnits),
+        costPriceMinorAtSale: Value(sale.costPriceAtSale.minorUnits),
+        date: Value(sale.date),
+        customerId: Value(sale.customerId),
+        paymentStatus: Value(sale.paymentStatus),
+        paymentMethod: Value(sale.paymentMethod),
+        fundSourceType: Value(sale.fundSource.type),
+        fundSourceInvestorId: Value(sale.fundSource.investorId),
+        updatedAt: Value(now),
+      ),
+    );
+  }
 }

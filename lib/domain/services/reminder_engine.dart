@@ -34,6 +34,7 @@ import '../entities/due.dart';
 import '../entities/enums.dart';
 import '../entities/investor.dart';
 import '../entities/order.dart';
+import '../entities/product.dart';
 import '../entities/purchase.dart';
 import '../entities/rent_transaction.dart';
 import 'due_lifecycle.dart';
@@ -177,6 +178,22 @@ final class OrderDeadlineReminder extends Reminder {
 
   @override
   bool isOverdueAsOf(DateTime now) => now.isAfter(dueDate);
+}
+
+final class LowStockReminder extends Reminder {
+  final Product product;
+  final double threshold;
+
+  LowStockReminder({required this.product, this.threshold = 5});
+
+  @override
+  String get id => 'low-stock-${product.id}';
+
+  @override
+  DateTime? get dueDate => null;
+
+  @override
+  bool isOverdueAsOf(DateTime now) => true;
 }
 
 /// [customerNameOf] must resolve every [dues] entry's `customerId` — a
@@ -373,6 +390,18 @@ List<OrderDeadlineReminder> buildOrderDeadlineReminders({
   return reminders;
 }
 
+List<LowStockReminder> buildLowStockReminders({
+  required List<Product> products,
+  double threshold = 5,
+}) {
+  return products
+      .where((product) => product.qty <= threshold)
+      .map(
+        (product) => LowStockReminder(product: product, threshold: threshold),
+      )
+      .toList();
+}
+
 /// The whole inbox, sorted overdue-first, then soonest-due, with the
 /// always-active (no-date) reminders — currently only
 /// [SuspiciousCustomerReminder] — pinned at the very top: they need
@@ -387,6 +416,7 @@ List<Reminder> buildReminderInbox({
   required String Function(String productId) bookNameOf,
   required List<Order> orders,
   required DateTime now,
+  List<Product> products = const [],
   int upcomingWithinDays = 3,
 }) {
   final reminders = <Reminder>[
@@ -415,6 +445,7 @@ List<Reminder> buildReminderInbox({
       now: now,
       upcomingWithinDays: upcomingWithinDays,
     ),
+    ...buildLowStockReminders(products: products),
   ];
 
   reminders.sort((a, b) {

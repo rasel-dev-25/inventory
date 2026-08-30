@@ -1,9 +1,15 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/money/money.dart';
+import '../../../core/platform/capabilities.dart';
+import '../../../core/utils/image_compressor.dart';
 import '../../../data/local/app_database.dart';
 import '../../../data/local/default_shop.dart';
 import '../../../data/usecases/expense_usecases.dart';
@@ -59,6 +65,7 @@ class QuickCaptureController extends GetxController {
   final investors = <Investor>[].obs;
 
   final errorMessage = RxnString();
+  final _imagePicker = ImagePicker();
 
   final List<StreamSubscription<Object?>> _subscriptions = [];
 
@@ -108,14 +115,50 @@ class QuickCaptureController extends GetxController {
     return null;
   }
 
+  Future<String?> capturePhoto() async {
+    errorMessage.value = null;
+    if (!PlatformCapabilities.detect().hasCamera) {
+      errorMessage.value = 'cameraUnavailable'.tr;
+      return null;
+    }
+    try {
+      final picked = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: AppImageCompressor.memoMaxDimension.toDouble(),
+        maxHeight: AppImageCompressor.memoMaxDimension.toDouble(),
+        imageQuality: AppImageCompressor.defaultQuality,
+      );
+      if (picked == null) return null;
+
+      final documents = await getApplicationDocumentsDirectory();
+      final captureDirectory = Directory(
+        path.join(documents.path, 'quick_captures'),
+      );
+      await captureDirectory.create(recursive: true);
+      final destination = path.join(captureDirectory.path, '${_uuid.v7()}.jpg');
+      await AppImageCompressor.compressAndSave(
+        sourceFile: File(picked.path),
+        destinationPath: destination,
+        maxWidth: AppImageCompressor.memoMaxDimension,
+        maxHeight: AppImageCompressor.memoMaxDimension,
+      );
+      return destination;
+    } catch (error) {
+      errorMessage.value = error.toString();
+      return null;
+    }
+  }
+
   Future<bool> createCapture({
     required QuickCaptureType type,
     required String note,
+    String? fileLocalPath,
   }) async {
     errorMessage.value = null;
     final result = await _captureUseCases.create(
       type: type,
       note: note,
+      fileLocalPath: fileLocalPath,
       shopId: defaultShopId,
       now: DateTime.now().toUtc(),
     );

@@ -1,13 +1,24 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:file_selector/file_selector.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/money/money.dart';
+import '../../../core/platform/capabilities.dart';
+import '../../../core/utils/image_compressor.dart';
 import '../../../data/local/app_database.dart';
 import '../../../data/local/default_shop.dart';
+import '../../../data/sync/outbox_event.dart';
+import '../../../data/sync/storage_upload_transport.dart';
 import '../../../data/usecases/category_usecases.dart';
+import '../../../data/usecases/product_image_usecases.dart';
 import '../../../data/usecases/product_usecases.dart';
+import '../../../data/usecases/sync_enqueue_helper.dart';
 import '../../../domain/entities/fund_source.dart';
 import '../../../domain/entities/investor.dart';
 import '../../../domain/entities/product.dart';
@@ -31,13 +42,18 @@ class CatalogController extends GetxController {
   /// [overheadMarkupPercent] stays plain constructor-injected state like
   /// every other v2 controller dependency.
   final PricingSettingsController pricingSettings;
+  final StorageUploadTransport? imageStorage;
 
   static const _uuid = Uuid();
 
-  CatalogController(this.db, this.pricingSettings);
+  CatalogController(this.db, this.pricingSettings, {this.imageStorage});
 
   late final CategoryUseCases _categoryUseCases = CategoryUseCases(db);
   late final ProductUseCases _productUseCases = ProductUseCases(db);
+  late final ProductImageUseCases _productImageUseCases = ProductImageUseCases(
+    db,
+  );
+  final _imagePicker = ImagePicker();
 
   /// Null exactly when `ProductFormSheet`'s cost-price suggestion should
   /// stay hidden (the pricing engine's bootstrap period, or no usable
@@ -47,6 +63,8 @@ class CatalogController extends GetxController {
 
   final categories = <CategoryRow>[].obs;
   final products = <Product>[].obs;
+  final productImages = <ProductImageRow>[].obs;
+  final signedImageUrls = <String, String>{}.obs;
   final investors = <Investor>[].obs;
   final errorMessage = RxnString();
 
@@ -69,6 +87,12 @@ class CatalogController extends GetxController {
       db.productDao
           .watchAll(defaultShopId)
           .listen((rows) => products.assignAll(rows)),
+    );
+    _subscriptions.add(
+      db.productImageDao.watchForShop(defaultShopId).listen((rows) {
+        productImages.assignAll(rows);
+        _resolveRemoteImages(rows);
+      }),
     );
     _subscriptions.add(
       db.investorDao
@@ -156,9 +180,11 @@ class CatalogController extends GetxController {
     required Money suggestedSellPrice,
     required FundSource fundSource,
     bool isRentable = false,
+    double initialQty = 0,
     String? barcode,
     String? sku,
     int? pageCount,
+    String? photoLocalPath,
   }) async {
     try {
       final product = Product(
@@ -167,18 +193,55 @@ class CatalogController extends GetxController {
         category: category,
         costPrice: costPrice,
         suggestedSellPrice: suggestedSellPrice,
-        qty: 0,
+        qty: initialQty,
         fundSource: fundSource,
         isRentable: isRentable,
         barcode: barcode,
         sku: sku,
         pageCount: pageCount,
       );
-      await _productUseCases.create(
-        product,
-        shopId: defaultShopId,
-        now: DateTime.now().toUtc(),
-      );
+      final now = DateTime.now().toUtc();
+      await db.transaction(() async {
+        await _productUseCases.create(product, shopId: defaultShopId, now: now);
+        if (initialQty > 0) {
+          final movementId = _uuid.v7();
+          await writeAndEnqueue(
+            db: db,
+            eventType: 'stock_movement_created',
+            upserts: [
+              TableUpsert(
+                table: 'stock_movements',
+                row: {
+                  'id': movementId,
+                  'shop_id': defaultShopId,
+                  'product_id': product.id,
+                  'delta_qty': initialQty,
+                  'source_type': 'opening_stock',
+                  'source_id': product.id,
+                  'date': now.toIso8601String(),
+                },
+              ),
+            ],
+            localWrite: () => db.ledgerDao.recordStockMovement(
+              id: movementId,
+              shopId: defaultShopId,
+              productId: product.id,
+              deltaQty: initialQty,
+              sourceType: 'opening_stock',
+              sourceId: product.id,
+              date: now,
+              now: now,
+            ),
+          );
+        }
+        if (photoLocalPath != null) {
+          await _productImageUseCases.add(
+            productId: product.id,
+            localPath: photoLocalPath,
+            now: now,
+          );
+        }
+      });
       return true;
     } catch (e) {
       errorMessage.value = e.toString();
@@ -196,11 +259,13 @@ class CatalogController extends GetxController {
     String? category,
     Money? costPrice,
     Money? suggestedSellPrice,
+    double? qty,
     FundSource? fundSource,
     bool? isRentable,
     String? barcode,
     String? sku,
     int? pageCount,
+    String? photoLocalPath,
   }) async {
     try {
       final updated = existing.copyWith(
@@ -208,17 +273,61 @@ class CatalogController extends GetxController {
         category: category,
         costPrice: costPrice,
         suggestedSellPrice: suggestedSellPrice,
+        qty: qty,
         fundSource: fundSource,
         isRentable: isRentable,
         barcode: barcode,
         sku: sku,
         pageCount: pageCount,
       );
-      await _productUseCases.update(
-        updated,
-        shopId: defaultShopId,
-        now: DateTime.now().toUtc(),
-      );
+      final now = DateTime.now().toUtc();
+      await db.transaction(() async {
+        await _productUseCases.update(updated, shopId: defaultShopId, now: now);
+
+        if (qty != null && qty != existing.qty) {
+          final delta = qty - existing.qty;
+          final movementId = 'sm-${const Uuid().v4()}';
+          final movementRow = {
+            'id': movementId,
+            'shop_id': defaultShopId,
+            'product_id': existing.id,
+            'delta_qty': delta,
+            'source_type': 'adjustment',
+            'source_id': movementId,
+            'date': now.toIso8601String(),
+          };
+          await writeAndEnqueue(
+            db: db,
+            eventType: 'stock_movement_created',
+            upserts: [
+              TableUpsert(table: 'stock_movements', row: movementRow),
+            ],
+            localWrite: () => db.ledgerDao.recordStockMovement(
+              id: movementId,
+              shopId: defaultShopId,
+              productId: existing.id,
+              deltaQty: delta,
+              sourceType: 'adjustment',
+              sourceId: movementId,
+              date: now,
+              now: now,
+            ),
+          );
+        }
+
+        if (photoLocalPath != null &&
+            !productImages.any(
+              (image) =>
+                  image.productId == existing.id &&
+                  image.localPath == photoLocalPath,
+            )) {
+          await _productImageUseCases.add(
+            productId: existing.id,
+            localPath: photoLocalPath,
+            now: now,
+          );
+        }
+      });
       return true;
     } catch (e) {
       errorMessage.value = e.toString();
@@ -242,6 +351,84 @@ class CatalogController extends GetxController {
     } catch (e) {
       errorMessage.value = e.toString();
       return false;
+    }
+  }
+
+  ProductImageRow? primaryImageFor(String productId) {
+    return productImages
+        .where((image) => image.productId == productId)
+        .firstOrNull;
+  }
+
+  String? imageSourceFor(ProductImageRow image) {
+    final localPath = image.localPath;
+    if (localPath != null && File(localPath).existsSync()) return localPath;
+    return signedImageUrls[image.id];
+  }
+
+  Future<String?> captureProductPhoto() async {
+    errorMessage.value = null;
+    try {
+      XFile? selected;
+      if (PlatformCapabilities.detect().hasCamera) {
+        selected = await _imagePicker.pickImage(
+          source: ImageSource.camera,
+          maxWidth: AppImageCompressor.defaultMaxDimension.toDouble(),
+          maxHeight: AppImageCompressor.defaultMaxDimension.toDouble(),
+          imageQuality: AppImageCompressor.defaultQuality,
+        );
+      } else if (PlatformCapabilities.detect().hasFileSystemAccess) {
+        selected = await openFile(
+          acceptedTypeGroups: const [
+            XTypeGroup(
+              label: 'Images',
+              extensions: ['jpg', 'jpeg', 'png', 'webp'],
+            ),
+          ],
+        );
+      }
+      if (selected == null) return null;
+
+      final sourceFile = File(selected.path);
+      if (await sourceFile.length() > 10 * 1024 * 1024) {
+        errorMessage.value = 'photoTooLarge'.tr;
+        return null;
+      }
+
+      final documents = await getApplicationDocumentsDirectory();
+      final directory = Directory(path.join(documents.path, 'product_images'));
+      await directory.create(recursive: true);
+      final extension = path.extension(selected.path).toLowerCase();
+      final destination = path.join(
+        directory.path,
+        '${_uuid.v7()}${extension.isEmpty ? '.jpg' : extension}',
+      );
+      await AppImageCompressor.compressAndSave(
+        sourceFile: sourceFile,
+        destinationPath: destination,
+      );
+      return destination;
+    } catch (error) {
+      errorMessage.value = error.toString();
+      return null;
+    }
+  }
+
+  Future<void> _resolveRemoteImages(List<ProductImageRow> rows) async {
+    final storage = imageStorage;
+    if (storage == null) return;
+    for (final image in rows) {
+      if (image.remoteUrl == null || signedImageUrls.containsKey(image.id)) {
+        continue;
+      }
+      final result = await storage.createSignedUrl(
+        bucketName: ProductImageUseCases.bucketName,
+        storagePath: image.remoteUrl!,
+      );
+      result.fold(
+        onOk: (url) => signedImageUrls[image.id] = url,
+        onErr: (_) {},
+      );
     }
   }
 }

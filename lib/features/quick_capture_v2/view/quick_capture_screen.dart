@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -47,6 +49,7 @@ class QuickCaptureScreen extends GetView<QuickCaptureController> {
         );
       }),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'quick_capture_fab',
         onPressed: () => _openCreateDialog(context),
         child: const Icon(Icons.add),
       ),
@@ -57,6 +60,7 @@ class QuickCaptureScreen extends GetView<QuickCaptureController> {
     QuickCaptureType type = QuickCaptureType.voiceNote;
     final noteController = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    String? photoPath;
 
     await showDialog<void>(
       context: context,
@@ -85,17 +89,59 @@ class QuickCaptureScreen extends GetView<QuickCaptureController> {
                       onSelectionChanged: (s) => setState(() => type = s.first),
                     ),
                     const SizedBox(height: AppSpacing.md),
+                    if (type == QuickCaptureType.photoNote) ...[
+                      OutlinedButton.icon(
+                        onPressed: () async {
+                          final path = await controller.capturePhoto();
+                          if (path != null && dialogContext.mounted) {
+                            setState(() => photoPath = path);
+                          }
+                        },
+                        icon: const Icon(Icons.camera_alt),
+                        label: Text('takePhoto'.tr),
+                      ),
+                      if (photoPath != null) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        SizedBox(
+                          height: 140,
+                          child: Image.file(
+                            File(photoPath!),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: AppSpacing.sm),
+                    ],
                     TextFormField(
                       controller: noteController,
-                      autofocus: true,
+                      autofocus: type == QuickCaptureType.voiceNote,
                       maxLines: 3,
                       decoration: InputDecoration(
                         labelText: 'writeQuickNote'.tr,
                       ),
-                      validator: (v) => (v == null || v.trim().isEmpty)
+                      validator: (v) =>
+                          type == QuickCaptureType.photoNote &&
+                              (photoPath == null &&
+                                  (v == null || v.trim().isEmpty))
+                          ? 'takePhoto'.tr
+                          : type == QuickCaptureType.voiceNote &&
+                                (v == null || v.trim().isEmpty)
                           ? 'nameRequired'.tr
                           : null,
                     ),
+                    Obx(() {
+                      final error = controller.errorMessage.value;
+                      if (error == null) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.sm),
+                        child: Text(
+                          error,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      );
+                    }),
                   ],
                 ),
               ),
@@ -110,6 +156,7 @@ class QuickCaptureScreen extends GetView<QuickCaptureController> {
                     final ok = await controller.createCapture(
                       type: type,
                       note: noteController.text,
+                      fileLocalPath: photoPath,
                     );
                     if (ok && dialogContext.mounted) {
                       Navigator.of(dialogContext).pop();
@@ -151,6 +198,19 @@ class _PendingCard extends GetView<QuickCaptureController> {
                 Expanded(child: Text(capture.fileLocalPath)),
               ],
             ),
+            if (capture.type == QuickCaptureType.photoNote &&
+                File(capture.fileLocalPath).existsSync()) ...[
+              const SizedBox(height: AppSpacing.sm),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppSpacing.xs),
+                child: Image.file(
+                  File(capture.fileLocalPath),
+                  height: 160,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ],
             const SizedBox(height: AppSpacing.sm),
             Align(
               alignment: Alignment.centerRight,

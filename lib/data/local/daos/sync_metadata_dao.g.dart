@@ -6,6 +6,8 @@ part of 'sync_metadata_dao.dart';
 mixin _$SyncMetadataDaoMixin on DatabaseAccessor<AppDatabase> {
   $SyncOutboxEntriesTable get syncOutboxEntries =>
       attachedDatabase.syncOutboxEntries;
+  $SyncPendingUploadsTable get syncPendingUploads =>
+      attachedDatabase.syncPendingUploads;
   $SyncCursorsTable get syncCursors => attachedDatabase.syncCursors;
   SyncMetadataDaoManager get managers => SyncMetadataDaoManager(this);
 }
@@ -17,6 +19,11 @@ class SyncMetadataDaoManager {
       $$SyncOutboxEntriesTableTableManager(
         _db.attachedDatabase,
         _db.syncOutboxEntries,
+      );
+  $$SyncPendingUploadsTableTableManager get syncPendingUploads =>
+      $$SyncPendingUploadsTableTableManager(
+        _db.attachedDatabase,
+        _db.syncPendingUploads,
       );
   $$SyncCursorsTableTableManager get syncCursors =>
       $$SyncCursorsTableTableManager(_db.attachedDatabase, _db.syncCursors);

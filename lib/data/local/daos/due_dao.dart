@@ -105,4 +105,23 @@ class DueDao extends DatabaseAccessor<AppDatabase> with _$DueDaoMixin {
       );
     });
   }
+
+  Future<domain.Due?> getBySource(String sourceType, String sourceId) async {
+    final row = await (select(dues)..where(
+      (d) =>
+          d.sourceType.equals(sourceType) &
+          d.sourceId.equals(sourceId) &
+          d.deletedAt.isNull(),
+    )).getSingleOrNull();
+    return row?.toDomain();
+  }
+
+  Future<void> softDelete(String id, DateTime now) {
+    return (update(dues)..where((d) => d.id.equals(id))).write(
+      DuesCompanion(
+        deletedAt: Value(now),
+        updatedAt: Value(now),
+      ),
+    );
+  }
 }

@@ -46,4 +46,30 @@ class Sale {
     required this.paymentMethod,
     required this.fundSource,
   });
+
+  Sale copyWith({
+    String? id,
+    String? productId,
+    double? qty,
+    Money? actualSellPrice,
+    Money? costPriceAtSale,
+    DateTime? date,
+    String? customerId,
+    PaymentStatus? paymentStatus,
+    PaymentMethod? paymentMethod,
+    FundSource? fundSource,
+  }) {
+    return Sale(
+      id: id ?? this.id,
+      productId: productId ?? this.productId,
+      qty: qty ?? this.qty,
+      actualSellPrice: actualSellPrice ?? this.actualSellPrice,
+      costPriceAtSale: costPriceAtSale ?? this.costPriceAtSale,
+      date: date ?? this.date,
+      customerId: customerId ?? this.customerId,
+      paymentStatus: paymentStatus ?? this.paymentStatus,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      fundSource: fundSource ?? this.fundSource,
+    );
+  }
 }

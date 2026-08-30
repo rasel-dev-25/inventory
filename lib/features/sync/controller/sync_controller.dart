@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import '../../../data/local/app_database.dart';
 import '../../../data/sync/sync_pull_service.dart';
 import '../../../data/sync/sync_push_service.dart';
+import '../../../data/sync/pending_upload_service.dart';
 import '../../auth/controller/auth_controller.dart';
 
 /// What the "Sync Now" affordance shows — kept as one enum rather than
@@ -41,6 +42,7 @@ class SyncController extends GetxController {
   final AppDatabase db;
   final SyncPushService pushService;
   final SyncPullService pullService;
+  final PendingUploadService uploadService;
   final AuthController authController;
   final Stream<List<ConnectivityResult>> connectivityChanges;
   final Duration autoSyncInterval;
@@ -49,6 +51,7 @@ class SyncController extends GetxController {
     required this.db,
     required this.pushService,
     required this.pullService,
+    required this.uploadService,
     required this.authController,
     required this.connectivityChanges,
     this.autoSyncInterval = const Duration(minutes: 5),
@@ -59,6 +62,7 @@ class SyncController extends GetxController {
   final pendingOutboxCount = 0.obs;
 
   StreamSubscription<Object?>? _outboxCountSub;
+  StreamSubscription<Object?>? _uploadCountSub;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
   Timer? _periodicTimer;
 
@@ -67,12 +71,21 @@ class SyncController extends GetxController {
   /// connectivity event (e.g. wifi→wifi network handoffs, which still
   /// emit a change event but were never actually offline in between).
   bool _wasOffline = false;
+  int _pendingOutboxEntries = 0;
+  int _pendingUploads = 0;
 
   @override
   void onInit() {
     super.onInit();
     _outboxCountSub = db.syncMetadataDao.watchPendingCount().listen((count) {
-      pendingOutboxCount.value = count;
+      _pendingOutboxEntries = count;
+      _updatePendingWorkCount();
+    });
+    _uploadCountSub = db.syncMetadataDao.watchPendingUploadCount().listen((
+      count,
+    ) {
+      _pendingUploads = count;
+      _updatePendingWorkCount();
     });
 
     _periodicTimer = Timer.periodic(autoSyncInterval, (_) => _autoSync());
@@ -88,9 +101,14 @@ class SyncController extends GetxController {
   @override
   void onClose() {
     _outboxCountSub?.cancel();
+    _uploadCountSub?.cancel();
     _connectivitySub?.cancel();
     _periodicTimer?.cancel();
     super.onClose();
+  }
+
+  void _updatePendingWorkCount() {
+    pendingOutboxCount.value = _pendingOutboxEntries + _pendingUploads;
   }
 
   /// The user-facing "Sync Now" button — reports "no shop yet" as a
@@ -133,6 +151,25 @@ class SyncController extends GetxController {
         return;
       }
 
+      final uploadSummary = await uploadService.uploadPending();
+      if (uploadSummary.failed > 0) {
+        status.value = SyncStatus.failure;
+        statusMessage.value =
+            'Failed to upload ${uploadSummary.failed} photo(s).';
+        return;
+      }
+
+      final uploadMetadataPush = await pushService.pushPending(
+        remoteShopId: shopId,
+      );
+      if (uploadMetadataPush.failed > 0) {
+        status.value = SyncStatus.failure;
+        statusMessage.value = 'syncPushFailed'.trParams({
+          'count': '${uploadMetadataPush.failed}',
+        });
+        return;
+      }
+
       final pullResult = await pullService.pullAll(remoteShopId: shopId);
       if (pullResult.isErr) {
         status.value = SyncStatus.failure;
@@ -142,7 +179,7 @@ class SyncController extends GetxController {
 
       status.value = SyncStatus.success;
       statusMessage.value = 'syncSucceeded'.trParams({
-        'pushed': '${pushSummary.succeeded}',
+        'pushed': '${pushSummary.succeeded + uploadMetadataPush.succeeded}',
         'pulled': '${pullResult.valueOrNull}',
       });
     } catch (e) {

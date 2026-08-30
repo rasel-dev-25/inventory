@@ -132,6 +132,15 @@ void main() {
     },
   );
 
+  test('selectDay shows the selected historical day and keeps day mode', () {
+    controller.selectDay(twoDaysAgo);
+
+    expect(controller.isDayView.value, isTrue);
+    expect(controller.selectedDay.value, twoDaysAgo);
+    expect(controller.totals.totalSaleRevenue, Money.fromMinor(15000));
+    expect(controller.totals.netProfit, Money.fromMinor(5000));
+  });
+
   test('All-time view folds in the older sale too, expense unaffected', () {
     controller.toggleView();
     expect(controller.isDayView.value, isFalse);

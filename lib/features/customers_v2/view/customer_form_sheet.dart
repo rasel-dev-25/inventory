@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -14,6 +16,7 @@ class CustomerFormResult {
   final String? contact;
   final bool suspicionFlag;
   final bool isBlocked;
+  final String? photoLocalPath;
 
   const CustomerFormResult({
     required this.name,
@@ -21,6 +24,7 @@ class CustomerFormResult {
     required this.isBlocked,
     this.address,
     this.contact,
+    this.photoLocalPath,
   });
 }
 
@@ -30,8 +34,15 @@ class CustomerFormResult {
 /// `Navigator.pop`.
 class CustomerFormSheet extends StatefulWidget {
   final Customer? existing;
+  final Future<String?> Function()? onCapturePhoto;
+  final String? existingPhotoSource;
 
-  const CustomerFormSheet({super.key, this.existing});
+  const CustomerFormSheet({
+    super.key,
+    this.existing,
+    this.onCapturePhoto,
+    this.existingPhotoSource,
+  });
 
   @override
   State<CustomerFormSheet> createState() => _CustomerFormSheetState();
@@ -50,6 +61,8 @@ class _CustomerFormSheetState extends State<CustomerFormSheet> {
   );
   late bool _suspicionFlag = widget.existing?.suspicionFlag ?? false;
   late bool _isBlocked = widget.existing?.isBlocked ?? false;
+  String? _photoLocalPath;
+  late String? _photoPreviewSource = widget.existingPhotoSource;
 
   @override
   void dispose() {
@@ -98,6 +111,39 @@ class _CustomerFormSheetState extends State<CustomerFormSheet> {
                 decoration: InputDecoration(labelText: 'address'.tr),
               ),
               const SizedBox(height: AppSpacing.md),
+              OutlinedButton.icon(
+                onPressed: widget.onCapturePhoto == null ? null : _capturePhoto,
+                icon: const Icon(Icons.camera_alt_outlined),
+                label: Text(
+                  _photoPreviewSource == null
+                      ? 'addCustomerPhoto'.tr
+                      : 'changeCustomerPhoto'.tr,
+                ),
+              ),
+              if (_photoPreviewSource case final photoSource?) ...[
+                const SizedBox(height: AppSpacing.sm),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  child: photoSource.startsWith('http')
+                      ? Image.network(
+                          photoSource,
+                          height: 160,
+                          fit: BoxFit.cover,
+                        )
+                      : Image.file(
+                          File(photoSource),
+                          height: 160,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => const SizedBox(
+                            height: 160,
+                            child: Center(
+                              child: Icon(Icons.broken_image_outlined),
+                            ),
+                          ),
+                        ),
+                ),
+              ],
+              const SizedBox(height: AppSpacing.md),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text('suspicionFlag'.tr),
@@ -119,6 +165,15 @@ class _CustomerFormSheetState extends State<CustomerFormSheet> {
     );
   }
 
+  Future<void> _capturePhoto() async {
+    final photoPath = await widget.onCapturePhoto?.call();
+    if (photoPath == null || !mounted) return;
+    setState(() {
+      _photoLocalPath = photoPath;
+      _photoPreviewSource = photoPath;
+    });
+  }
+
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
     Navigator.of(context).pop(
@@ -132,6 +187,7 @@ class _CustomerFormSheetState extends State<CustomerFormSheet> {
             : _contactController.text.trim(),
         suspicionFlag: _suspicionFlag,
         isBlocked: _isBlocked,
+        photoLocalPath: _photoLocalPath,
       ),
     );
   }

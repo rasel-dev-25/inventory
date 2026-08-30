@@ -7,6 +7,7 @@ import 'package:inventory/domain/entities/fund_source.dart';
 import 'package:inventory/domain/entities/investor.dart';
 import 'package:inventory/domain/entities/order.dart';
 import 'package:inventory/domain/entities/purchase.dart';
+import 'package:inventory/domain/entities/product.dart';
 import 'package:inventory/domain/entities/rent_transaction.dart';
 import 'package:inventory/domain/services/reminder_engine.dart';
 
@@ -524,6 +525,34 @@ void main() {
         now: now,
       );
       expect(inbox, isEmpty);
+    });
+
+    test('includes products at or below the low-stock threshold', () {
+      final product = Product(
+        id: 'product-1',
+        name: 'Notebook',
+        category: 'Stationery',
+        costPrice: Money.fromMinor(5000),
+        suggestedSellPrice: Money.fromMinor(7000),
+        qty: 5,
+        fundSource: FundSource.shop(),
+      );
+
+      final inbox = buildReminderInbox(
+        dues: const [],
+        customerNameOf: (_) => '',
+        investors: const [],
+        purchaseTrips: const [],
+        customers: const [],
+        rentals: const [],
+        bookNameOf: (_) => '',
+        orders: const [],
+        products: [product],
+        now: now,
+      );
+
+      expect(inbox.single, isA<LowStockReminder>());
+      expect((inbox.single as LowStockReminder).product.id, 'product-1');
     });
   });
 }

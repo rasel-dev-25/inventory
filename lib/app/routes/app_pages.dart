@@ -3,6 +3,7 @@ import 'app_routes.dart';
 import '../../features/auth/view/auth_gate.dart';
 import '../../features/shell/controller/shell_controller.dart';
 import '../../data/local/app_database.dart' show AppDatabase;
+import '../../data/remote/supabase_storage_upload_transport.dart';
 import '../../features/catalog/view/catalog_screen.dart';
 import '../../features/catalog/controller/catalog_controller.dart';
 import '../../features/purchase_entry/view/purchase_entry_screen.dart';
@@ -57,9 +58,21 @@ abstract class AppPages {
         Get.lazyPut(() => ShellController());
         Get.lazyPut(() => DashboardController(Get.find<AppDatabase>()));
         Get.lazyPut(() => DailySalesController(Get.find<AppDatabase>()));
-        Get.lazyPut(() => StockController(Get.find<AppDatabase>()));
+        Get.lazyPut(
+          () => StockController(
+            Get.find<AppDatabase>(),
+            pricingSettings: Get.find<PricingSettingsController>(),
+            imageStorage: Get.find<SupabaseStorageUploadTransport>(),
+          ),
+        );
         Get.lazyPut(() => DuesController(Get.find<AppDatabase>()));
-        Get.lazyPut(() => CustomersController(Get.find<AppDatabase>()));
+        Get.lazyPut(() => PurchaseEntryController(Get.find<AppDatabase>()));
+        Get.lazyPut(
+          () => CustomersController(
+            Get.find<AppDatabase>(),
+            imageStorage: Get.find<SupabaseStorageUploadTransport>(),
+          ),
+        );
       }),
     ),
     GetPage(
@@ -75,6 +88,7 @@ abstract class AppPages {
           () => CatalogController(
             Get.find<AppDatabase>(),
             Get.find<PricingSettingsController>(),
+            imageStorage: Get.find<SupabaseStorageUploadTransport>(),
           ),
         );
       }),
@@ -122,7 +136,12 @@ abstract class AppPages {
       name: AppRoutes.fixedAssetV2,
       page: () => const FixedAssetScreen(),
       binding: BindingsBuilder(() {
-        Get.lazyPut(() => FixedAssetController(Get.find<AppDatabase>()));
+        Get.lazyPut(
+          () => FixedAssetController(
+            Get.find<AppDatabase>(),
+            imageStorage: Get.find<SupabaseStorageUploadTransport>(),
+          ),
+        );
       }),
     ),
     GetPage(

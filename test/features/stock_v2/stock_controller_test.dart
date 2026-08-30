@@ -135,6 +135,17 @@ void main() {
     expect(controller.potentialProfit, Money.fromMinor(99000));
   });
 
+  test(
+    'categoryCostTotals returns every category without changing filters',
+    () {
+      expect(controller.categoryCostTotals, {
+        'Book': Money.fromMinor(180000),
+        'Date': Money.fromMinor(15000),
+      });
+      expect(controller.selectedCategory.value, isNull);
+    },
+  );
+
   test('category filter narrows both the product list and the totals', () {
     controller.selectedCategory.value = 'Date';
     expect(controller.filteredProducts.map((p) => p.id).toList(), ['date-a']);
@@ -173,5 +184,58 @@ void main() {
   test('investorName resolves a known id and falls back to the id itself', () {
     expect(controller.investorName('investor-1'), 'Uncle Karim');
     expect(controller.investorName('does-not-exist'), 'does-not-exist');
+  });
+
+  test('countForCategory and countForFundSource return accurate counts', () {
+    expect(controller.countForCategory(null), 3);
+    expect(controller.countForCategory('Book'), 2);
+    expect(controller.countForCategory('Date'), 1);
+
+    expect(controller.countForFundSource(null), 3);
+    expect(controller.countForFundSource(shopFundFilterValue), 2);
+    expect(controller.countForFundSource('investor-1'), 1);
+  });
+
+  test('createProduct with initialQty sets opening stock and movements', () async {
+    final success = await controller.createProduct(
+      name: 'Attar Rose',
+      category: 'Attar',
+      costPrice: Money.fromMinor(12000),
+      suggestedSellPrice: Money.fromMinor(18000),
+      fundSource: FundSource.shop(),
+      initialQty: 10,
+      barcode: '123456789',
+      sku: 'ATT-ROSE',
+    );
+    expect(success, isTrue);
+
+    await Future<void>.delayed(Duration.zero);
+    final created = controller.products.firstWhere((p) => p.name == 'Attar Rose');
+    expect(created.qty, 10);
+    expect(created.barcode, '123456789');
+    expect(created.sku, 'ATT-ROSE');
+  });
+
+  test('updateProduct and softDeleteProduct update state reactively', () async {
+    final product = controller.products.firstWhere((p) => p.id == 'date-a');
+    final updated = await controller.updateProduct(
+      product,
+      name: 'Premium Ajwa Date',
+      suggestedSellPrice: Money.fromMinor(9000),
+      qty: 12,
+    );
+    expect(updated, isTrue);
+
+    await Future<void>.delayed(Duration.zero);
+    final date = controller.products.firstWhere((p) => p.id == 'date-a');
+    expect(date.name, 'Premium Ajwa Date');
+    expect(date.suggestedSellPrice, Money.fromMinor(9000));
+    expect(date.qty, 12);
+
+    final deleted = await controller.softDeleteProduct('date-a');
+    expect(deleted, isTrue);
+
+    await Future<void>.delayed(Duration.zero);
+    expect(controller.products.any((p) => p.id == 'date-a'), isFalse);
   });
 }

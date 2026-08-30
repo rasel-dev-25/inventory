@@ -56,6 +56,24 @@ void main() {
     );
   });
 
+  test('createFromCashPurchase with photo queues its upload', () async {
+    final ok = await controller.createFromCashPurchase(
+      name: 'Display Showcase',
+      value: Money.fromMinor(1500000),
+      dateAcquired: DateTime.now(),
+      photoLocalPath: 'fixed_asset_images/showcase.jpg',
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(ok, isTrue);
+    expect(controller.assetImages, hasLength(1));
+    expect(
+      controller.assetImages.single.localPath,
+      'fixed_asset_images/showcase.jpg',
+    );
+    expect(await db.syncMetadataDao.pendingUploads(), hasLength(1));
+  });
+
   test('createFromStock reduces the product qty visible in products', () async {
     final ok = await controller.createFromStock(
       productId: 'attar-bottle',

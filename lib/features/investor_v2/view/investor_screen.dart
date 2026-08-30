@@ -33,6 +33,7 @@ class InvestorScreen extends GetView<InvestorController> {
         );
       }),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'investor_fab',
         onPressed: () => _openForm(context),
         child: const Icon(Icons.add),
       ),

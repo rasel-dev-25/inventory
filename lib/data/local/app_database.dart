@@ -10,13 +10,16 @@ import 'daos/app_settings_dao.dart';
 import 'daos/audit_log_dao.dart';
 import 'daos/category_dao.dart';
 import 'daos/customer_dao.dart';
+import 'daos/customer_image_dao.dart';
 import 'daos/due_dao.dart';
 import 'daos/expense_dao.dart';
 import 'daos/fixed_asset_dao.dart';
+import 'daos/fixed_asset_image_dao.dart';
 import 'daos/investor_dao.dart';
 import 'daos/ledger_dao.dart';
 import 'daos/order_dao.dart';
 import 'daos/product_dao.dart';
+import 'daos/product_image_dao.dart';
 import 'daos/purchase_dao.dart';
 import 'daos/quick_capture_dao.dart';
 import 'daos/rent_dao.dart';
@@ -42,7 +45,7 @@ import 'tables/sync.dart';
 
 part 'app_database.g.dart';
 
-/// The local Drift database — a clean-slate schema (schemaVersion 1), not
+/// The local Drift database — a clean-slate schema, not
 /// a migration path from the v1 app's database. This app is new enough
 /// that there was no real production data to preserve, so the old v1
 /// database (`lib/core/database/`, `inventory_db`) and every v1 feature
@@ -80,6 +83,7 @@ part 'app_database.g.dart';
     Products,
     ProductImages,
     Customers,
+    CustomerImages,
     Investors,
     InvestorRepayments,
     LegacySettlements,
@@ -94,6 +98,7 @@ part 'app_database.g.dart';
     Expenses,
     Orders,
     FixedAssets,
+    FixedAssetImages,
     QuickCaptures,
     CashLedgerEntries,
     StockMovements,
@@ -105,7 +110,9 @@ part 'app_database.g.dart';
   daos: [
     AppSettingsDao,
     ProductDao,
+    ProductImageDao,
     CustomerDao,
+    CustomerImageDao,
     InvestorDao,
     PurchaseDao,
     SyncMetadataDao,
@@ -117,6 +124,7 @@ part 'app_database.g.dart';
     RentDao,
     OrderDao,
     FixedAssetDao,
+    FixedAssetImageDao,
     QuickCaptureDao,
     AuditLogDao,
   ],
@@ -133,13 +141,22 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (Migrator m) async {
       await m.createAll();
       await _seed(this);
+    },
+    onUpgrade: (Migrator m, int from, int to) async {
+      if (from < 2) {
+        await m.addColumn(purchaseTrips, purchaseTrips.actualCashTakenOutMinor);
+      }
+      if (from < 3) {
+        await m.createTable(customerImages);
+        await m.createTable(fixedAssetImages);
+      }
     },
   );
 }

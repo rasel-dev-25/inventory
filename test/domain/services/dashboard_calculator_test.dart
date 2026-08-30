@@ -1,6 +1,7 @@
 import 'package:test/test.dart';
 import 'package:inventory/core/money/money.dart';
 import 'package:inventory/domain/entities/cash_ledger_entry.dart';
+import 'package:inventory/domain/entities/due.dart';
 import 'package:inventory/domain/entities/enums.dart';
 import 'package:inventory/domain/entities/fund_source.dart';
 import 'package:inventory/domain/entities/purchase.dart';
@@ -158,5 +159,61 @@ void main() {
         expect(totals.stockValue, Money.parse('40') * 5);
       },
     );
+
+    test('totalExpense sums all expense amounts in range', () {
+      final totals = computeDashboardTotals(
+        ledgerEntriesInRange: const [],
+        salesInRange: const [],
+        purchaseTripsInRange: const [],
+        stockMovementsInRange: const [],
+        expensesInRange: [Money.parse('150'), Money.parse('350')],
+      );
+      expect(totals.totalExpense, Money.parse('500'));
+    });
+
+    test('totalDue sums remaining uncollected balances from dues in range', () {
+      final due1 = Due(
+        id: 'd1',
+        customerId: 'c1',
+        sourceType: DueSourceType.sale,
+        sourceId: 's1',
+        originalAmount: Money.parse('500'),
+        paidAmount: Money.parse('100'),
+        status: DueStatus.partiallyPaid,
+        createdAt: DateTime.utc(2026, 8, 4),
+      );
+      final due2 = Due(
+        id: 'd2',
+        customerId: 'c2',
+        sourceType: DueSourceType.sale,
+        sourceId: 's2',
+        originalAmount: Money.parse('300'),
+        paidAmount: Money.zero(),
+        status: DueStatus.pending,
+        createdAt: DateTime.utc(2026, 8, 4),
+      );
+      final totals = computeDashboardTotals(
+        ledgerEntriesInRange: const [],
+        salesInRange: const [],
+        purchaseTripsInRange: const [],
+        stockMovementsInRange: const [],
+        duesInRange: [due1, due2],
+      );
+      // (500 - 100) + (300 - 0) = 700
+      expect(totals.totalDue, Money.parse('700'));
+    });
+
+    test('carries totalInvestorRemaining and dailyInvestorObligation', () {
+      final totals = computeDashboardTotals(
+        ledgerEntriesInRange: const [],
+        salesInRange: const [],
+        purchaseTripsInRange: const [],
+        stockMovementsInRange: const [],
+        totalInvestorRemaining: Money.parse('50000'),
+        dailyInvestorObligation: Money.parse('555.55'),
+      );
+      expect(totals.totalInvestorRemaining, Money.parse('50000'));
+      expect(totals.dailyInvestorObligation, Money.parse('555.55'));
+    });
   });
 }
