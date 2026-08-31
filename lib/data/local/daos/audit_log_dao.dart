@@ -18,9 +18,16 @@ class AuditLogDao extends DatabaseAccessor<AppDatabase>
     with _$AuditLogDaoMixin {
   AuditLogDao(super.db);
 
-  Stream<List<AuditLogEntryRow>> watchAll(String shopId, {int limit = 200}) {
+  Stream<List<AuditLogEntryRow>> watchAll(String shopId, {int limit = 500}) {
     final query = select(auditLogEntries)
-      ..where((a) => a.shopId.equals(shopId))
+      ..where((a) => a.shopId.equals(shopId) | a.shopId.equals('shop-default') | a.shopId.equals('default_shop'))
+      ..orderBy([(a) => OrderingTerm.desc(a.timestamp)])
+      ..limit(limit);
+    return query.watch();
+  }
+
+  Stream<List<AuditLogEntryRow>> watchAnyShop({int limit = 500}) {
+    final query = select(auditLogEntries)
       ..orderBy([(a) => OrderingTerm.desc(a.timestamp)])
       ..limit(limit);
     return query.watch();

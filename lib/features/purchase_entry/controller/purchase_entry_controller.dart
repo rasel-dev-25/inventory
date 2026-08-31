@@ -86,11 +86,88 @@ class PurchaseEntryController extends GetxController {
   /// comment). Capped the same way `PurchaseDao.watchRecent`'s own doc
   /// comment explains: right for a scrolling list, wrong for a total.
   final recentTrips = <PurchaseTrip>[].obs;
+  final searchQuery = ''.obs;
+  final selectedFundFilter = 'all'.obs; // 'all', 'cash', 'investor'
 
   final isSaving = false.obs;
   final errorMessage = RxnString();
 
   final List<StreamSubscription<Object?>> _subscriptions = [];
+
+  List<PurchaseTrip> get filteredTrips {
+    final query = searchQuery.value.trim().toLowerCase();
+    final fundFilter = selectedFundFilter.value;
+
+    return recentTrips.where((trip) {
+      // 1. Filter by Fund Source
+      final isInvestor = trip.items.any((i) => i.fundSource.isInvestor);
+      if (fundFilter == 'cash' && isInvestor) return false;
+      if (fundFilter == 'investor' && !isInvestor) return false;
+
+      // 2. Filter by Search Query
+      if (query.isNotEmpty) {
+        final matchesItem = trip.items.any((i) {
+          final prod = products.firstWhereOrNull((p) => p.id == i.productId);
+          final name = prod?.name.toLowerCase() ?? '';
+          return name.contains(query) || i.productId.toLowerCase().contains(query);
+        });
+
+        final matchesOtherCost = trip.otherCosts.any((c) => c.description.toLowerCase().contains(query));
+
+        if (!matchesItem && !matchesOtherCost) return false;
+      }
+
+      return true;
+    }).toList();
+  }
+
+  Money get totalPurchasesAmount {
+    return filteredTrips.fold(
+      Money.zero(),
+      (sum, trip) => sum + trip.items.fold(Money.zero(), (itemSum, i) => itemSum + i.lineTotal),
+    );
+  }
+
+  Money get totalTransportAndOtherCosts {
+    return filteredTrips.fold(
+      Money.zero(),
+      (sum, trip) => sum + trip.transportCost + trip.otherCostsTotal,
+    );
+  }
+
+  Money get totalSpentAmount {
+    return totalPurchasesAmount + totalTransportAndOtherCosts;
+  }
+
+  Money get totalRemainingCash {
+    return filteredTrips.fold(
+      Money.zero(),
+      (sum, trip) {
+        if (trip.actualCashTakenOut == null || trip.actualCashTakenOut!.minorUnits == 0) {
+          return sum;
+        }
+        final itemsTotal = trip.items.fold(Money.zero(), (s, i) => s + i.lineTotal);
+        final totalSpent = itemsTotal + trip.transportCost + trip.otherCostsTotal;
+        final netUsed = trip.actualCashTakenOut! - trip.cashReturned;
+        final balanceDiff = netUsed.minorUnits - totalSpent.minorUnits;
+        return balanceDiff > 0 ? sum + Money.fromMinor(balanceDiff) : sum;
+      },
+    );
+  }
+
+  int get totalItemsCount {
+    return filteredTrips.fold(
+      0,
+      (sum, trip) => sum + trip.items.length,
+    );
+  }
+
+  void setSearchQuery(String q) => searchQuery.value = q;
+  void setFundFilter(String f) => selectedFundFilter.value = f;
+  void resetFilters() {
+    searchQuery.value = '';
+    selectedFundFilter.value = 'all';
+  }
 
   @override
   void onInit() {

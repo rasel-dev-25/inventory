@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -12,9 +10,8 @@ import '../../../domain/entities/product.dart';
 import '../../catalog/view/product_form_sheet.dart';
 import '../controller/stock_controller.dart';
 
-/// The upgraded Stock screen — horizontal category & investor filter chips,
-/// real-time summary metrics, rich stock product cards, detail modals, and direct
-/// product creation with opening stock, barcode scanning, and photos.
+/// The upgraded, clean, organized Stock screen — live search, status filters,
+/// modern financial overview, clean category carousel, and sleek product cards.
 class StockScreen extends GetView<StockController> {
   final VoidCallback? onMenuTap;
 
@@ -395,59 +392,86 @@ class StockScreen extends GetView<StockController> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: ShopAppBarTitle(pageTitle: 'stockAndAssets'.tr),
         leading: onMenuTap == null
             ? null
             : IconButton(icon: const Icon(Icons.menu), onPressed: onMenuTap),
-        actions: const [
-          NotificationBellAction(),
-          SizedBox(width: 4),
+        actions: [
+          Obx(() {
+            final hasFilter = controller.selectedCategory.value != null ||
+                controller.selectedFundFilter.value != null ||
+                controller.stockStatusFilter.value != 'all' ||
+                controller.searchQuery.value.isNotEmpty;
+            if (!hasFilter) return const SizedBox.shrink();
+            return IconButton(
+              icon: const Icon(Icons.filter_alt_off_rounded, size: 20),
+              tooltip: 'clearFilter'.tr,
+              onPressed: controller.resetFilters,
+            );
+          }),
+          const NotificationBellAction(),
+          const SizedBox(width: 4),
         ],
       ),
       body: Obx(() {
         final items = controller.filteredProducts;
+
         return ListView(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
             vertical: AppSpacing.sm,
           ),
           children: [
-            // 1. Category Filter Chips
-            _CategoryChips(onAddCategory: () => _showAddCategoryDialog(context)),
-            const SizedBox(height: AppSpacing.xs),
-
-            // 2. Investor Filter Chips
-            const _InvestorChips(),
-            const SizedBox(height: AppSpacing.md),
-
-            // 3. Summary Cards
+            // 1. Stock Overview Financial Metrics
             const _StockSummaryCard(),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.sm),
+
+            // 2. Search & Stock Status Filter Bar
+            _buildSearchAndFilters(context),
+            const SizedBox(height: AppSpacing.sm),
+
+            // 3. Category & Investor Carousel
+            _CategoryAndInvestorCarousel(
+              onAddCategory: () => _showAddCategoryDialog(context),
+            ),
+            const SizedBox(height: AppSpacing.sm),
 
             // 4. Products List Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '${'products'.tr} (${items.length})',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                if (controller.selectedCategory.value != null ||
-                    controller.selectedFundFilter.value != null)
-                  TextButton(
-                    onPressed: () {
-                      controller.selectedCategory.value = null;
-                      controller.selectedFundFilter.value = null;
-                    },
-                    child: Text('clearFilter'.tr),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${'products'.tr} (${items.length})',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
                   ),
-              ],
+                  if (controller.selectedCategory.value != null ||
+                      controller.selectedFundFilter.value != null ||
+                      controller.stockStatusFilter.value != 'all' ||
+                      controller.searchQuery.value.isNotEmpty)
+                    InkWell(
+                      onTap: controller.resetFilters,
+                      child: Text(
+                        'clearFilter'.tr,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
-            const SizedBox(height: AppSpacing.xs),
+            const SizedBox(height: 4),
 
             // 5. Products List
             if (items.isEmpty)
@@ -460,17 +484,21 @@ class StockScreen extends GetView<StockController> {
                       Icon(
                         Icons.inventory_2_outlined,
                         size: 48,
-                        color: Colors.grey.shade400,
+                        color: theme.colorScheme.outlineVariant,
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
-                        'noProductsYet'.tr,
-                        style: TextStyle(color: Colors.grey.shade600),
+                        controller.searchQuery.value.isNotEmpty ||
+                                controller.selectedCategory.value != null ||
+                                controller.stockStatusFilter.value != 'all'
+                            ? 'কোনো পণ্য খুঁজে পাওয়া যায়নি'
+                            : 'noProductsYet'.tr,
+                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                       ),
                       const SizedBox(height: AppSpacing.md),
                       FilledButton.icon(
                         onPressed: () => _openProductForm(context),
-                        icon: const Icon(Icons.add),
+                        icon: const Icon(Icons.add_rounded),
                         label: Text('addNewProduct'.tr),
                       ),
                     ],
@@ -485,6 +513,8 @@ class StockScreen extends GetView<StockController> {
                   onEdit: () => _openProductForm(context, existing: product),
                   onDelete: () => _confirmDelete(context, product),
                 ),
+
+            const SizedBox(height: 80), // FAB bottom padding
           ],
         );
       }),
@@ -492,184 +522,294 @@ class StockScreen extends GetView<StockController> {
         heroTag: 'stock_fab',
         tooltip: 'addNewProduct'.tr,
         onPressed: () => _openProductForm(context),
-        icon: const Icon(Icons.add),
+        icon: const Icon(Icons.add_rounded),
         label: Text('addNewProduct'.tr),
       ),
     );
   }
+
+  Widget _buildSearchAndFilters(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      children: [
+        // Search Input
+        TextField(
+          onChanged: controller.setSearchQuery,
+          decoration: InputDecoration(
+            hintText: 'searchStockHint'.tr,
+            prefixIcon: const Icon(Icons.search_rounded, size: 20),
+            suffixIcon: Obx(() => controller.searchQuery.value.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear, size: 18),
+                    onPressed: () => controller.setSearchQuery(''),
+                  )
+                : const SizedBox.shrink()),
+            isDense: true,
+            filled: true,
+            fillColor: theme.colorScheme.surface,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: 10,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              borderSide: BorderSide(
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              borderSide: BorderSide(
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 6),
+
+        // Quick Stock Status Filter Pills
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Obx(() {
+            final current = controller.stockStatusFilter.value;
+            final inStock = controller.inStockCount;
+            final lowStock = controller.lowStockCount;
+            final outStock = controller.outOfStockCount;
+
+            final statusOptions = [
+              {'key': 'all', 'label': 'সব (${controller.products.length})', 'icon': Icons.tune_rounded, 'color': theme.colorScheme.primary},
+              {'key': 'in_stock', 'label': 'স্টক আছে ($inStock)', 'icon': Icons.check_circle_outline, 'color': Colors.green.shade700},
+              {'key': 'low_stock', 'label': 'কম স্টক ($lowStock)', 'icon': Icons.warning_amber_rounded, 'color': Colors.orange.shade800},
+              {'key': 'out_of_stock', 'label': 'স্টক নেই ($outStock)', 'icon': Icons.cancel_outlined, 'color': Colors.red.shade700},
+            ];
+
+            return Row(
+              children: statusOptions.map((opt) {
+                final isSelected = current == opt['key'];
+                final color = opt['color'] as Color;
+
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: ChoiceChip(
+                    avatar: Icon(
+                      opt['icon'] as IconData,
+                      size: 13,
+                      color: isSelected ? theme.colorScheme.onPrimary : color,
+                    ),
+                    label: Text(opt['label'] as String),
+                    selected: isSelected,
+                    showCheckmark: false,
+                    selectedColor: color,
+                    backgroundColor: theme.colorScheme.surface,
+                    labelStyle: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
+                    ),
+                    side: BorderSide(
+                      color: isSelected ? color : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    onSelected: (_) => controller.setStockStatusFilter(opt['key'] as String),
+                  ),
+                );
+              }).toList(),
+            );
+          }),
+        ),
+      ],
+    );
+  }
 }
 
-class _CategoryChips extends GetView<StockController> {
+/// Unified, clean Category & Investor chips horizontal carousel.
+class _CategoryAndInvestorCarousel extends GetView<StockController> {
   final VoidCallback onAddCategory;
 
-  const _CategoryChips({required this.onAddCategory});
+  const _CategoryAndInvestorCarousel({required this.onAddCategory});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Obx(() {
-      final selected = controller.selectedCategory.value;
+      final selectedCat = controller.selectedCategory.value;
       final categories = controller.categories;
-      final totalCount = controller.products.length;
-
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'filterByCategory'.tr,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade700,
-                    ),
-              ),
-              InkWell(
-                onTap: onAddCategory,
-                borderRadius: BorderRadius.circular(4),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.add_circle_outline,
-                          size: 14, color: Theme.of(context).colorScheme.primary),
-                      const SizedBox(width: 4),
-                      Text(
-                        'addCategory'.tr,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                ChoiceChip(
-                  label: Text('${'allCategories'.tr} ($totalCount)'),
-                  selected: selected == null,
-                  onSelected: (_) => controller.selectedCategory.value = null,
-                ),
-                const SizedBox(width: 6),
-                for (final cat in categories) ...[
-                  ChoiceChip(
-                    label: Text(
-                      '${cat.name} (${controller.countForCategory(cat.name)})',
-                    ),
-                    selected: selected == cat.name,
-                    onSelected: (val) => controller.selectedCategory.value =
-                        val ? cat.name : null,
-                  ),
-                  const SizedBox(width: 6),
-                ],
-              ],
-            ),
-          ),
-        ],
-      );
-    });
-  }
-}
-
-class _InvestorChips extends GetView<StockController> {
-  const _InvestorChips();
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final selected = controller.selectedFundFilter.value;
+      final selectedFund = controller.selectedFundFilter.value;
       final investors = controller.investors;
-      final shopCount = controller.countForFundSource(shopFundFilterValue);
 
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'filterByInvestor'.tr,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade700,
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            // Category Add Button
+            ActionChip(
+              avatar: Icon(Icons.add_rounded, size: 14, color: theme.colorScheme.primary),
+              label: Text(
+                'addCategory'.tr,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.primary,
                 ),
-          ),
-          const SizedBox(height: 4),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                ChoiceChip(
-                  label: Text('allInvestors'.tr),
-                  selected: selected == null,
-                  onSelected: (_) =>
-                      controller.selectedFundFilter.value = null,
-                ),
-                const SizedBox(width: 6),
-                ChoiceChip(
-                  label: Text('${'shop'.tr} ($shopCount)'),
-                  selected: selected == shopFundFilterValue,
-                  onSelected: (val) => controller.selectedFundFilter.value =
-                      val ? shopFundFilterValue : null,
-                ),
-                const SizedBox(width: 6),
-                for (final inv in investors) ...[
-                  ChoiceChip(
-                    label: Text(
-                      '${inv.name} (${controller.countForFundSource(inv.id)})',
-                    ),
-                    selected: selected == inv.id,
-                    onSelected: (val) => controller.selectedFundFilter.value =
-                        val ? inv.id : null,
-                  ),
-                  const SizedBox(width: 6),
-                ],
-              ],
+              ),
+              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.08),
+              side: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              onPressed: onAddCategory,
             ),
-          ),
-        ],
+            const SizedBox(width: 6),
+
+            // All Categories Chip
+            ChoiceChip(
+              label: Text('${'allCategories'.tr} (${controller.products.length})'),
+              selected: selectedCat == null,
+              showCheckmark: false,
+              selectedColor: theme.colorScheme.primaryContainer,
+              backgroundColor: theme.colorScheme.surface,
+              labelStyle: TextStyle(
+                fontSize: 11.5,
+                fontWeight: selectedCat == null ? FontWeight.bold : FontWeight.normal,
+                color: selectedCat == null
+                    ? theme.colorScheme.onPrimaryContainer
+                    : theme.colorScheme.onSurfaceVariant,
+              ),
+              side: BorderSide(
+                color: selectedCat == null
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              onSelected: (_) => controller.selectedCategory.value = null,
+            ),
+            const SizedBox(width: 6),
+
+            // Category Chips
+            for (final cat in categories) ...[
+              ChoiceChip(
+                label: Text('${cat.name} (${controller.countForCategory(cat.name)})'),
+                selected: selectedCat == cat.name,
+                showCheckmark: false,
+                selectedColor: theme.colorScheme.primaryContainer,
+                backgroundColor: theme.colorScheme.surface,
+                labelStyle: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: selectedCat == cat.name ? FontWeight.bold : FontWeight.normal,
+                  color: selectedCat == cat.name
+                      ? theme.colorScheme.onPrimaryContainer
+                      : theme.colorScheme.onSurfaceVariant,
+                ),
+                side: BorderSide(
+                  color: selectedCat == cat.name
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                onSelected: (val) => controller.selectedCategory.value = val ? cat.name : null,
+              ),
+              const SizedBox(width: 6),
+            ],
+
+            // Divider before investors if investors exist
+            if (investors.isNotEmpty) ...[
+              Container(
+                height: 18,
+                width: 1,
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                color: theme.colorScheme.outlineVariant,
+              ),
+              for (final inv in investors) ...[
+                ChoiceChip(
+                  avatar: Icon(
+                    Icons.handshake_outlined,
+                    size: 13,
+                    color: selectedFund == inv.id ? Colors.orange.shade900 : Colors.orange.shade800,
+                  ),
+                  label: Text('${inv.name} (${controller.countForFundSource(inv.id)})'),
+                  selected: selectedFund == inv.id,
+                  showCheckmark: false,
+                  selectedColor: Colors.orange.shade100,
+                  backgroundColor: theme.colorScheme.surface,
+                  labelStyle: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: selectedFund == inv.id ? FontWeight.bold : FontWeight.normal,
+                    color: selectedFund == inv.id ? Colors.orange.shade900 : Colors.orange.shade800,
+                  ),
+                  side: BorderSide(
+                    color: selectedFund == inv.id ? Colors.orange.shade600 : Colors.orange.shade200,
+                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  onSelected: (val) => controller.selectedFundFilter.value = val ? inv.id : null,
+                ),
+                const SizedBox(width: 6),
+              ],
+            ],
+          ],
+        ),
       );
     });
   }
 }
 
+/// Modern Stock Overview Financial Dashboard Card
 class _StockSummaryCard extends GetView<StockController> {
   const _StockSummaryCard();
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Obx(() {
       final count = controller.filteredProducts.length;
-      final value = controller.totalCostValue.format();
-      final profit = controller.potentialProfit.format();
+      final costValue = controller.totalCostValue.format();
+      final profitValue = controller.potentialProfit.format();
       final isProfitNegative = controller.potentialProfit.isNegative;
 
       return Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.35),
-          borderRadius: BorderRadius.circular(12),
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           border: Border.all(
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
+            width: 0.8,
           ),
         ),
-        child: Row(
+        child: Column(
           children: [
-            _statItem(context, label: 'products'.tr, value: '$count'),
-            Container(width: 1, height: 32, color: Colors.grey.shade300),
-            _statItem(context, label: 'stockValue'.tr, value: value),
-            Container(width: 1, height: 32, color: Colors.grey.shade300),
-            _statItem(
-              context,
-              label: 'potentialProfit'.tr,
-              value: profit,
-              color: isProfitNegative ? Colors.red : Colors.green.shade700,
+            Row(
+              children: [
+                _buildStatColumn(
+                  context,
+                  label: 'products'.tr,
+                  value: '$count',
+                  color: theme.colorScheme.primary,
+                  icon: Icons.inventory_2_outlined,
+                ),
+                Container(width: 1, height: 36, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6)),
+                _buildStatColumn(
+                  context,
+                  label: 'stockValue'.tr,
+                  value: costValue,
+                  color: theme.colorScheme.onSurface,
+                  icon: Icons.account_balance_wallet_outlined,
+                ),
+                Container(width: 1, height: 36, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6)),
+                _buildStatColumn(
+                  context,
+                  label: 'potentialProfit'.tr,
+                  value: profitValue,
+                  color: isProfitNegative ? Colors.red.shade700 : Colors.green.shade700,
+                  icon: Icons.trending_up_rounded,
+                ),
+              ],
             ),
           ],
         ),
@@ -677,31 +817,48 @@ class _StockSummaryCard extends GetView<StockController> {
     });
   }
 
-  Widget _statItem(
+  Widget _buildStatColumn(
     BuildContext context, {
     required String label,
     required String value,
-    Color? color,
+    required Color color,
+    required IconData icon,
   }) {
+    final theme = Theme.of(context);
+
     return Expanded(
       child: Column(
         children: [
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey.shade700,
-                  fontSize: 11,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 13, color: theme.colorScheme.onSurfaceVariant),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  label,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontSize: 11,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-            textAlign: TextAlign.center,
+              ),
+            ],
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
           Text(
             value,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
+            style: TextStyle(
+              fontSize: 14.5,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
             textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -709,6 +866,7 @@ class _StockSummaryCard extends GetView<StockController> {
   }
 }
 
+/// Clean, modern product tile representation
 class _ProductCard extends GetView<StockController> {
   final Product product;
   final VoidCallback onTap;
@@ -724,34 +882,34 @@ class _ProductCard extends GetView<StockController> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final image = controller.primaryImageFor(product.id);
     final imageSource = image == null ? null : controller.imageSourceFor(image);
 
     final isOutOfStock = product.qty <= 0;
     final isLowStock = product.qty > 0 && product.qty <= 5;
     final stockColor = isOutOfStock
-        ? Colors.red
+        ? Colors.red.shade700
         : (isLowStock ? Colors.orange.shade800 : Colors.green.shade700);
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      elevation: 0.5,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: isOutOfStock
-              ? Colors.red.withValues(alpha: 0.3)
-              : Colors.grey.withValues(alpha: 0.15),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
+          width: 0.8,
         ),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.all(AppSpacing.sm),
           child: Row(
             children: [
-              // Product Image or Icon
+              // Product Image or Icon Container
               if (imageSource != null)
                 GestureDetector(
                   onTap: () => showFullScreenImageViewer(
@@ -765,8 +923,8 @@ class _ProductCard extends GetView<StockController> {
                     tag: 'stock_card_image_${product.id}',
                     child: SafeImage(
                       source: imageSource,
-                      width: 52,
-                      height: 52,
+                      width: 50,
+                      height: 50,
                       borderRadius: BorderRadius.circular(8),
                       fallbackIcon: Icons.inventory_2_outlined,
                     ),
@@ -774,105 +932,142 @@ class _ProductCard extends GetView<StockController> {
                 )
               else
                 Container(
-                  width: 52,
-                  height: 52,
+                  width: 50,
+                  height: 50,
                   decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.08),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     Icons.inventory_2_outlined,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 26,
+                    color: theme.colorScheme.primary,
+                    size: 24,
                   ),
                 ),
-              const SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.sm),
 
               // Product Info
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      product.name,
-                      style:
-                          Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
+                    // Title & Category Tag
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            product.name,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (product.category.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              product.category,
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: theme.colorScheme.onSurfaceVariant,
                               ),
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 3),
+
+                    // Buy & Sell Prices
                     Row(
                       children: [
                         Text(
                           '${'buy'.tr}: ${product.costPrice.format()}/${product.unit}',
                           style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade700,
+                            fontSize: 11.5,
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
+                        const SizedBox(width: 6),
                         Text(
-                          '  •  ${'sell'.tr}: ${product.suggestedSellPrice.format()}/${product.sellUnit}',
+                          '•  ${'sell'.tr}: ${product.suggestedSellPrice.format()}/${product.sellUnit}',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 11.5,
                             fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade900,
+                            color: theme.colorScheme.primary,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 4),
+
+                    // Stock Status Badge
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
                           decoration: BoxDecoration(
-                            color: stockColor.withValues(alpha: 0.12),
+                            color: stockColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: stockColor.withValues(alpha: 0.25), width: 0.6),
                           ),
-                          child: Text(
-                            isOutOfStock
-                                 ? 'outOfStock'.tr
-                                 : '${'stockLabel'.tr} ${product.qty.toStringAsFixed(product.qty == product.qty.roundToDouble() ? 0 : 2)} ${product.sellUnit}',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: stockColor,
-                            ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                isOutOfStock
+                                    ? Icons.cancel_outlined
+                                    : (isLowStock ? Icons.warning_amber_rounded : Icons.check_circle_outline),
+                                size: 11,
+                                color: stockColor,
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                isOutOfStock
+                                    ? 'outOfStock'.tr
+                                    : '${'stockLabel'.tr} ${product.qty.toStringAsFixed(product.qty == product.qty.roundToDouble() ? 0 : 2)} ${product.sellUnit}',
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: stockColor,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            product.category,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey.shade700,
+                        if (!product.fundSource.isShop) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.shade50,
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: Colors.orange.shade200, width: 0.6),
+                            ),
+                            child: Text(
+                              controller.investorName(product.fundSource.investorId!),
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.orange.shade900,
+                              ),
                             ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ],
                 ),
               ),
 
-              // Action Buttons
+              // Action Menu
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert),
+                icon: Icon(Icons.more_vert, size: 20, color: theme.colorScheme.outline),
                 onSelected: (val) {
                   if (val == 'details') onTap();
                   if (val == 'edit') onEdit();
@@ -903,11 +1098,9 @@ class _ProductCard extends GetView<StockController> {
                     value: 'delete',
                     child: Row(
                       children: [
-                        const Icon(Icons.delete_outline,
-                            size: 18, color: Colors.red),
+                        const Icon(Icons.delete_outline, color: Colors.red, size: 18),
                         const SizedBox(width: 8),
-                        Text('delete'.tr,
-                            style: const TextStyle(color: Colors.red)),
+                        Text('delete'.tr, style: const TextStyle(color: Colors.red)),
                       ],
                     ),
                   ),

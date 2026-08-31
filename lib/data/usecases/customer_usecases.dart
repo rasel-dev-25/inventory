@@ -27,8 +27,8 @@ class CustomerUseCases {
     Customer customer, {
     required String shopId,
     required DateTime now,
-  }) {
-    return writeAndEnqueue(
+  }) async {
+    await writeAndEnqueue(
       db: db,
       eventType: 'customer_created',
       upserts: [
@@ -40,14 +40,24 @@ class CustomerUseCases {
       localWrite: () =>
           db.customerDao.create(customer, shopId: shopId, now: now),
     );
+    await recordAuditLog(
+      db: db,
+      shopId: shopId,
+      action: 'insert',
+      changedTableName: 'customers',
+      recordId: customer.id,
+      now: now,
+      newValueJson: jsonEncode(_rowFor(customer, shopId: shopId)),
+    );
   }
 
   Future<void> update(
     Customer customer, {
     required String shopId,
     required DateTime now,
-  }) {
-    return writeAndEnqueue(
+  }) async {
+    final old = await db.customerDao.getById(customer.id);
+    await writeAndEnqueue(
       db: db,
       eventType: 'customer_updated',
       upserts: [
@@ -58,6 +68,16 @@ class CustomerUseCases {
       ],
       localWrite: () =>
           db.customerDao.updateCustomer(customer, shopId: shopId, now: now),
+    );
+    await recordAuditLog(
+      db: db,
+      shopId: shopId,
+      action: 'update',
+      changedTableName: 'customers',
+      recordId: customer.id,
+      now: now,
+      oldValueJson: old != null ? jsonEncode(_rowFor(old, shopId: shopId)) : null,
+      newValueJson: jsonEncode(_rowFor(customer, shopId: shopId)),
     );
   }
 

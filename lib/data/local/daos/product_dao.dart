@@ -68,10 +68,25 @@ class ProductDao extends DatabaseAccessor<AppDatabase> with _$ProductDaoMixin {
     return row?.toDomain();
   }
 
+  Future<domain.Product?> getAnyById(String id) async {
+    final row = await (select(
+      products,
+    )..where((p) => p.id.equals(id))).getSingleOrNull();
+    return row?.toDomain();
+  }
+
   /// All non-deleted products for the current shop, live-updating.
   Stream<List<domain.Product>> watchAll(String shopId) {
     final query = select(products)
       ..where((p) => p.shopId.equals(shopId) & p.deletedAt.isNull())
+      ..orderBy([(p) => OrderingTerm.asc(p.name)]);
+    return query.watch().map((rows) => rows.map((r) => r.toDomain()).toList());
+  }
+
+  /// All products (including soft-deleted) for the current shop, live-updating.
+  Stream<List<domain.Product>> watchAllWithDeleted(String shopId) {
+    final query = select(products)
+      ..where((p) => p.shopId.equals(shopId))
       ..orderBy([(p) => OrderingTerm.asc(p.name)]);
     return query.watch().map((rows) => rows.map((r) => r.toDomain()).toList());
   }

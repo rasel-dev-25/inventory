@@ -37,16 +37,16 @@ void main() {
     ).softDelete('cust-1', shopId: defaultShopId, now: DateTime.now().toUtc());
     await Future<void>.delayed(Duration.zero);
 
-    expect(controller.entries, hasLength(1));
-    expect(controller.entries.single.action, 'delete');
-    expect(controller.entries.single.changedTableName, 'customers');
+    expect(controller.entries, hasLength(2));
+    expect(controller.entries.map((e) => e.action), containsAll(['insert', 'delete']));
+    expect(controller.entries.first.changedTableName, 'customers');
   });
 
   test('shows newest entries first', () async {
     await CustomerUseCases(db).create(
       const Customer(id: 'cust-1', name: 'Karim'),
       shopId: defaultShopId,
-      now: DateTime.now().toUtc(),
+      now: DateTime.utc(2025, 1, 1),
     );
     await CustomerUseCases(db).softDelete(
       'cust-1',
@@ -58,8 +58,50 @@ void main() {
     ).restore('cust-1', shopId: defaultShopId, now: DateTime.utc(2026, 6, 1));
     await Future<void>.delayed(Duration.zero);
 
-    expect(controller.entries, hasLength(2));
-    expect(controller.entries.first.action, 'restore');
-    expect(controller.entries.last.action, 'delete');
+    expect(controller.entries, hasLength(3));
+    expect(controller.entries[0].action, 'restore');
+    expect(controller.entries[1].action, 'delete');
+    expect(controller.entries[2].action, 'insert');
+  });
+
+  test('filters entries by entity and action properly', () async {
+    await CustomerUseCases(db).create(
+      const Customer(id: 'cust-1', name: 'Rahim'),
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+    await CustomerUseCases(db).softDelete(
+      'cust-1',
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(controller.totalCount, 2);
+    expect(controller.deleteCount, 1);
+    expect(controller.insertCount, 1);
+
+    // Filter by entity
+    controller.setEntityFilter('customers');
+    expect(controller.filteredEntries, hasLength(2));
+
+    controller.setEntityFilter('products');
+    expect(controller.filteredEntries, isEmpty);
+
+    // Filter by action
+    controller.setEntityFilter('all');
+    controller.setActionFilter('delete');
+    expect(controller.filteredEntries, hasLength(1));
+
+    controller.setActionFilter('update');
+    expect(controller.filteredEntries, isEmpty);
+
+    // Search query
+    controller.setActionFilter('all');
+    controller.setSearchQuery('Rahim');
+    expect(controller.filteredEntries, hasLength(2));
+
+    controller.setSearchQuery('Unknown');
+    expect(controller.filteredEntries, isEmpty);
   });
 }

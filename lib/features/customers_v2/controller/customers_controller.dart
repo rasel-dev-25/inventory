@@ -56,6 +56,7 @@ class CustomersController extends GetxController {
   final showBuyersOnly = false.obs;
   final showWithDuesOnly = false.obs;
   final showWithOrdersOnly = false.obs;
+  final showFlaggedOnly = false.obs;
   final errorMessage = RxnString();
 
   final List<StreamSubscription<Object?>> _subscriptions = [];
@@ -90,7 +91,7 @@ class CustomersController extends GetxController {
       db.orderDao.watchAll(defaultShopId).listen(orders.assignAll),
     );
     _subscriptions.add(
-      db.productDao.watchAll(defaultShopId).listen(products.assignAll),
+      db.productDao.watchAllWithDeleted(defaultShopId).listen(products.assignAll),
     );
   }
 
@@ -138,6 +139,20 @@ class CustomersController extends GetxController {
       customers.where((c) => outstandingDueFor(c.id) > 0).length;
   int get withOrdersCustomersCount =>
       customers.where((c) => ordersCountFor(c.id) > 0).length;
+  int get flaggedCustomersCount =>
+      customers.where((c) => c.suspicionFlag || c.isBlocked).length;
+
+  Money get totalReceivables => Money.fromMinor(
+        dues.fold(0, (sum, d) => sum + (d.originalAmount.minorUnits - d.paidAmount.minorUnits)),
+      );
+
+  void resetFilters() {
+    searchQuery.value = '';
+    showBuyersOnly.value = false;
+    showWithDuesOnly.value = false;
+    showWithOrdersOnly.value = false;
+    showFlaggedOnly.value = false;
+  }
 
   /// Applies the search query (name/contact/address, case-insensitive) and the
   /// filter toggles together.
@@ -153,6 +168,9 @@ class CustomersController extends GetxController {
         return false;
       }
       if (showWithOrdersOnly.value && ordersCountFor(c.id) == 0) {
+        return false;
+      }
+      if (showFlaggedOnly.value && !c.suspicionFlag && !c.isBlocked) {
         return false;
       }
       if (query.isEmpty) return true;

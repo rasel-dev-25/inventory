@@ -70,9 +70,26 @@ class StockController extends GetxController {
   /// anything else = that investor's id.
   final selectedFundFilter = RxnString();
 
+  /// 'all', 'in_stock', 'low_stock', 'out_of_stock'
+  final stockStatusFilter = 'all'.obs;
+  final searchQuery = ''.obs;
+
   final List<StreamSubscription<Object?>> _subscriptions = [];
 
   double? get overheadMarkupPercent => pricingSettings?.overheadMarkupPercent;
+
+  int get outOfStockCount => products.where((p) => p.qty <= 0).length;
+  int get lowStockCount => products.where((p) => p.qty > 0 && p.qty <= 5).length;
+  int get inStockCount => products.where((p) => p.qty > 5).length;
+
+  void setSearchQuery(String q) => searchQuery.value = q;
+  void setStockStatusFilter(String s) => stockStatusFilter.value = s;
+  void resetFilters() {
+    searchQuery.value = '';
+    selectedCategory.value = null;
+    selectedFundFilter.value = null;
+    stockStatusFilter.value = 'all';
+  }
 
   @override
   void onInit() {
@@ -119,15 +136,44 @@ class StockController extends GetxController {
   }
 
   List<Product> get filteredProducts {
+    final query = searchQuery.value.trim().toLowerCase();
+    final status = stockStatusFilter.value;
+
     return products.where((p) {
+      // 1. Search Query
+      if (query.isNotEmpty) {
+        final matchesName = p.name.toLowerCase().contains(query);
+        final matchesCategory = p.category.toLowerCase().contains(query);
+        final matchesBarcode = p.barcode?.toLowerCase().contains(query) ?? false;
+        final matchesSku = p.sku?.toLowerCase().contains(query) ?? false;
+
+        if (!matchesName && !matchesCategory && !matchesBarcode && !matchesSku) {
+          return false;
+        }
+      }
+
+      // 2. Category Filter
       if (selectedCategory.value != null &&
           p.category != selectedCategory.value) {
         return false;
       }
+
+      // 3. Fund Filter
       final filter = selectedFundFilter.value;
-      if (filter == null) return true;
-      if (filter == shopFundFilterValue) return p.fundSource.isShop;
-      return p.fundSource.investorId == filter;
+      if (filter != null) {
+        if (filter == shopFundFilterValue) {
+          if (!p.fundSource.isShop) return false;
+        } else if (p.fundSource.investorId != filter) {
+          return false;
+        }
+      }
+
+      // 4. Stock Status Filter
+      if (status == 'in_stock' && p.qty <= 0) return false;
+      if (status == 'low_stock' && (p.qty <= 0 || p.qty > 5)) return false;
+      if (status == 'out_of_stock' && p.qty > 0) return false;
+
+      return true;
     }).toList();
   }
 

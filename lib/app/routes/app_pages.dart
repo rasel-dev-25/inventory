@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'app_routes.dart';
 import '../../features/auth/view/auth_gate.dart';
+import '../../features/auth/controller/auth_controller.dart';
 import '../../features/shell/controller/shell_controller.dart';
 import '../../data/local/app_database.dart' show AppDatabase;
 import '../../data/sync/storage_upload_transport.dart';
@@ -187,7 +188,12 @@ abstract class AppPages {
       name: AppRoutes.auditLogV2,
       page: () => const AuditLogScreen(),
       binding: BindingsBuilder(() {
-        Get.lazyPut(() => AuditLogController(Get.find<AppDatabase>()));
+        Get.lazyPut(
+          () => AuditLogController(
+            Get.find<AppDatabase>(),
+            authController: Get.find<AuthController>(),
+          ),
+        );
       }),
     ),
     GetPage(

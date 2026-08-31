@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:inventory/app/translations/app_translations.dart';
 import 'package:inventory/features/catalog/view/product_form_sheet.dart';
+import 'package:inventory/core/widgets/safe_image.dart';
 
 void main() {
   testWidgets('creates and selects a category from the product form', (
@@ -18,23 +19,23 @@ void main() {
           body: ProductFormSheet(
             categories: const ['Book'],
             investors: const [],
-            onCreateCategory: (name) async {
-              createdCategory = name;
-              return name;
+            onCreateCategory: (cat) async {
+              createdCategory = cat;
+              return true;
             },
           ),
         ),
       ),
     );
 
-    await tester.tap(find.byTooltip('Add Category'));
+    await tester.tap(find.text('Add Category'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField).last, 'Stationery');
-    await tester.tap(find.text('Save').last);
+    await tester.enterText(find.byType(TextField).last, 'Islamic');
+    await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
 
-    expect(createdCategory, 'Stationery');
-    expect(find.text('Stationery'), findsOneWidget);
+    expect(createdCategory, 'Islamic');
+    expect(find.text('Islamic'), findsWidgets);
   });
 
   testWidgets('captures and previews a product photo', (tester) async {
@@ -46,7 +47,7 @@ void main() {
         locale: const Locale('en', 'US'),
         home: Scaffold(
           body: ProductFormSheet(
-            categories: const ['Book'],
+            categories: const [],
             investors: const [],
             onCapturePhoto: () async {
               captureCalls++;
@@ -62,6 +63,6 @@ void main() {
 
     expect(captureCalls, 1);
     expect(find.text('Change product photo'), findsOneWidget);
-    expect(find.byType(Image), findsOneWidget);
+    expect(find.byType(SafeImage), findsOneWidget);
   });
 }

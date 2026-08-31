@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import 'package:inventory/app/translations/app_translations.dart';
 import 'package:inventory/features/customers_v2/view/customer_form_sheet.dart';
 
+import 'package:inventory/core/widgets/safe_image.dart';
+
 void main() {
   testWidgets('captures and previews a customer photo', (tester) async {
     var captureCalls = 0;
@@ -28,6 +30,6 @@ void main() {
 
     expect(captureCalls, 1);
     expect(find.text('Change customer photo'), findsOneWidget);
-    expect(find.byType(Image), findsOneWidget);
+    expect(find.byType(SafeImage), findsOneWidget);
   });
 }
