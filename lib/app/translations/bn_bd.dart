@@ -720,7 +720,8 @@ const Map<String, String> bnBD = {
 
   // ── Recycle Bin (M4 v2 screen) ───────────────────────────────────────
   'recycleBinTitle': 'রিসাইকেল বিন',
-  'noDeletedItems': 'এখন কিছু ডিলিট করা নেই',
+  'noDeletedItems': 'রিসাইকেল বিন একদম খালি! 🗑️',
+  'noDeletedItemsSubtitle': 'এখানে কোনো ডিলিট করা তথ্য নেই।',
   'deletedCustomersSectionTitle': 'ডিলিট করা কাস্টমার',
   'deletedOrdersSectionTitle': 'ডিলিট করা অর্ডার',
   'deletedExpensesSectionTitle': 'ডিলিট করা খরচ',
@@ -728,10 +729,26 @@ const Map<String, String> bnBD = {
   'deletedFixedAssetsSectionTitle': 'ডিলিট করা ফিক্সড অ্যাসেট',
   'deletedPurchaseTripsSectionTitle': 'ডিলিট করা কেনাকাটার ট্রিপ',
   'restoreAction': 'রিস্টোর',
+  'permanentDeleteAction': 'স্থায়ী ডিলিট',
+  'permanentDeleteConfirmTitle': 'স্থায়ীভাবে মুছে ফেলবেন?',
+  'permanentDeleteConfirmMessage':
+      'এই আইটেমটি এবং এর সাথে যুক্ত সকল তথ্য ও ছবি ডিভাইস থেকে চিরতরে মুছে ফেলা হবে। এটি আর ফিরিয়ে আনা যাবে না।',
+  'itemsInRecycleBin': 'টি আইটেম বিনে আছে',
+  'emptyRecycleBinNow': 'বিন খালি করুন',
+  'emptyRecycleBinConfirmTitle': 'সকল আইটেম চিরতরে মুছে ফেলবেন?',
+  'emptyRecycleBinConfirmMessage':
+      'রিসাইকেল বিনে থাকা সকল আইটেম ও ছবি চিরতরে ডিলিট হয়ে যাবে। এটি আর ফিরিয়ে আনা যাবে না।',
+  'searchRecycleBinHint': 'ডিলিট করা আইটেম খুঁজুন...',
+  'itemRestoredSuccess': 'আইটেম সফলভাবে রিস্টোর করা হয়েছে',
+  'itemDeletedPermanently': 'আইটেম স্থায়ীভাবে মুছে ফেলা হয়েছে',
+  'cannotDeleteLinkedProduct':
+      'এই পণ্যের অতীত বিক্রয় বা ক্রয় লেনদেন থাকায় স্থায়ীভাবে মুছে ফেলা সম্ভব নয়',
+  'cannotDeleteLinkedCustomer':
+      'এই গ্রাহকের অতীত লেনদেন বা বাকি থাকায় স্থায়ীভাবে মুছে ফেলা সম্ভব নয়',
   'cannotRestoreExpenseNote':
       'রিস্টোর সম্ভব না (ক্যাশ ইতিমধ্যে সমন্বয় হয়েছে)',
   'cannotRestoreNote': 'রিস্টোর সম্ভব না (ক্যাশ/স্টক ইতিমধ্যে সমন্বয় হয়েছে)',
-  'deletedOnLabel': 'ডিলিট হয়েছে ',
+  'deletedOnLabel': 'ডিলিট হয়েছে: ',
   'cleanUpOldItemsNow': 'পুরনো আইটেম পরিষ্কার করুন',
   'pruneConfirmTitle': 'পুরনো আইটেম পরিষ্কার করবেন?',
   'pruneConfirmMessage':

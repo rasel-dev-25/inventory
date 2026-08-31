@@ -127,4 +127,10 @@ class ExpenseDao extends DatabaseAccessor<AppDatabase> with _$ExpenseDaoMixin {
         ))
         .go();
   }
+
+  /// Permanently deletes a single expense.
+  Future<bool> hardDelete(String id) async {
+    final rows = await (delete(expenses)..where((e) => e.id.equals(id))).go();
+    return rows > 0;
+  }
 }

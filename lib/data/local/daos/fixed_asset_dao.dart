@@ -88,4 +88,10 @@ class FixedAssetDao extends DatabaseAccessor<AppDatabase>
   // `buildStockMovementReversal` cannot safely run a second time on an
   // already-reversed source (see `ledger_reversal.dart`'s own doc
   // comment) — same reasoning `ExpenseDao.watchDeleted` documents.
+
+  /// Permanently deletes a single fixed asset.
+  Future<bool> hardDelete(String id) async {
+    final rows = await (delete(fixedAssets)..where((a) => a.id.equals(id))).go();
+    return rows > 0;
+  }
 }

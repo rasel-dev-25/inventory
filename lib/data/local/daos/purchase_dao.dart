@@ -209,4 +209,10 @@ class PurchaseDao extends DatabaseAccessor<AppDatabase>
       ..orderBy([(t) => OrderingTerm.desc(t.deletedAt)]);
     return query.watch();
   }
+
+  /// Permanently deletes a single purchase trip.
+  Future<bool> hardDeleteTrip(String id) async {
+    final rows = await (delete(purchaseTrips)..where((t) => t.id.equals(id))).go();
+    return rows > 0;
+  }
 }

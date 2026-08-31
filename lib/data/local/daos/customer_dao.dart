@@ -47,6 +47,13 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
     return row?.toDomain();
   }
 
+  Future<domain.Customer?> getAnyById(String id) async {
+    final row = await (select(
+      customers,
+    )..where((c) => c.id.equals(id))).getSingleOrNull();
+    return row?.toDomain();
+  }
+
   Stream<List<domain.Customer>> watchAll(String shopId) {
     final query = select(customers)
       ..where((c) => c.shopId.equals(shopId) & c.deletedAt.isNull())
@@ -162,6 +169,15 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
       deletedCount++;
     }
     return deletedCount;
+  }
+
+  /// Permanently deletes a single customer if no linked transactions exist.
+  Future<bool> hardDelete(String id) async {
+    if (await _hasLinkedHistory(id)) {
+      return false; // Cannot delete customer with linked transactions
+    }
+    final rows = await (delete(customers)..where((c) => c.id.equals(id))).go();
+    return rows > 0;
   }
 
   /// True if [customerId] has any row in [Dues]/[Orders]/

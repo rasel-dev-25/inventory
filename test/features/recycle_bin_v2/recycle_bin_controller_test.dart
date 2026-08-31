@@ -257,4 +257,68 @@ void main() {
       expect(controller.deletedCustomers, isEmpty);
     },
   );
+
+  test(
+    'permanentDeleteCustomer deletes row from DB and records audit log',
+    () async {
+      await CustomerUseCases(db).create(
+        const Customer(id: 'cust-perm', name: 'Permanent Customer'),
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+      await CustomerUseCases(db).softDelete(
+        'cust-perm',
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(controller.deletedCustomers, hasLength(1));
+
+      final ok = await controller.permanentDeleteCustomer('cust-perm');
+      expect(ok, isTrue);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(controller.deletedCustomers, isEmpty);
+      expect(await db.customerDao.getAnyById('cust-perm'), isNull);
+
+      final auditLogs = await db.auditLogDao.watchAll(defaultShopId).first;
+      expect(auditLogs.any((a) => a.action == 'PERMANENT_DELETE' && a.recordId == 'cust-perm'), isTrue);
+    },
+  );
+
+  test(
+    'searchQuery filters deleted items reactively',
+    () async {
+      await CustomerUseCases(db).create(
+        const Customer(id: 'cust-a', name: 'Rahim'),
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+      await CustomerUseCases(db).create(
+        const Customer(id: 'cust-b', name: 'Karim'),
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+      await CustomerUseCases(db).softDelete(
+        'cust-a',
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+      await CustomerUseCases(db).softDelete(
+        'cust-b',
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(controller.filteredCustomers, hasLength(2));
+
+      controller.searchQuery.value = 'Rahim';
+      expect(controller.filteredCustomers, hasLength(1));
+      expect(controller.filteredCustomers.single.name, 'Rahim');
+
+      controller.searchQuery.value = '';
+      expect(controller.filteredCustomers, hasLength(2));
+    },
+  );
 }

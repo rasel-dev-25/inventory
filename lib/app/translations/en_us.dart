@@ -727,7 +727,8 @@ const Map<String, String> enUS = {
 
   // ── Recycle Bin (M4 v2 screen) ───────────────────────────────────────
   'recycleBinTitle': 'Recycle Bin',
-  'noDeletedItems': 'Nothing deleted right now',
+  'noDeletedItems': 'Recycle Bin is empty! 🗑️',
+  'noDeletedItemsSubtitle': 'There are no deleted records here.',
   'deletedCustomersSectionTitle': 'Deleted Customers',
   'deletedOrdersSectionTitle': 'Deleted Orders',
   'deletedExpensesSectionTitle': 'Deleted Expenses',
@@ -735,9 +736,25 @@ const Map<String, String> enUS = {
   'deletedFixedAssetsSectionTitle': 'Deleted Fixed Assets',
   'deletedPurchaseTripsSectionTitle': 'Deleted Purchase Trips',
   'restoreAction': 'Restore',
+  'permanentDeleteAction': 'Permanent Delete',
+  'permanentDeleteConfirmTitle': 'Permanently Delete?',
+  'permanentDeleteConfirmMessage':
+      'This item and all associated data and photos will be permanently deleted from device storage. This action cannot be undone.',
+  'itemsInRecycleBin': 'items in bin',
+  'emptyRecycleBinNow': 'Empty Bin',
+  'emptyRecycleBinConfirmTitle': 'Permanently erase all items?',
+  'emptyRecycleBinConfirmMessage':
+      'All items and photos in the recycle bin will be permanently deleted. This cannot be undone.',
+  'searchRecycleBinHint': 'Search deleted items...',
+  'itemRestoredSuccess': 'Item restored successfully',
+  'itemDeletedPermanently': 'Item permanently deleted',
+  'cannotDeleteLinkedProduct':
+      'Cannot permanently delete product with existing sales or purchase history',
+  'cannotDeleteLinkedCustomer':
+      'Cannot permanently delete customer with existing transactions or dues',
   'cannotRestoreExpenseNote': 'restore not supported (cash already adjusted)',
   'cannotRestoreNote': 'restore not supported (cash/stock already adjusted)',
-  'deletedOnLabel': 'Deleted on ',
+  'deletedOnLabel': 'Deleted: ',
   'cleanUpOldItemsNow': 'Clean up old items now',
   'pruneConfirmTitle': 'Clean up old items?',
   'pruneConfirmMessage':

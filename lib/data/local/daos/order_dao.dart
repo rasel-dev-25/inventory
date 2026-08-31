@@ -114,4 +114,10 @@ class OrderDao extends DatabaseAccessor<AppDatabase> with _$OrderDaoMixin {
         ))
         .go();
   }
+
+  /// Permanently deletes a single order.
+  Future<bool> hardDelete(String id) async {
+    final rows = await (delete(orders)..where((o) => o.id.equals(id))).go();
+    return rows > 0;
+  }
 }

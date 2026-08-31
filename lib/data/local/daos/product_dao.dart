@@ -176,6 +176,37 @@ class ProductDao extends DatabaseAccessor<AppDatabase> with _$ProductDaoMixin {
     );
   }
 
+  Future<bool> _hasLinkedHistory(String productId) async {
+    final sale = await (db.select(db.sales)
+          ..where((s) => s.productId.equals(productId))
+          ..limit(1))
+        .getSingleOrNull();
+    if (sale != null) return true;
+
+    final purchaseItem = await (db.select(db.purchaseItems)
+          ..where((p) => p.productId.equals(productId))
+          ..limit(1))
+        .getSingleOrNull();
+    if (purchaseItem != null) return true;
+
+    final movement = await (db.select(db.stockMovements)
+          ..where((m) => m.productId.equals(productId))
+          ..limit(1))
+        .getSingleOrNull();
+    if (movement != null) return true;
+
+    return false;
+  }
+
+  /// Permanently deletes a single product if no linked sales/purchases/movements exist.
+  Future<bool> hardDelete(String id) async {
+    if (await _hasLinkedHistory(id)) {
+      return false; // Cannot hard delete product with transaction history
+    }
+    final rows = await (delete(products)..where((p) => p.id.equals(id))).go();
+    return rows > 0;
+  }
+
   ProductsCompanion _companionFor(
     domain.Product product, {
     required String shopId,
