@@ -640,8 +640,8 @@ class _ModernTripCard extends GetView<PurchaseEntryController> {
                           Icon(Icons.inventory_2_outlined, size: 14, color: theme.colorScheme.onSurfaceVariant),
                           const SizedBox(width: 6),
                           Expanded(
-                            child: RichText(
-                              text: TextSpan(
+                            child: Text.rich(
+                              TextSpan(
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.onSurface,
                                 ),
