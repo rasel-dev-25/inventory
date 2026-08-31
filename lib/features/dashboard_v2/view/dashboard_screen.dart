@@ -132,7 +132,7 @@ class DashboardScreen extends GetView<DashboardController> {
               children: [
                 Icon(
                   Icons.check_circle_rounded,
-                  size: 18,
+                  size: 19,
                   color: Colors.green.shade700,
                 ),
                 const SizedBox(width: 8),
@@ -140,7 +140,7 @@ class DashboardScreen extends GetView<DashboardController> {
                   child: Text(
                     '✓ সকল অ্যালার্ট চেক করা হয়েছে',
                     style: TextStyle(
-                      fontSize: 12.5,
+                      fontSize: 13.5,
                       fontWeight: FontWeight.w600,
                       color: Colors.green.shade900,
                     ),
@@ -156,7 +156,7 @@ class DashboardScreen extends GetView<DashboardController> {
                   child: Text(
                     'পুনরায় চালু',
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 12,
                       fontWeight: FontWeight.bold,
                       color: Colors.green.shade900,
                     ),
@@ -185,12 +185,12 @@ class DashboardScreen extends GetView<DashboardController> {
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           child: Row(
             children: [
               Icon(
                 overdue ? Icons.warning_amber_rounded : Icons.info_outline_rounded,
-                size: 20,
+                size: 21,
                 color: overdue ? theme.colorScheme.error : Colors.amber.shade900,
               ),
               const SizedBox(width: 8),
@@ -203,7 +203,7 @@ class DashboardScreen extends GetView<DashboardController> {
                         child: Text(
                           summary,
                           style: TextStyle(
-                            fontSize: 12.5,
+                            fontSize: 13.5,
                             fontWeight: FontWeight.w600,
                             color: overdue
                                 ? theme.colorScheme.onErrorContainer
@@ -215,14 +215,14 @@ class DashboardScreen extends GetView<DashboardController> {
                       Text(
                         'দেখুন',
                         style: TextStyle(
-                          fontSize: 11.5,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.bold,
                           color: overdue ? theme.colorScheme.error : Colors.amber.shade900,
                         ),
                       ),
                       Icon(
                         Icons.chevron_right_rounded,
-                        size: 16,
+                        size: 18,
                         color: overdue ? theme.colorScheme.error : Colors.amber.shade900,
                       ),
                     ],
@@ -233,7 +233,7 @@ class DashboardScreen extends GetView<DashboardController> {
               FilledButton.tonal(
                 style: FilledButton.styleFrom(
                   backgroundColor: Colors.white.withValues(alpha: 0.9),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   shape: RoundedRectangleBorder(
@@ -350,14 +350,14 @@ class DashboardScreen extends GetView<DashboardController> {
                 children: [
                   Icon(
                     Icons.calendar_month_outlined,
-                    size: 14,
+                    size: 15,
                     color: theme.colorScheme.primary,
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 5),
                   Text(
                     dateStr,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 13,
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.onSurface,
                     ),
@@ -365,7 +365,7 @@ class DashboardScreen extends GetView<DashboardController> {
                   const SizedBox(width: 2),
                   Icon(
                     Icons.arrow_drop_down_rounded,
-                    size: 16,
+                    size: 18,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ],
@@ -388,7 +388,7 @@ class DashboardScreen extends GetView<DashboardController> {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
           color: selected ? theme.colorScheme.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -405,8 +405,8 @@ class DashboardScreen extends GetView<DashboardController> {
         child: Text(
           title,
           style: TextStyle(
-            fontSize: 12,
-            fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+            fontSize: 13,
+            fontWeight: selected ? FontWeight.bold : FontWeight.w600,
             color: selected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
           ),
         ),
@@ -440,14 +440,14 @@ class DashboardScreen extends GetView<DashboardController> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(4),
+                      padding: const EdgeInsets.all(4.5),
                       decoration: BoxDecoration(
                         color: (isCashNegative ? Colors.red : Colors.teal).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Icon(
                         Icons.account_balance_wallet_outlined,
-                        size: 14,
+                        size: 16,
                         color: isCashNegative ? Colors.red.shade700 : Colors.teal.shade700,
                       ),
                     ),
@@ -455,7 +455,7 @@ class DashboardScreen extends GetView<DashboardController> {
                     Text(
                       'totalCash'.tr,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13.5,
                         fontWeight: FontWeight.w600,
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -466,7 +466,7 @@ class DashboardScreen extends GetView<DashboardController> {
                 Text(
                   totals.totalCash.format(),
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: isCashNegative ? theme.colorScheme.error : theme.colorScheme.onSurface,
                   ),
@@ -478,7 +478,7 @@ class DashboardScreen extends GetView<DashboardController> {
           // Center Divider
           Container(
             width: 1,
-            height: 44,
+            height: 48,
             color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -491,14 +491,14 @@ class DashboardScreen extends GetView<DashboardController> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(4),
+                      padding: const EdgeInsets.all(4.5),
                       decoration: BoxDecoration(
                         color: (isProfitNegative ? Colors.red : Colors.green).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Icon(
                         isProfitNegative ? Icons.trending_down_rounded : Icons.trending_up_rounded,
-                        size: 14,
+                        size: 16,
                         color: isProfitNegative ? Colors.red.shade700 : Colors.green.shade700,
                       ),
                     ),
@@ -506,7 +506,7 @@ class DashboardScreen extends GetView<DashboardController> {
                     Text(
                       isProfitNegative ? 'netLoss'.tr : 'netProfit'.tr,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13.5,
                         fontWeight: FontWeight.w600,
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -517,7 +517,7 @@ class DashboardScreen extends GetView<DashboardController> {
                 Text(
                   totals.netProfit.format(),
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: isProfitNegative ? Colors.red.shade700 : Colors.green.shade700,
                   ),
@@ -540,8 +540,6 @@ class DashboardScreen extends GetView<DashboardController> {
             context,
             icon: Icons.receipt_long_rounded,
             label: 'expenses'.tr,
-            color: Colors.red.shade700,
-            bgColor: Colors.red.shade50,
             onTap: () => Get.toNamed(AppRoutes.expenseV2),
           ),
           const SizedBox(width: 8),
@@ -549,8 +547,6 @@ class DashboardScreen extends GetView<DashboardController> {
             context,
             icon: Icons.handshake_outlined,
             label: 'investor'.tr,
-            color: Colors.indigo.shade700,
-            bgColor: Colors.indigo.shade50,
             onTap: () => Get.toNamed(AppRoutes.investorV2),
           ),
           const SizedBox(width: 8),
@@ -558,8 +554,6 @@ class DashboardScreen extends GetView<DashboardController> {
             context,
             icon: Icons.menu_book_rounded,
             label: 'rent'.tr,
-            color: Colors.teal.shade700,
-            bgColor: Colors.teal.shade50,
             onTap: () => Get.toNamed(AppRoutes.rentV2),
           ),
           const SizedBox(width: 8),
@@ -567,8 +561,6 @@ class DashboardScreen extends GetView<DashboardController> {
             context,
             icon: Icons.assignment_outlined,
             label: 'orders'.tr,
-            color: Colors.purple.shade700,
-            bgColor: Colors.purple.shade50,
             onTap: () => Get.toNamed(AppRoutes.orderV2),
           ),
           const SizedBox(width: 8),
@@ -576,8 +568,6 @@ class DashboardScreen extends GetView<DashboardController> {
             context,
             icon: Icons.bar_chart_rounded,
             label: 'reportsTitle'.tr,
-            color: Colors.blue.shade700,
-            bgColor: Colors.blue.shade50,
             onTap: () => Get.toNamed(AppRoutes.reportsV2),
           ),
           const SizedBox(width: 8),
@@ -585,8 +575,6 @@ class DashboardScreen extends GetView<DashboardController> {
             context,
             icon: Icons.apartment_rounded,
             label: 'fixedAssets'.tr,
-            color: Colors.deepOrange.shade700,
-            bgColor: Colors.deepOrange.shade50,
             onTap: () => Get.toNamed(AppRoutes.fixedAssetV2),
           ),
           const SizedBox(width: 8),
@@ -594,8 +582,6 @@ class DashboardScreen extends GetView<DashboardController> {
             context,
             icon: Icons.history_rounded,
             label: 'auditLogTitle'.tr,
-            color: Colors.blueGrey.shade700,
-            bgColor: Colors.blueGrey.shade50,
             onTap: () => Get.toNamed(AppRoutes.auditLogV2),
           ),
         ],
@@ -607,31 +593,34 @@ class DashboardScreen extends GetView<DashboardController> {
     BuildContext context, {
     required IconData icon,
     required String label,
-    required Color color,
-    required Color bgColor,
     required VoidCallback onTap,
   }) {
+    final theme = Theme.of(context);
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.pill),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7.5),
         decoration: BoxDecoration(
-          color: bgColor,
+          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
           borderRadius: BorderRadius.circular(AppRadius.pill),
-          border: Border.all(color: color.withValues(alpha: 0.25), width: 0.8),
+          border: Border.all(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
+            width: 0.8,
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: color),
-            const SizedBox(width: 5),
+            Icon(icon, size: 16, color: theme.colorScheme.primary),
+            const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: color,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
               ),
             ),
           ],
@@ -735,7 +724,8 @@ class DashboardScreen extends GetView<DashboardController> {
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Text(
         title,
-        style: theme.textTheme.titleSmall?.copyWith(
+        style: TextStyle(
+          fontSize: 15.5,
           fontWeight: FontWeight.bold,
           color: theme.colorScheme.primary,
         ),
@@ -785,13 +775,13 @@ class _ModernDashboardCard extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: 38,
-                height: 38,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(icon, color: color, size: 20),
+                child: Icon(icon, color: color, size: 21),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -802,7 +792,7 @@ class _ModernDashboardCard extends StatelessWidget {
                       label,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
-                        fontSize: 11.5,
+                        fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
                       maxLines: 1,
@@ -812,7 +802,7 @@ class _ModernDashboardCard extends StatelessWidget {
                     Text(
                       value.format(),
                       style: TextStyle(
-                        fontSize: isFullWidth ? 16 : 14.5,
+                        fontSize: isFullWidth ? 18 : 16.5,
                         fontWeight: FontWeight.bold,
                         color: theme.colorScheme.onSurface,
                       ),
@@ -822,7 +812,7 @@ class _ModernDashboardCard extends StatelessWidget {
                       Text(
                         subtitle!,
                         style: TextStyle(
-                          fontSize: 10.5,
+                          fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: color,
                         ),
