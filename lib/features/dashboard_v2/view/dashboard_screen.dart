@@ -530,7 +530,7 @@ class DashboardScreen extends GetView<DashboardController> {
     );
   }
 
-  // ── 3. Quick Business Action Shortcuts ────────────────────────────────────
+  // ── 3. Quick Drawer Feature Shortcuts ────────────────────────────────────
   Widget _buildQuickActions(BuildContext context) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -538,38 +538,20 @@ class DashboardScreen extends GetView<DashboardController> {
         children: [
           _buildActionPill(
             context,
-            icon: Icons.point_of_sale_rounded,
-            label: 'newSaleAction'.tr,
-            color: Colors.green.shade700,
-            bgColor: Colors.green.shade50,
-            onTap: () => _navigateToTab(1),
-          ),
-          const SizedBox(width: 8),
-          _buildActionPill(
-            context,
-            icon: Icons.add_shopping_cart_rounded,
-            label: 'newPurchaseAction'.tr,
-            color: Colors.blue.shade700,
-            bgColor: Colors.blue.shade50,
-            onTap: () => _navigateToTab(5),
-          ),
-          const SizedBox(width: 8),
-          _buildActionPill(
-            context,
             icon: Icons.receipt_long_rounded,
-            label: 'collectDueAction'.tr,
-            color: Colors.orange.shade800,
-            bgColor: Colors.orange.shade50,
-            onTap: () => _navigateToTab(3),
-          ),
-          const SizedBox(width: 8),
-          _buildActionPill(
-            context,
-            icon: Icons.money_off_rounded,
-            label: 'addExpenseAction'.tr,
+            label: 'expenses'.tr,
             color: Colors.red.shade700,
             bgColor: Colors.red.shade50,
             onTap: () => Get.toNamed(AppRoutes.expenseV2),
+          ),
+          const SizedBox(width: 8),
+          _buildActionPill(
+            context,
+            icon: Icons.handshake_outlined,
+            label: 'investor'.tr,
+            color: Colors.indigo.shade700,
+            bgColor: Colors.indigo.shade50,
+            onTap: () => Get.toNamed(AppRoutes.investorV2),
           ),
           const SizedBox(width: 8),
           _buildActionPill(
@@ -579,6 +561,42 @@ class DashboardScreen extends GetView<DashboardController> {
             color: Colors.teal.shade700,
             bgColor: Colors.teal.shade50,
             onTap: () => Get.toNamed(AppRoutes.rentV2),
+          ),
+          const SizedBox(width: 8),
+          _buildActionPill(
+            context,
+            icon: Icons.assignment_outlined,
+            label: 'orders'.tr,
+            color: Colors.purple.shade700,
+            bgColor: Colors.purple.shade50,
+            onTap: () => Get.toNamed(AppRoutes.orderV2),
+          ),
+          const SizedBox(width: 8),
+          _buildActionPill(
+            context,
+            icon: Icons.bar_chart_rounded,
+            label: 'reportsTitle'.tr,
+            color: Colors.blue.shade700,
+            bgColor: Colors.blue.shade50,
+            onTap: () => Get.toNamed(AppRoutes.reportsV2),
+          ),
+          const SizedBox(width: 8),
+          _buildActionPill(
+            context,
+            icon: Icons.apartment_rounded,
+            label: 'fixedAssets'.tr,
+            color: Colors.deepOrange.shade700,
+            bgColor: Colors.deepOrange.shade50,
+            onTap: () => Get.toNamed(AppRoutes.fixedAssetV2),
+          ),
+          const SizedBox(width: 8),
+          _buildActionPill(
+            context,
+            icon: Icons.history_rounded,
+            label: 'auditLogTitle'.tr,
+            color: Colors.blueGrey.shade700,
+            bgColor: Colors.blueGrey.shade50,
+            onTap: () => Get.toNamed(AppRoutes.auditLogV2),
           ),
         ],
       ),
