@@ -108,6 +108,11 @@ class SupabaseSyncTransport implements SyncTransport {
     ),
   };
 
+  static const _tablesWithoutSyncedAt = <String>{
+    'purchase_other_costs',
+    'rent_pricing_tiers',
+  };
+
   @override
   Future<Result<RemotePage>> fetchSince({
     required String table,
@@ -123,12 +128,13 @@ class SupabaseSyncTransport implements SyncTransport {
 
     try {
       final indirect = _indirectShopId[table];
+      final hasSyncedAt = !_tablesWithoutSyncedAt.contains(table);
 
       // Build the cursor filter string once — reused in both branches.
       // (synced_at, id) > (afterSyncedAt, afterId) as a single PostgREST
       // `or` — tie-breaking on id matters because two rows can share the
       // same synced_at under load; a bare synced_at.gt. would skip them.
-      final String? cursorFilter = (afterSyncedAt != null && afterId != null)
+      final String? cursorFilter = (hasSyncedAt && afterSyncedAt != null && afterId != null)
           ? 'synced_at.gt.${afterSyncedAt.toUtc().toIso8601String()},'
                 'and(synced_at.eq.${afterSyncedAt.toUtc().toIso8601String()},'
                 'id.gt.$afterId)'
@@ -148,12 +154,22 @@ class SupabaseSyncTransport implements SyncTransport {
             .from(table)
             .select('*, ${indirect.parent}!inner(shop_id)')
             .eq('${indirect.parent}.shop_id', shopId);
-        if (cursorFilter != null) q = q.or(cursorFilter);
-        rawRows = await q.order('synced_at').order('id').limit(limit);
+        if (!hasSyncedAt) {
+          if (afterId != null) q = q.gt('id', afterId);
+          rawRows = await q.order('id').limit(limit);
+        } else {
+          if (cursorFilter != null) q = q.or(cursorFilter);
+          rawRows = await q.order('synced_at').order('id').limit(limit);
+        }
       } else {
         var q = _client.from(table).select().eq('shop_id', shopId);
-        if (cursorFilter != null) q = q.or(cursorFilter);
-        rawRows = await q.order('synced_at').order('id').limit(limit);
+        if (!hasSyncedAt) {
+          if (afterId != null) q = q.gt('id', afterId);
+          rawRows = await q.order('id').limit(limit);
+        } else {
+          if (cursorFilter != null) q = q.or(cursorFilter);
+          rawRows = await q.order('synced_at').order('id').limit(limit);
+        }
       }
 
       // For indirect tables, remove the nested parent join object that

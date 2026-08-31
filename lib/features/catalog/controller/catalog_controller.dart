@@ -19,9 +19,11 @@ import '../../../data/usecases/category_usecases.dart';
 import '../../../data/usecases/product_image_usecases.dart';
 import '../../../data/usecases/product_usecases.dart';
 import '../../../data/usecases/sync_enqueue_helper.dart';
+import '../../../data/usecases/unit_usecases.dart';
 import '../../../domain/entities/fund_source.dart';
 import '../../../domain/entities/investor.dart';
 import '../../../domain/entities/product.dart';
+import '../../../domain/entities/product_unit.dart';
 import '../../pricing_settings_v2/controller/pricing_settings_controller.dart';
 
 /// Backs the new v2 categories/products screens
@@ -49,6 +51,7 @@ class CatalogController extends GetxController {
   CatalogController(this.db, this.pricingSettings, {this.imageStorage});
 
   late final CategoryUseCases _categoryUseCases = CategoryUseCases(db);
+  late final UnitUseCases _unitUseCases = UnitUseCases(db);
   late final ProductUseCases _productUseCases = ProductUseCases(db);
   late final ProductImageUseCases _productImageUseCases = ProductImageUseCases(
     db,
@@ -62,6 +65,7 @@ class CatalogController extends GetxController {
   double? get overheadMarkupPercent => pricingSettings.overheadMarkupPercent;
 
   final categories = <CategoryRow>[].obs;
+  final units = <ProductUnit>[].obs;
   final products = <Product>[].obs;
   final productImages = <ProductImageRow>[].obs;
   final signedImageUrls = <String, String>{}.obs;
@@ -82,6 +86,11 @@ class CatalogController extends GetxController {
       db.categoryDao
           .watchAll(defaultShopId)
           .listen((rows) => categories.assignAll(rows)),
+    );
+    _subscriptions.add(
+      _unitUseCases
+          .watchAll(defaultShopId)
+          .listen((rows) => units.assignAll(rows)),
     );
     _subscriptions.add(
       db.productDao
@@ -173,12 +182,24 @@ class CatalogController extends GetxController {
     }
   }
 
+  Future<void> reorderCategories(List<String> orderedIds) async {
+    for (var i = 0; i < orderedIds.length; i++) {
+      await _categoryUseCases.reorder(
+        id: orderedIds[i],
+        shopId: defaultShopId,
+        sortOrder: i,
+      );
+    }
+  }
+
   Future<bool> createProduct({
     required String name,
     required String category,
     required Money costPrice,
     required Money suggestedSellPrice,
     required FundSource fundSource,
+    String unit = 'pcs',
+    String sellUnit = 'pcs',
     bool isRentable = false,
     double initialQty = 0,
     String? barcode,
@@ -195,6 +216,8 @@ class CatalogController extends GetxController {
         suggestedSellPrice: suggestedSellPrice,
         qty: initialQty,
         fundSource: fundSource,
+        unit: unit,
+        sellUnit: sellUnit,
         isRentable: isRentable,
         barcode: barcode,
         sku: sku,
@@ -261,6 +284,8 @@ class CatalogController extends GetxController {
     Money? suggestedSellPrice,
     double? qty,
     FundSource? fundSource,
+    String? unit,
+    String? sellUnit,
     bool? isRentable,
     String? barcode,
     String? sku,
@@ -275,6 +300,8 @@ class CatalogController extends GetxController {
         suggestedSellPrice: suggestedSellPrice,
         qty: qty,
         fundSource: fundSource,
+        unit: unit,
+        sellUnit: sellUnit,
         isRentable: isRentable,
         barcode: barcode,
         sku: sku,
@@ -286,7 +313,7 @@ class CatalogController extends GetxController {
 
         if (qty != null && qty != existing.qty) {
           final delta = qty - existing.qty;
-          final movementId = 'sm-${const Uuid().v4()}';
+          final movementId = _uuid.v7();
           final movementRow = {
             'id': movementId,
             'shop_id': defaultShopId,

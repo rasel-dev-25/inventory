@@ -42,6 +42,7 @@ class InvestorMetrics {
   final Money currentStockValue;
   final Money totalPurchasedCash;
   final Money totalSoldRevenue;
+  final Money totalGrossProfit;
   final Money profitShare;
   final Money totalRepaidCapital;
   final Money remainingBalance;
@@ -51,6 +52,7 @@ class InvestorMetrics {
     required this.currentStockValue,
     required this.totalPurchasedCash,
     required this.totalSoldRevenue,
+    required this.totalGrossProfit,
     required this.profitShare,
     required this.totalRepaidCapital,
     required this.remainingBalance,
@@ -76,19 +78,24 @@ InvestorMetrics computeInvestorMetrics({
 }) {
   final zero = Money.zero(currency: currency);
 
-  final totalInvestment = purchaseItemsForInvestor.fold(
-    zero,
-    (sum, item) => sum + item.lineTotal,
-  );
+  final totalPurchasedCash = purchaseItemsForInvestor
+      .where((item) => !item.isInKind)
+      .fold(zero, (sum, item) => sum + item.lineTotal);
+
+  final totalInKind = purchaseItemsForInvestor
+      .where((item) => item.isInKind)
+      .fold(zero, (sum, item) => sum + item.lineTotal);
+
+  final effectiveCash = investor.initialCashInvestment > totalPurchasedCash
+      ? investor.initialCashInvestment
+      : totalPurchasedCash;
+
+  final totalInvestment = effectiveCash + totalInKind;
 
   final currentStockValue = productsForInvestor.fold(
     zero,
     (sum, product) => sum + product.costPrice * product.qty,
   );
-
-  final totalPurchasedCash = purchaseItemsForInvestor
-      .where((item) => !item.isInKind)
-      .fold(zero, (sum, item) => sum + item.lineTotal);
 
   final totalSoldRevenue = salesForInvestor.fold(
     zero,
@@ -113,6 +120,7 @@ InvestorMetrics computeInvestorMetrics({
     currentStockValue: currentStockValue,
     totalPurchasedCash: totalPurchasedCash,
     totalSoldRevenue: totalSoldRevenue,
+    totalGrossProfit: totalGrossProfit,
     profitShare: profitShare,
     totalRepaidCapital: totalRepaidCapital,
     remainingBalance: totalInvestment - totalRepaidCapital,

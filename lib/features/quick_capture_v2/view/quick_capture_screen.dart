@@ -2,9 +2,15 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/design/tokens.dart';
 import '../../../core/money/money.dart';
+import '../../../core/widgets/calculator_keypad.dart';
+import '../../../core/widgets/full_screen_image_viewer.dart';
+import '../../../core/widgets/notification_bell_action.dart';
+import '../../../core/widgets/safe_image.dart';
+import '../../../core/widgets/shop_app_bar_title.dart';
 import '../../../domain/entities/enums.dart';
 import '../../../domain/entities/fund_source.dart';
 import '../../../domain/entities/quick_capture.dart';
@@ -19,7 +25,13 @@ class QuickCaptureScreen extends GetView<QuickCaptureController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('${'quickCaptures'.tr} (v2)')),
+      appBar: AppBar(
+        title: ShopAppBarTitle(pageTitle: 'quickCaptures'.tr),
+        actions: const [
+          NotificationBellAction(),
+          SizedBox(width: 4),
+        ],
+      ),
       body: Obx(() {
         final pending = controller.pending;
         final converted = controller.converted;
@@ -102,11 +114,39 @@ class QuickCaptureScreen extends GetView<QuickCaptureController> {
                       ),
                       if (photoPath != null) ...[
                         const SizedBox(height: AppSpacing.sm),
-                        SizedBox(
-                          height: 140,
-                          child: Image.file(
-                            File(photoPath!),
-                            fit: BoxFit.cover,
+                        GestureDetector(
+                          onTap: () => showFullScreenImageViewer(
+                            context,
+                            imagePath: photoPath!,
+                            title: 'photoPreview'.tr,
+                          ),
+                          child: Stack(
+                            alignment: Alignment.bottomRight,
+                            children: [
+                              SafeImage(
+                                source: photoPath!,
+                                height: 140,
+                                width: double.infinity,
+                                borderRadius: BorderRadius.circular(AppRadius.sm),
+                                fallbackIcon: Icons.photo_camera_outlined,
+                              ),
+                              Container(
+                                margin: const EdgeInsets.all(6),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.6),
+                                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.zoom_in, color: Colors.white, size: 12),
+                                    const SizedBox(width: 4),
+                                    Text('tapToZoom'.tr, style: const TextStyle(color: Colors.white, fontSize: 10)),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -179,6 +219,15 @@ class _PendingCard extends GetView<QuickCaptureController> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final photo = capture.photoPath;
+    final hasPhoto = photo != null && File(photo).existsSync();
+    final noteText = capture.note;
+    final displayTitle = noteText.isNotEmpty
+        ? noteText
+        : (capture.type == QuickCaptureType.photoNote ? 'photoNote'.tr : 'voiceNote'.tr);
+
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Padding(
@@ -191,38 +240,302 @@ class _PendingCard extends GetView<QuickCaptureController> {
                 Icon(
                   capture.type == QuickCaptureType.voiceNote
                       ? Icons.mic
-                      : Icons.photo,
+                      : Icons.photo_camera,
                   size: 18,
+                  color: theme.colorScheme.primary,
                 ),
                 const SizedBox(width: AppSpacing.xs),
-                Expanded(child: Text(capture.fileLocalPath)),
+                Expanded(
+                  child: Text(
+                    displayTitle,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  DateFormat('dd MMM, hh:mm a').format(capture.createdAt.toLocal()),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                  ),
+                ),
               ],
             ),
-            if (capture.type == QuickCaptureType.photoNote &&
-                File(capture.fileLocalPath).existsSync()) ...[
+            if (hasPhoto) ...[
               const SizedBox(height: AppSpacing.sm),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppSpacing.xs),
-                child: Image.file(
-                  File(capture.fileLocalPath),
-                  height: 160,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
+              GestureDetector(
+                onTap: () => showFullScreenImageViewer(
+                  context,
+                  imagePath: photo,
+                  title: displayTitle,
+                  subtitle: DateFormat('dd MMM yyyy, hh:mm a').format(capture.createdAt.toLocal()),
+                  heroTag: 'quick_capture_pending_${capture.id}',
+                ),
+                child: Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    Hero(
+                      tag: 'quick_capture_pending_${capture.id}',
+                      child: SafeImage(
+                        source: photo,
+                        height: 180,
+                        width: double.infinity,
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                        fallbackIcon: Icons.photo_camera_outlined,
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.65),
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.zoom_in, color: Colors.white, size: 14),
+                          const SizedBox(width: 4),
+                          Text(
+                            'fullView'.tr,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
-            const SizedBox(height: AppSpacing.sm),
-            Align(
-              alignment: Alignment.centerRight,
-              child: FilledButton(
-                onPressed: () => _openConvertChoice(context),
-                child: Text('convertTo'.tr),
-              ),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    minimumSize: Size.zero,
+                  ),
+                  icon: const Icon(Icons.edit_outlined, size: 16),
+                  label: const Text('সম্পাদনা', style: TextStyle(fontSize: 12)),
+                  onPressed: () => _openEditSheet(context),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    foregroundColor: Colors.red.shade600,
+                    side: BorderSide(color: Colors.red.shade200),
+                    minimumSize: Size.zero,
+                  ),
+                  icon: const Icon(Icons.delete_outline, size: 16),
+                  label: const Text('মুছুন', style: TextStyle(fontSize: 12)),
+                  onPressed: () => _confirmDelete(context),
+                ),
+                const SizedBox(width: 8),
+                FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    minimumSize: Size.zero,
+                  ),
+                  icon: const Icon(Icons.transform, size: 16),
+                  onPressed: () => _openConvertChoice(context),
+                  label: Text('convertTo'.tr, style: const TextStyle(fontSize: 12)),
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _openEditSheet(BuildContext context) async {
+    final noteController = TextEditingController(text: capture.note);
+    final formKey = GlobalKey<FormState>();
+    String? photoPath = capture.photoPath;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (sheetContext, setState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: SafeArea(
+                  top: false,
+                  child: SingleChildScrollView(
+                    child: Form(
+                      key: formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Center(
+                            child: Container(
+                              width: 40,
+                              height: 4,
+                              margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade400,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'নোট সম্পাদনা',
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.close),
+                                onPressed: () => Navigator.of(sheetContext).pop(),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          TextFormField(
+                            controller: noteController,
+                            maxLines: 3,
+                            decoration: InputDecoration(
+                              labelText: 'নোটের বিবরণ',
+                              hintText: 'এখানে লিখুন...',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            validator: (v) => (v == null || v.trim().isEmpty) &&
+                                    (photoPath == null || photoPath!.isEmpty)
+                                ? 'কিছু লিখুন অথবা ছবি সংযুক্ত করুন'
+                                : null,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          Row(
+                            children: [
+                              OutlinedButton.icon(
+                                onPressed: () async {
+                                  final path = await controller.capturePhoto();
+                                  if (path != null) {
+                                    setState(() => photoPath = path);
+                                  }
+                                },
+                                icon: const Icon(Icons.camera_alt, size: 18),
+                                label: Text(photoPath == null ? 'ছবি তুলুন' : 'ছবি পরিবর্তন'),
+                              ),
+                              if (photoPath != null) ...[
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon: const Icon(Icons.close_rounded, color: Colors.red),
+                                  tooltip: 'ছবি মুছুন',
+                                  onPressed: () => setState(() => photoPath = null),
+                                ),
+                              ],
+                            ],
+                          ),
+                          if (photoPath != null) ...[
+                            const SizedBox(height: AppSpacing.sm),
+                            SafeImage(
+                              source: photoPath!,
+                              height: 120,
+                              width: double.infinity,
+                              borderRadius: BorderRadius.circular(10),
+                              fallbackIcon: Icons.photo_camera_outlined,
+                            ),
+                          ],
+                          const SizedBox(height: AppSpacing.lg),
+                          FilledButton.icon(
+                            style: FilledButton.styleFrom(
+                              minimumSize: const Size.fromHeight(48),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            onPressed: () async {
+                              if (!formKey.currentState!.validate()) return;
+                              final ok = await controller.updateCapture(
+                                id: capture.id,
+                                note: noteController.text.trim(),
+                                fileLocalPath: photoPath,
+                              );
+                              if (ok && sheetContext.mounted) {
+                                Navigator.of(sheetContext).pop();
+                                Get.snackbar(
+                                  'নোট আপডেট হয়েছে',
+                                  'দ্রুত নোটটি সফলভাবে আপডেট করা হয়েছে।',
+                                  snackPosition: SnackPosition.BOTTOM,
+                                );
+                              }
+                            },
+                            icon: const Icon(Icons.save_rounded),
+                            label: const Text('আপডেট সংরক্ষণ করুন', style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('নোট মুছে ফেলবেন?'),
+        content: Text(
+          capture.note.isNotEmpty
+              ? 'আপনি কি নিশ্চিত যে "${capture.note}" নোটটি মুছে ফেলতে চান?'
+              : 'আপনি কি নিশ্চিত এই নোটটি মুছে ফেলতে চান?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text('cancel'.tr),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text('delete'.tr),
+          ),
+        ],
+      ),
+    );
+
+    if (ok == true) {
+      final success = await controller.deleteCapture(capture.id);
+      if (success) {
+        Get.snackbar(
+          'নোট মুছে ফেলা হয়েছে',
+          'দ্রুত নোটটি সফলভাবে মুছে ফেলা হয়েছে।',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    }
   }
 
   Future<void> _openConvertChoice(BuildContext context) async {
@@ -265,7 +578,7 @@ class _PendingCard extends GetView<QuickCaptureController> {
   Future<void> _openExpenseForm(BuildContext context) async {
     final amountController = TextEditingController();
     final descriptionController = TextEditingController(
-      text: capture.fileLocalPath,
+      text: capture.note,
     );
     ExpenseCategory category = ExpenseCategory.dailyOther;
     PaymentMethod method = PaymentMethod.cash;
@@ -306,7 +619,25 @@ class _PendingCard extends GetView<QuickCaptureController> {
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
-                        decoration: InputDecoration(labelText: 'amount'.tr),
+                        decoration: InputDecoration(
+                          labelText: 'amount'.tr,
+                          prefixText: '৳ ',
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.calculate_outlined, size: 20),
+                            tooltip: 'calculator'.tr,
+                            onPressed: () async {
+                              final res = await showCalculatorModal(
+                                context,
+                                initialValue: amountController.text,
+                                title: 'amount'.tr,
+                              );
+                              if (res != null) {
+                                amountController.text = res;
+                                setState(() {});
+                              }
+                            },
+                          ),
+                        ),
                         validator: (v) => _parseMoneyOrNull(v ?? '') == null
                             ? 'invalidQty'.tr
                             : null,
@@ -446,7 +777,25 @@ class _PendingCard extends GetView<QuickCaptureController> {
                                   const TextInputType.numberWithOptions(
                                     decimal: true,
                                   ),
-                              decoration: InputDecoration(labelText: 'qty'.tr),
+                              decoration: InputDecoration(
+                                labelText: 'qty'.tr,
+                                suffixIcon: IconButton(
+                                  icon: const Icon(Icons.calculate_outlined, size: 20),
+                                  tooltip: 'calculator'.tr,
+                                  onPressed: () async {
+                                    final res = await showCalculatorModal(
+                                      context,
+                                      initialValue: qtyController.text,
+                                      title: 'qty'.tr,
+                                      currencySymbol: '',
+                                    );
+                                    if (res != null) {
+                                      qtyController.text = res;
+                                      setState(() {});
+                                    }
+                                  },
+                                ),
+                              ),
                               validator: (v) => double.tryParse(v ?? '') == null
                                   ? 'invalidQty'.tr
                                   : null,
@@ -462,6 +811,22 @@ class _PendingCard extends GetView<QuickCaptureController> {
                                   ),
                               decoration: InputDecoration(
                                 labelText: 'sellPriceLabel'.tr,
+                                prefixText: '৳ ',
+                                suffixIcon: IconButton(
+                                  icon: const Icon(Icons.calculate_outlined, size: 20),
+                                  tooltip: 'calculator'.tr,
+                                  onPressed: () async {
+                                    final res = await showCalculatorModal(
+                                      context,
+                                      initialValue: priceController.text,
+                                      title: 'sellPriceLabel'.tr,
+                                    );
+                                    if (res != null) {
+                                      priceController.text = res;
+                                      setState(() {});
+                                    }
+                                  },
+                                ),
                               ),
                               validator: (v) =>
                                   _parseMoneyOrNull(v ?? '') == null
@@ -477,7 +842,25 @@ class _PendingCard extends GetView<QuickCaptureController> {
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
-                        decoration: InputDecoration(labelText: 'cashAmount'.tr),
+                        decoration: InputDecoration(
+                          labelText: 'cashAmount'.tr,
+                          prefixText: '৳ ',
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.calculate_outlined, size: 20),
+                            tooltip: 'calculator'.tr,
+                            onPressed: () async {
+                              final res = await showCalculatorModal(
+                                context,
+                                initialValue: receivedController.text,
+                                title: 'cashAmount'.tr,
+                              );
+                              if (res != null) {
+                                receivedController.text = res;
+                                setState(() {});
+                              }
+                            },
+                          ),
+                        ),
                         onChanged: (_) => setState(() {}),
                       ),
                       const SizedBox(height: AppSpacing.md),
@@ -629,7 +1012,25 @@ class _PendingCard extends GetView<QuickCaptureController> {
                                   const TextInputType.numberWithOptions(
                                     decimal: true,
                                   ),
-                              decoration: InputDecoration(labelText: 'qty'.tr),
+                              decoration: InputDecoration(
+                                labelText: 'qty'.tr,
+                                suffixIcon: IconButton(
+                                  icon: const Icon(Icons.calculate_outlined, size: 20),
+                                  tooltip: 'calculator'.tr,
+                                  onPressed: () async {
+                                    final res = await showCalculatorModal(
+                                      context,
+                                      initialValue: qtyController.text,
+                                      title: 'qty'.tr,
+                                      currencySymbol: '',
+                                    );
+                                    if (res != null) {
+                                      qtyController.text = res;
+                                      setState(() {});
+                                    }
+                                  },
+                                ),
+                              ),
                               validator: (v) => double.tryParse(v ?? '') == null
                                   ? 'invalidQty'.tr
                                   : null,
@@ -645,6 +1046,22 @@ class _PendingCard extends GetView<QuickCaptureController> {
                                   ),
                               decoration: InputDecoration(
                                 labelText: 'buyPricePer'.tr,
+                                prefixText: '৳ ',
+                                suffixIcon: IconButton(
+                                  icon: const Icon(Icons.calculate_outlined, size: 20),
+                                  tooltip: 'calculator'.tr,
+                                  onPressed: () async {
+                                    final res = await showCalculatorModal(
+                                      context,
+                                      initialValue: priceController.text,
+                                      title: 'buyPricePer'.tr,
+                                    );
+                                    if (res != null) {
+                                      priceController.text = res;
+                                      setState(() {});
+                                    }
+                                  },
+                                ),
                               ),
                               validator: (v) =>
                                   _parseMoneyOrNull(v ?? '') == null
@@ -739,16 +1156,136 @@ class _ConvertedRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      dense: true,
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(
-        capture.type == QuickCaptureType.voiceNote ? Icons.mic : Icons.photo,
-        size: 18,
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final photo = capture.photoPath;
+    final hasPhoto = photo != null && File(photo).existsSync();
+    final noteText = capture.note;
+    final displayTitle = noteText.isNotEmpty
+        ? noteText
+        : (capture.type == QuickCaptureType.photoNote ? 'photoNote'.tr : 'voiceNote'.tr);
+
+    String convertedLabel = 'converted'.tr;
+    if (capture.convertedToType != null) {
+      if (capture.convertedToType == 'sale') convertedLabel = 'dailySales'.tr;
+      if (capture.convertedToType == 'purchase') convertedLabel = 'purchaseEntry'.tr;
+      if (capture.convertedToType == 'expense') convertedLabel = 'expenses'.tr;
+    }
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: AppSpacing.xs),
+      child: ListTile(
+        dense: true,
+        leading: hasPhoto
+            ? GestureDetector(
+                onTap: () => showFullScreenImageViewer(
+                  context,
+                  imagePath: photo,
+                  title: displayTitle,
+                  subtitle: DateFormat('dd MMM yyyy, hh:mm a').format(capture.createdAt.toLocal()),
+                  heroTag: 'quick_capture_conv_${capture.id}',
+                ),
+                child: Hero(
+                  tag: 'quick_capture_conv_${capture.id}',
+                  child: SafeImage(
+                    source: photo,
+                    width: 44,
+                    height: 44,
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                    fallbackIcon: Icons.photo_camera_outlined,
+                  ),
+                ),
+              )
+            : CircleAvatar(
+                radius: 18,
+                backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                child: Icon(
+                  capture.type == QuickCaptureType.voiceNote
+                      ? Icons.mic
+                      : Icons.photo_camera,
+                  size: 18,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+        title: Text(
+          displayTitle,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+        ),
+        subtitle: Text(
+          DateFormat('dd MMM yyyy, hh:mm a').format(capture.createdAt.toLocal()),
+          style: TextStyle(
+            fontSize: 11,
+            color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+          ),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                convertedLabel,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onPrimaryContainer,
+                ),
+              ),
+            ),
+            IconButton(
+              icon: Icon(Icons.delete_outline, size: 18, color: Colors.grey.shade500),
+              tooltip: 'মুছুন',
+              onPressed: () => _confirmDelete(context),
+            ),
+          ],
+        ),
       ),
-      title: Text(capture.fileLocalPath),
-      trailing: Text(capture.convertedToType ?? ''),
     );
+  }
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final controller = Get.find<QuickCaptureController>();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('নোট মুছে ফেলবেন?'),
+        content: Text(
+          capture.note.isNotEmpty
+              ? 'আপনি কি নিশ্চিত যে "${capture.note}" নোটটি মুছে ফেলতে চান?'
+              : 'আপনি কি নিশ্চিত এই নোটটি মুছে ফেলতে চান?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text('cancel'.tr),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text('delete'.tr),
+          ),
+        ],
+      ),
+    );
+
+    if (ok == true) {
+      final success = await controller.deleteCapture(capture.id);
+      if (success) {
+        Get.snackbar(
+          'নোট মুছে ফেলা হয়েছে',
+          'নোটটি সফলভাবে মুছে ফেলা হয়েছে।',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    }
   }
 }
 

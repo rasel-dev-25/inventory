@@ -8,6 +8,7 @@ import '../../../data/local/default_shop.dart';
 import '../../../data/usecases/pay_due_usecase.dart';
 import '../../../domain/entities/customer.dart';
 import '../../../domain/entities/due.dart';
+import '../../../domain/entities/due_payment.dart';
 import '../../../domain/entities/enums.dart';
 import '../../../domain/services/due_lifecycle.dart';
 
@@ -49,6 +50,7 @@ class DuesController extends GetxController {
 
   final dues = <Due>[].obs;
   final customers = <Customer>[].obs;
+  final duePayments = <DuePayment>[].obs;
 
   final isSaving = false.obs;
   final errorMessage = RxnString();
@@ -65,6 +67,11 @@ class DuesController extends GetxController {
       db.customerDao
           .watchAll(defaultShopId)
           .listen((rows) => customers.assignAll(rows)),
+    );
+    _subscriptions.add(
+      db.dueDao
+          .watchAllPayments()
+          .listen((rows) => duePayments.assignAll(rows)),
     );
   }
 
@@ -113,6 +120,42 @@ class DuesController extends GetxController {
   int get totalOverdueCount {
     final now = DateTime.now();
     return outstandingDues.where((d) => isOverdue(d, now)).length;
+  }
+
+  /// Total payments collected against dues across all time.
+  Money get totalCollectedAmount {
+    return duePayments.fold(
+      Money.zero(),
+      (acc, p) => acc + p.amount,
+    );
+  }
+
+  /// Returns all payments made towards a specific due, newest first.
+  List<DuePayment> paymentsForDue(String dueId) {
+    final list = duePayments.where((p) => p.dueId == dueId).toList();
+    list.sort((a, b) => b.date.compareTo(a.date));
+    return list;
+  }
+
+  /// Returns all payments made by a customer across all their dues, newest first.
+  List<DuePayment> paymentsForCustomer(String customerId) {
+    final customerDueIds = dues
+        .where((d) => d.customerId == customerId)
+        .map((d) => d.id)
+        .toSet();
+    final list = duePayments
+        .where((p) => customerDueIds.contains(p.dueId))
+        .toList();
+    list.sort((a, b) => b.date.compareTo(a.date));
+    return list;
+  }
+
+  /// Total money received from a specific customer across all their dues.
+  Money totalCollectedForCustomer(String customerId) {
+    return paymentsForCustomer(customerId).fold(
+      Money.zero(),
+      (acc, p) => acc + p.amount,
+    );
   }
 
   /// Groups all active dues by Customer so a single customer never appears

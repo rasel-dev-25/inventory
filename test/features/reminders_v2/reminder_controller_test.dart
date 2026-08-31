@@ -153,4 +153,29 @@ void main() {
 
     expect(controller.inbox, isEmpty);
   });
+
+  test('ticking/resolving a reminder moves it to resolved and reduces activeCount', () async {
+    await CustomerUseCases(db).create(
+      const Customer(id: 'c1', name: 'Flagged Customer', suspicionFlag: true),
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(controller.activeCount, 1);
+    expect(controller.resolvedCount, 0);
+    expect(controller.hasAnyActiveAlerts, isTrue);
+
+    final reminderId = controller.inbox.single.id;
+    controller.toggleResolved(reminderId);
+
+    expect(controller.isResolved(reminderId), isTrue);
+    expect(controller.activeCount, 0);
+    expect(controller.resolvedCount, 1);
+    expect(controller.allResolvedToday, isTrue);
+
+    controller.toggleResolved(reminderId);
+    expect(controller.isResolved(reminderId), isFalse);
+    expect(controller.activeCount, 1);
+  });
 }

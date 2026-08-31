@@ -14,23 +14,25 @@ import 'core/platform/capabilities.dart';
 import 'core/settings/settings_registry.dart';
 import 'data/local/app_database.dart';
 import 'data/local/drift_key_value_store.dart';
+import 'data/local/local_row_upserter.dart';
+import 'data/local/local_storage_metrics_service.dart';
+import 'data/remote/cloudinary_storage_upload_transport.dart';
 import 'data/remote/supabase_auth_repository.dart';
-import 'data/remote/supabase_sync_transport.dart';
+import 'data/remote/supabase_storage_metrics_service.dart';
 import 'data/remote/supabase_storage_upload_transport.dart';
+import 'data/remote/supabase_sync_transport.dart';
+import 'data/sync/pending_upload_service.dart';
+import 'data/sync/storage_upload_transport.dart';
 import 'data/sync/sync_pull_service.dart';
 import 'data/sync/sync_push_service.dart';
-import 'data/sync/pending_upload_service.dart';
 import 'domain/repositories/auth_repository.dart';
 import 'features/auth/controller/auth_controller.dart';
 import 'features/backup_v2/controller/backup_controller.dart';
 import 'features/pricing_settings_v2/controller/pricing_settings_controller.dart';
 import 'features/reminders_v2/controller/reminder_controller.dart';
 import 'features/settings/controller/settings_controller.dart';
-import 'features/sync/controller/sync_controller.dart';
-import 'data/local/local_row_upserter.dart';
-import 'data/local/local_storage_metrics_service.dart';
-import 'data/remote/supabase_storage_metrics_service.dart';
 import 'features/storage_usage/controller/storage_usage_controller.dart';
+import 'features/sync/controller/sync_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,6 +46,10 @@ void main() async {
     url: SupabaseConfig.url,
     publishableKey: SupabaseConfig.publishableKey,
   );
+  // --- v2 Drift init (the only database now) ---
+  final dbV2 = AppDatabase();
+  Get.put<AppDatabase>(dbV2, permanent: true);
+
   Get.put<AuthRepository>(SupabaseAuthRepository(), permanent: true);
   Get.put<AuthController>(
     AuthController(Get.find<AuthRepository>()),
@@ -63,17 +69,19 @@ void main() async {
     getApplicationDocumentsDirectory().then(LegacyDatabaseCleanup.deleteFrom),
   );
 
-  // --- v2 Drift init (the only database now — see the cleanup above) ---
-  final dbV2 = AppDatabase();
-  Get.put<AppDatabase>(dbV2, permanent: true);
-
   // --- Sync engine (outbox pusher + cursor puller) ---
   // See SYNC.md for the design. Registered here (not lazily per-screen)
   // since the "Sync Now" affordance and its pending-outbox-count badge
   // need to exist app-wide, not just on whichever screen last opened it.
   final syncTransport = SupabaseSyncTransport();
-  final storageTransport = SupabaseStorageUploadTransport();
-  Get.put<SupabaseStorageUploadTransport>(storageTransport, permanent: true);
+  final storageTransport = CloudinaryStorageUploadTransport();
+  Get.put<StorageUploadTransport>(storageTransport, permanent: true);
+  Get.put<CloudinaryStorageUploadTransport>(storageTransport, permanent: true);
+  // Keep SupabaseStorageUploadTransport registered for backward compatibility if needed
+  Get.put<SupabaseStorageUploadTransport>(
+    SupabaseStorageUploadTransport(),
+    permanent: true,
+  );
   Get.put<SyncController>(
     SyncController(
       db: dbV2,

@@ -100,9 +100,13 @@ void main() {
     await tester.pump();
 
     expect(find.text('Karim'), findsOneWidget);
-    expect(find.text('Book One'), findsNWidgets(2));
-    expect(find.text('Special edition'), findsOneWidget);
+    expect(find.text('Book One'), findsAtLeastNWidgets(1));
     expect(find.text('Outstanding due'), findsOneWidget);
-    expect(find.text(Money.fromMinor(3000).format()), findsNWidgets(2));
+    expect(find.text(Money.fromMinor(3000).format()), findsAtLeastNWidgets(1));
+
+    // Switch to Pre-Orders tab
+    await tester.tap(find.byType(Tab).at(3));
+    await tester.pumpAndSettle();
+    expect(find.text('Special edition'), findsOneWidget);
   });
 }

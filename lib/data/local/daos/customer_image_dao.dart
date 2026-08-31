@@ -54,4 +54,8 @@ class CustomerImageDao extends DatabaseAccessor<AppDatabase>
       ),
     );
   }
+
+  Future<void> deleteImage(String id) {
+    return (delete(customerImages)..where((image) => image.id.equals(id))).go();
+  }
 }

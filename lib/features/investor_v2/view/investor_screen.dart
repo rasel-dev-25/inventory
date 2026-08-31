@@ -2,29 +2,37 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../core/design/tokens.dart';
-import '../../../core/money/money.dart';
+import '../../../core/widgets/shop_app_bar_title.dart';
 import '../../../domain/entities/enums.dart';
 import '../../../domain/entities/investor.dart';
-import '../../../domain/entities/legacy_settlement.dart';
 import '../controller/investor_controller.dart';
+import 'investor_detail_screen.dart';
 import 'investor_form_sheet.dart';
 
-/// The Investor screen — list + per-investor metrics
-/// (`notes/business_logic.md` §ঙ) and repayment recording, backed by
-/// [InvestorController].
+/// The Investor screen — list + rich per-investor cards,
+/// backed by [InvestorController].
 class InvestorScreen extends GetView<InvestorController> {
   const InvestorScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('${'investor'.tr} (v2)')),
+      appBar: AppBar(
+        title: ShopAppBarTitle(pageTitle: 'investor'.tr),
+        actions: [
+          IconButton(
+            tooltip: 'addInvestor'.tr,
+            icon: const Icon(Icons.person_add_alt_1_outlined),
+            onPressed: () => _openForm(context),
+          ),
+        ],
+      ),
       body: Obx(() {
         if (controller.investors.isEmpty) {
           return Center(child: Text('noInvestors'.tr));
         }
         return ListView.builder(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.md),
           itemCount: controller.investors.length,
           itemBuilder: (context, index) {
             final investor = controller.investors[index];
@@ -44,6 +52,7 @@ class InvestorScreen extends GetView<InvestorController> {
     final result = await showModalBottomSheet<InvestorFormResult>(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) => InvestorFormSheet(existing: existing),
     );
     if (result == null) return;
@@ -56,14 +65,9 @@ class InvestorScreen extends GetView<InvestorController> {
         profitSharePercent: result.profitSharePercent,
         capitalReturnTermDays: result.capitalReturnTermDays,
         profitPayoutCycle: result.profitPayoutCycle,
+        initialCashInvestment: result.initialCashInvestment,
         notes: result.notes,
       );
-      // Only ever set when `InvestorFormSheet`'s "has an old ledger-book
-      // account?" toggle was on — see `LegacySettlementFormResult`'s doc
-      // comment. Created as a second, separate write rather than folded
-      // into `createInvestor` itself, since the investor and its (at
-      // most one) legacy settlement are genuinely different aggregates
-      // with independent validation.
       final legacy = result.legacySettlement;
       if (newInvestorId != null && legacy != null) {
         await controller.createLegacySettlement(
@@ -83,6 +87,7 @@ class InvestorScreen extends GetView<InvestorController> {
         profitSharePercent: result.profitSharePercent,
         capitalReturnTermDays: result.capitalReturnTermDays,
         profitPayoutCycle: result.profitPayoutCycle,
+        initialCashInvestment: result.initialCashInvestment,
         notes: result.notes,
       );
     }
@@ -95,51 +100,197 @@ class _InvestorCard extends GetView<InvestorController> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Obx(() {
       final metrics = controller.metricsFor(investor);
+      final settlement = controller.settlementFor(investor.id);
+      final hasPendingLegacy = settlement?.status == LegacySettlementStatus.pending;
+
       return Card(
         margin: const EdgeInsets.only(bottom: AppSpacing.md),
+        elevation: 1.5,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          side: BorderSide(
+            color: hasPendingLegacy
+                ? Colors.amber.shade400
+                : theme.colorScheme.outline.withValues(alpha: 0.15),
+            width: hasPendingLegacy ? 1.2 : 1.0,
+          ),
+        ),
         child: InkWell(
-          onTap: () => _showDetail(context),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          onTap: () {
+            Get.to(() => InvestorDetailScreen(investorId: investor.id));
+          },
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // ── Header: Name + Contact + Type Badge ─────────────────────
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
+                    CircleAvatar(
+                      radius: 18,
+                      backgroundColor: theme.colorScheme.primaryContainer,
+                      foregroundColor: theme.colorScheme.primary,
                       child: Text(
-                        investor.name,
-                        style: Theme.of(context).textTheme.titleMedium,
+                        investor.name.isNotEmpty ? investor.name[0].toUpperCase() : '?',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                       ),
                     ),
-                    Text(
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            investor.name,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (investor.contact != null && investor.contact!.isNotEmpty)
+                            Text(
+                              investor.contact!,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    _badge(
                       _investmentTypeLabel(investor.investmentType),
-                      style: Theme.of(context).textTheme.bodySmall,
+                      theme.colorScheme.primaryContainer,
+                      theme.colorScheme.primary,
                     ),
                   ],
                 ),
-                if (controller.settlementFor(investor.id)?.status ==
-                    LegacySettlementStatus.pending) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    'legacySettlementPending'.tr,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.error,
-                      fontWeight: FontWeight.w600,
+
+                // ── Old Ledger Warning Alert Banner (if pending) ────────────
+                if (hasPendingLegacy && settlement != null) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade50,
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                      border: Border.all(color: Colors.amber.shade300),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.warning_amber_rounded, size: 16, color: Colors.amber.shade900),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            '${'oldLedgerDue'.tr}: ${settlement.netSettlementAmount.format()}',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.amber.shade900,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          'legacySettlementPending'.tr,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.amber.shade900,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
                 const SizedBox(height: AppSpacing.sm),
+
+                // ── 3 Stat Boxes: Bought / Sold / Profit (from Old App) ──────
+                Row(
+                  children: [
+                    _statBox('bought'.tr, metrics.totalPurchasedCash.format(), Colors.blue),
+                    const SizedBox(width: 4),
+                    _statBox('sold'.tr, metrics.totalSoldRevenue.format(), Colors.green),
+                    const SizedBox(width: 4),
+                    _statBox('profit'.tr, metrics.totalGrossProfit.format(), Colors.orange),
+                  ],
+                ),
+                const SizedBox(height: 6),
+
+                // ── Profit Split Bar ─────────────────────────────────────────
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade50,
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                    border: Border.all(color: Colors.amber.shade200, width: 0.5),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '${'profitSplit'.tr}:',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.brown.shade800,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '${'investorShare'.tr} (${investor.profitSharePercent}%): ${metrics.profitShare.format()}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green.shade800,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '| ${'shopShare'.tr}: ${(metrics.totalGrossProfit - metrics.profitShare).format()}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.teal.shade800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+
+                // ── Bottom Summary Row: Stock / Remaining / Repaid ───────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _stat(context, 'totalInvested'.tr, metrics.totalInvestment),
-                    _stat(
-                      context,
-                      'remainingBalance'.tr,
-                      metrics.remainingBalance,
+                    Text(
+                      '${'inStockLabel'.tr}${metrics.currentStockValue.format()}',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      '${'repaidLabel'.tr}${metrics.totalRepaidCapital.format()}',
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        color: Colors.green,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      '${'remainingBalance'.tr}: ${metrics.remainingBalance.format()}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: metrics.remainingBalance.isPositive
+                            ? Colors.red.shade700
+                            : Colors.green.shade700,
+                      ),
                     ),
                   ],
                 ),
@@ -151,26 +302,50 @@ class _InvestorCard extends GetView<InvestorController> {
     });
   }
 
-  Widget _stat(BuildContext context, String label, Money value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
-        Text(
-          value.format(),
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+  Widget _badge(String label, Color bg, Color fg) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: fg,
         ),
-      ],
+      ),
     );
   }
 
-  void _showDetail(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => _InvestorDetailSheet(investor: investor),
+  Widget _statBox(String label, String value, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+        ),
+        child: Column(
+          children: [
+            Text(
+              label,
+              style: const TextStyle(fontSize: 10, color: Colors.grey),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -182,391 +357,4 @@ String _investmentTypeLabel(InvestmentType type) {
     InvestmentType.cashMusharaka => 'musharaka'.tr,
     InvestmentType.goodsInKind => 'productConsignment'.tr,
   };
-}
-
-class _InvestorDetailSheet extends GetView<InvestorController> {
-  final Investor investor;
-  const _InvestorDetailSheet({required this.investor});
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final metrics = controller.metricsFor(investor);
-      final history = controller.repaymentsFor(investor.id);
-      return Padding(
-        padding: EdgeInsets.only(
-          left: AppSpacing.lg,
-          right: AppSpacing.lg,
-          top: AppSpacing.lg,
-          bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      investor.name,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'editInvestor'.tr,
-                    icon: const Icon(Icons.edit),
-                    onPressed: () => _editInvestor(context),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              _row(context, 'totalInvested'.tr, metrics.totalInvestment),
-              _row(context, 'currentStockValue'.tr, metrics.currentStockValue),
-              _row(context, 'totalBought'.tr, metrics.totalPurchasedCash),
-              _row(context, 'totalSold'.tr, metrics.totalSoldRevenue),
-              _row(context, 'profitShareAmount'.tr, metrics.profitShare),
-              _row(context, 'totalRepaid'.tr, metrics.totalRepaidCapital),
-              _row(
-                context,
-                'remainingBalance'.tr,
-                metrics.remainingBalance,
-                emphasize: true,
-              ),
-              if (controller.settlementFor(investor.id) case final settlement?)
-                _LegacySettlementSection(settlement: settlement),
-              const SizedBox(height: AppSpacing.lg),
-              FilledButton(
-                onPressed: () => _showRepayDialog(context),
-                child: Text('repay'.tr),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Text(
-                'repayments'.tr,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              if (history.isEmpty)
-                Text('noRepayments'.tr)
-              else
-                for (final repayment in history)
-                  ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      repayment.type == RepaymentType.capitalReturn
-                          ? 'capitalReturn'.tr
-                          : 'profitShareAmount'.tr,
-                    ),
-                    subtitle: Text(
-                      repayment.date.toLocal().toString().split(' ').first,
-                    ),
-                    trailing: Text(repayment.amount.format()),
-                  ),
-            ],
-          ),
-        ),
-      );
-    });
-  }
-
-  Future<void> _editInvestor(BuildContext context) async {
-    final result = await showModalBottomSheet<InvestorFormResult>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => InvestorFormSheet(existing: investor),
-    );
-    if (result == null) return;
-    await controller.updateInvestor(
-      investor,
-      name: result.name,
-      contact: result.contact,
-      investmentType: result.investmentType,
-      profitSharePercent: result.profitSharePercent,
-      capitalReturnTermDays: result.capitalReturnTermDays,
-      profitPayoutCycle: result.profitPayoutCycle,
-      notes: result.notes,
-    );
-  }
-
-  Widget _row(
-    BuildContext context,
-    String label,
-    Money value, {
-    bool emphasize = false,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: Theme.of(context).textTheme.bodyMedium),
-          Text(
-            value.format(),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: emphasize ? FontWeight.bold : FontWeight.normal,
-              color: emphasize && value.isNegative
-                  ? Theme.of(context).colorScheme.error
-                  : null,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _showRepayDialog(BuildContext context) async {
-    final amountController = TextEditingController();
-    RepaymentType type = RepaymentType.capitalReturn;
-    PaymentMethod method = PaymentMethod.cash;
-    final formKey = GlobalKey<FormState>();
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (dialogContext, setState) {
-            return AlertDialog(
-              title: Text('addRepayment'.tr),
-              content: Form(
-                key: formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextFormField(
-                      controller: amountController,
-                      autofocus: true,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      decoration: InputDecoration(
-                        labelText: 'repaymentAmount'.tr,
-                      ),
-                      validator: (v) => _parseMoneyOrNull(v ?? '') == null
-                          ? 'invalidQty'.tr
-                          : null,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    SegmentedButton<RepaymentType>(
-                      segments: [
-                        ButtonSegment(
-                          value: RepaymentType.capitalReturn,
-                          label: Text('capitalReturn'.tr),
-                        ),
-                        ButtonSegment(
-                          value: RepaymentType.profitShare,
-                          label: Text('profitShareAmount'.tr),
-                        ),
-                      ],
-                      selected: {type},
-                      onSelectionChanged: (s) => setState(() => type = s.first),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    SegmentedButton<PaymentMethod>(
-                      segments: [
-                        ButtonSegment(
-                          value: PaymentMethod.cash,
-                          label: Text('cash'.tr),
-                        ),
-                        ButtonSegment(
-                          value: PaymentMethod.mobileBanking,
-                          label: Text('mobile'.tr),
-                        ),
-                        ButtonSegment(
-                          value: PaymentMethod.bankTransfer,
-                          label: Text('bank'.tr),
-                        ),
-                      ],
-                      selected: {method},
-                      onSelectionChanged: (s) =>
-                          setState(() => method = s.first),
-                    ),
-                    Obx(
-                      () => controller.errorMessage.value == null
-                          ? const SizedBox.shrink()
-                          : Padding(
-                              padding: const EdgeInsets.only(
-                                top: AppSpacing.sm,
-                              ),
-                              child: Text(
-                                controller.errorMessage.value!,
-                                style: const TextStyle(color: Colors.red),
-                              ),
-                            ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: Text('cancel'.tr),
-                ),
-                Obx(
-                  () => FilledButton(
-                    onPressed: controller.isSaving.value
-                        ? null
-                        : () async {
-                            if (!formKey.currentState!.validate()) return;
-                            final amount = _parseMoneyOrNull(
-                              amountController.text,
-                            )!;
-                            final ok = await controller.recordRepayment(
-                              investorId: investor.id,
-                              amount: amount,
-                              type: type,
-                              paymentMethod: method,
-                            );
-                            if (ok && dialogContext.mounted) {
-                              Navigator.of(dialogContext).pop();
-                            } else {
-                              setState(() {});
-                            }
-                          },
-                    child: controller.isSaving.value
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text('repay'.tr),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-}
-
-/// Same pattern as `daily_sales_v2`/`dues_v2`'s `_parseMoneyOrNull` —
-/// `Money` has no `tryParse`, see those files' doc comments for why every
-/// live-input field wraps `Money.parse` like this.
-Money? _parseMoneyOrNull(String text) {
-  if (text.trim().isEmpty) return null;
-  try {
-    return Money.parse(text);
-  } on MoneyException {
-    return null;
-  }
-}
-
-/// The read-only §৬ memo for an investor's old ledger-book account, plus
-/// (only while [LegacySettlementStatus.pending]) the one-time "Mark
-/// Settled" action. Never editable after creation — see
-/// `LegacySettlement`'s own class doc comment.
-class _LegacySettlementSection extends GetView<InvestorController> {
-  final LegacySettlement settlement;
-  const _LegacySettlementSection({required this.settlement});
-
-  @override
-  Widget build(BuildContext context) {
-    final isPending = settlement.status == LegacySettlementStatus.pending;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const SizedBox(height: AppSpacing.lg),
-        const Divider(),
-        Text(
-          'legacySettlementSectionTitle'.tr,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _row(
-          context,
-          'totalHistoricalInvestment'.tr,
-          settlement.totalHistoricalInvestment,
-        ),
-        _row(
-          context,
-          'totalAlreadyReturned'.tr,
-          settlement.totalAlreadyReturned,
-        ),
-        _row(
-          context,
-          'netSettlementAmount'.tr,
-          settlement.netSettlementAmount,
-          emphasize: true,
-        ),
-        if (settlement.notes != null && settlement.notes!.isNotEmpty) ...[
-          const SizedBox(height: 4),
-          Text(settlement.notes!, style: Theme.of(context).textTheme.bodySmall),
-        ],
-        const SizedBox(height: AppSpacing.sm),
-        Text(
-          isPending
-              ? 'legacySettlementPending'.tr
-              : 'legacySettlementSettled'.tr,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: isPending
-                ? Theme.of(context).colorScheme.error
-                : Colors.green,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        if (!isPending) ...[
-          const SizedBox(height: 4),
-          Text(
-            'legacySettlementAlreadySettledNote'.tr,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ],
-        if (isPending) ...[
-          const SizedBox(height: AppSpacing.sm),
-          OutlinedButton(
-            onPressed: () => _confirmMarkSettled(context),
-            child: Text('markSettled'.tr),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _row(
-    BuildContext context,
-    String label,
-    Money value, {
-    bool emphasize = false,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: Theme.of(context).textTheme.bodyMedium),
-          Text(
-            value.format(),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: emphasize ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _confirmMarkSettled(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text('markSettled'.tr),
-        content: Text('confirmMarkSettled'.tr),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text('cancel'.tr),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text('markSettled'.tr),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true) {
-      await controller.markLegacySettlementSettled(settlement.id);
-    }
-  }
 }

@@ -159,6 +159,57 @@ void main() {
       expect(settlement.netSettlementAmount, Money.fromMinor(40000000));
     });
 
+    test('recordLegacySettlementPayment partially pays and updates remaining amount', () async {
+      await controller.createLegacySettlement(
+        investorId: 'investor-1',
+        totalHistoricalInvestment: Money.fromMinor(5000000), // ৳50,000
+        totalAlreadyReturned: Money.zero(),
+        settlementDate: DateTime.utc(2026, 1, 1),
+        notes: 'Initial ledger balance',
+      );
+      await Future<void>.delayed(Duration.zero);
+      final settlementId = controller.settlementFor('investor-1')!.id;
+
+      // Partial payment of ৳20,000
+      final ok = await controller.recordLegacySettlementPayment(
+        settlementId: settlementId,
+        paymentAmount: Money.fromMinor(2000000),
+        note: 'Installment 1',
+      );
+      expect(ok, isTrue, reason: controller.errorMessage.value);
+      await Future<void>.delayed(Duration.zero);
+
+      final updated = controller.settlementFor('investor-1')!;
+      expect(updated.status, LegacySettlementStatus.pending);
+      expect(updated.totalAlreadyReturned, Money.fromMinor(2000000));
+      expect(updated.netSettlementAmount, Money.fromMinor(3000000)); // ৳30,000 left
+      expect(updated.notes, contains('Installment 1'));
+
+      // Pay remaining ৳30,000 -> Should automatically mark as settled!
+      final ok2 = await controller.recordLegacySettlementPayment(
+        settlementId: settlementId,
+        paymentAmount: Money.fromMinor(3000000),
+        note: 'Final settlement',
+      );
+      expect(ok2, isTrue, reason: controller.errorMessage.value);
+      await Future<void>.delayed(Duration.zero);
+
+      final finalSettlement = controller.settlementFor('investor-1')!;
+      expect(finalSettlement.status, LegacySettlementStatus.settled);
+      expect(finalSettlement.netSettlementAmount, Money.zero());
+      expect(finalSettlement.notes, contains('Final settlement'));
+    });
+
+    test('investorById and productsForInvestor return expected data', () {
+      final inv = controller.investorById('investor-1');
+      expect(inv, isNotNull);
+      expect(inv!.name, 'Uncle Karim');
+
+      final prods = controller.productsForInvestor('investor-1');
+      expect(prods, hasLength(1));
+      expect(prods.first.id, 'book-a');
+    });
+
     test('markLegacySettlementSettled flips it to settled', () async {
       await controller.createLegacySettlement(
         investorId: 'investor-1',
@@ -177,6 +228,42 @@ void main() {
         controller.settlementFor('investor-1')!.status,
         LegacySettlementStatus.settled,
       );
+    });
+
+    test('initialCashInvestment and addCashInvestment properly update investor capital', () async {
+      final id = await controller.createInvestor(
+        name: 'Sunny bhai',
+        investmentType: InvestmentType.cashMudaraba,
+        profitSharePercent: 40,
+        profitPayoutCycle: ProfitPayoutCycle.monthly,
+        initialCashInvestment: Money.fromMinor(10000000), // ৳100,000
+      );
+      expect(id, isNotNull);
+      await Future<void>.delayed(Duration.zero);
+
+      var inv = controller.investorById(id!)!;
+      expect(inv.initialCashInvestment, Money.fromMinor(10000000));
+
+      var metrics = controller.metricsFor(inv);
+      expect(metrics.totalInvestment, Money.fromMinor(10000000));
+      expect(metrics.remainingBalance, Money.fromMinor(10000000));
+
+      // Add additional cash investment
+      final added = await controller.addCashInvestment(
+        investorId: id,
+        amount: Money.fromMinor(2000000), // ৳20,000
+        note: 'অতিরিক্ত মূলধন',
+      );
+      expect(added, isTrue);
+      await Future<void>.delayed(Duration.zero);
+
+      inv = controller.investorById(id)!;
+      expect(inv.initialCashInvestment, Money.fromMinor(12000000)); // ৳120,000
+      expect(inv.notes, contains('অতিরিক্ত মূলধন'));
+
+      metrics = controller.metricsFor(inv);
+      expect(metrics.totalInvestment, Money.fromMinor(12000000));
+      expect(metrics.remainingBalance, Money.fromMinor(12000000));
     });
   });
 }

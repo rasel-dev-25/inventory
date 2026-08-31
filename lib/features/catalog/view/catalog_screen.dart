@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../core/design/tokens.dart';
+import '../../../core/widgets/full_screen_image_viewer.dart';
+import '../../../core/widgets/safe_image.dart';
 import '../../../domain/entities/product.dart';
 import '../controller/catalog_controller.dart';
 import 'product_form_sheet.dart';
@@ -21,7 +23,7 @@ class CatalogScreen extends GetView<CatalogController> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('${'products'.tr} (v2)'),
+          title: Text('products'.tr),
           bottom: TabBar(
             tabs: [
               Tab(text: 'category'.tr),
@@ -158,21 +160,24 @@ class _ProductsTab extends GetView<CatalogController> {
                           ? const CircleAvatar(
                               child: Icon(Icons.inventory_2_outlined),
                             )
-                          : ClipRRect(
-                              borderRadius: BorderRadius.circular(AppRadius.sm),
-                              child: imageSource.startsWith('http')
-                                  ? Image.network(
-                                      imageSource,
-                                      width: 48,
-                                      height: 48,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Image.file(
-                                      File(imageSource),
-                                      width: 48,
-                                      height: 48,
-                                      fit: BoxFit.cover,
-                                    ),
+                          : GestureDetector(
+                              onTap: () => showFullScreenImageViewer(
+                                context,
+                                imagePath: imageSource,
+                                title: product.name,
+                                subtitle: '${product.category} · ${product.suggestedSellPrice.format()}',
+                                heroTag: 'product_image_${product.id}',
+                              ),
+                              child: Hero(
+                                tag: 'product_image_${product.id}',
+                                child: SafeImage(
+                                  source: imageSource,
+                                  width: 48,
+                                  height: 48,
+                                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                                  fallbackIcon: Icons.inventory_2_outlined,
+                                ),
+                              ),
                             ),
                       title: Text(product.name),
                       subtitle: Text(
@@ -205,6 +210,7 @@ class _ProductsTab extends GetView<CatalogController> {
         existing: existing,
         categories: controller.categories.map((c) => c.name).toList(),
         investors: controller.investors,
+        units: controller.units.map((u) => u.name).toList(),
         onCreateCategory: (name) async {
           final ok = await controller.createCategory(name);
           return ok ? name.trim() : null;
@@ -225,6 +231,8 @@ class _ProductsTab extends GetView<CatalogController> {
         costPrice: result.costPrice,
         suggestedSellPrice: result.suggestedSellPrice,
         fundSource: result.fundSource,
+        unit: result.unit,
+        sellUnit: result.sellUnit,
         isRentable: result.isRentable,
         initialQty: result.initialQty,
         barcode: result.barcode,
@@ -241,6 +249,8 @@ class _ProductsTab extends GetView<CatalogController> {
         suggestedSellPrice: result.suggestedSellPrice,
         qty: result.initialQty,
         fundSource: result.fundSource,
+        unit: result.unit,
+        sellUnit: result.sellUnit,
         isRentable: result.isRentable,
         barcode: result.barcode,
         sku: result.sku,

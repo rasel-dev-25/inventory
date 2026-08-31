@@ -171,6 +171,44 @@ class QuickCaptureController extends GetxController {
     );
   }
 
+  Future<bool> updateCapture({
+    required String id,
+    required String note,
+    String? fileLocalPath,
+  }) async {
+    errorMessage.value = null;
+    final result = await _captureUseCases.update(
+      id: id,
+      note: note,
+      fileLocalPath: fileLocalPath,
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+    return result.fold(
+      onOk: (_) => true,
+      onErr: (failure) {
+        errorMessage.value = failure.message;
+        return false;
+      },
+    );
+  }
+
+  Future<bool> deleteCapture(String id) async {
+    errorMessage.value = null;
+    final result = await _captureUseCases.delete(
+      id: id,
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+    return result.fold(
+      onOk: (_) => true,
+      onErr: (failure) {
+        errorMessage.value = failure.message;
+        return false;
+      },
+    );
+  }
+
   Future<bool> convertToExpense({
     required String captureId,
     required ExpenseCategory category,

@@ -215,5 +215,24 @@ void main() {
       expect(totals.totalInvestorRemaining, Money.parse('50000'));
       expect(totals.dailyInvestorObligation, Money.parse('555.55'));
     });
+
+    test('correctly calculates totalPayableObligations and dailyTotalObligation with rent', () {
+      final totals = computeDashboardTotals(
+        ledgerEntriesInRange: const [],
+        salesInRange: const [],
+        purchaseTripsInRange: const [],
+        stockMovementsInRange: const [],
+        totalInvestorRemaining: Money.parse('50000'),
+        dailyInvestorObligation: Money.parse('1666.67'),
+        monthlyShopRent: Money.parse('15000'),
+        rentPaidThisMonth: Money.parse('5000'),
+        rentRemainingThisMonth: Money.parse('10000'),
+        dailyRentObligation: Money.parse('500'),
+      );
+      // Total payable = 50000 (investor) + 10000 (remaining rent) = 60000
+      expect(totals.totalPayableObligations, Money.parse('60000'));
+      // Daily total obligation = 1666.67 + 500 = 2166.67
+      expect(totals.dailyTotalObligation, Money.parse('2166.67'));
+    });
   });
 }

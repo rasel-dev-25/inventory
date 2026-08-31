@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../core/design/tokens.dart';
+import '../../../core/widgets/full_screen_image_viewer.dart';
+import '../../../core/widgets/notification_bell_action.dart';
+import '../../../core/widgets/safe_image.dart';
 import '../../../core/widgets/shop_app_bar_title.dart';
 import '../../../domain/entities/product.dart';
 import '../../catalog/view/product_form_sheet.dart';
@@ -32,6 +35,7 @@ class StockScreen extends GetView<StockController> {
         existing: existing,
         categories: controller.categories.map((c) => c.name).toList(),
         investors: controller.investors,
+        units: controller.units.map((u) => u.name).toList(),
         onCreateCategory: (name) async {
           final ok = await controller.createCategory(name);
           return ok ? name.trim() : null;
@@ -53,6 +57,8 @@ class StockScreen extends GetView<StockController> {
         costPrice: result.costPrice,
         suggestedSellPrice: result.suggestedSellPrice,
         fundSource: result.fundSource,
+        unit: result.unit,
+        sellUnit: result.sellUnit,
         isRentable: result.isRentable,
         initialQty: result.initialQty,
         barcode: result.barcode,
@@ -69,6 +75,8 @@ class StockScreen extends GetView<StockController> {
         suggestedSellPrice: result.suggestedSellPrice,
         qty: result.initialQty,
         fundSource: result.fundSource,
+        unit: result.unit,
+        sellUnit: result.sellUnit,
         isRentable: result.isRentable,
         barcode: result.barcode,
         sku: result.sku,
@@ -159,21 +167,24 @@ class StockScreen extends GetView<StockController> {
             Row(
               children: [
                 if (imageSource != null)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                    child: imageSource.startsWith('http')
-                        ? Image.network(
-                            imageSource,
-                            width: 60,
-                            height: 60,
-                            fit: BoxFit.cover,
-                          )
-                        : Image.file(
-                            File(imageSource),
-                            width: 60,
-                            height: 60,
-                            fit: BoxFit.cover,
-                          ),
+                  GestureDetector(
+                    onTap: () => showFullScreenImageViewer(
+                      context,
+                      imagePath: imageSource,
+                      title: product.name,
+                      subtitle: product.category,
+                      heroTag: 'product_sheet_image_${product.id}',
+                    ),
+                    child: Hero(
+                      tag: 'product_sheet_image_${product.id}',
+                      child: SafeImage(
+                        source: imageSource,
+                        width: 60,
+                        height: 60,
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        fallbackIcon: Icons.inventory_2_outlined,
+                      ),
+                    ),
                   )
                 else
                   Container(
@@ -249,7 +260,7 @@ class StockScreen extends GetView<StockController> {
                   context,
                   label: 'stockLabel'.tr,
                   value:
-                      '${product.qty.toStringAsFixed(product.qty == product.qty.roundToDouble() ? 0 : 2)} pcs',
+                      '${product.qty.toStringAsFixed(product.qty == product.qty.roundToDouble() ? 0 : 2)} ${product.sellUnit}',
                   icon: Icons.inventory_outlined,
                   color: product.qty <= 0
                       ? Colors.red
@@ -390,6 +401,10 @@ class StockScreen extends GetView<StockController> {
         leading: onMenuTap == null
             ? null
             : IconButton(icon: const Icon(Icons.menu), onPressed: onMenuTap),
+        actions: const [
+          NotificationBellAction(),
+          SizedBox(width: 4),
+        ],
       ),
       body: Obx(() {
         final items = controller.filteredProducts;
@@ -738,21 +753,24 @@ class _ProductCard extends GetView<StockController> {
             children: [
               // Product Image or Icon
               if (imageSource != null)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: imageSource.startsWith('http')
-                      ? Image.network(
-                          imageSource,
-                          width: 52,
-                          height: 52,
-                          fit: BoxFit.cover,
-                        )
-                      : Image.file(
-                          File(imageSource),
-                          width: 52,
-                          height: 52,
-                          fit: BoxFit.cover,
-                        ),
+                GestureDetector(
+                  onTap: () => showFullScreenImageViewer(
+                    context,
+                    imagePath: imageSource,
+                    title: product.name,
+                    subtitle: product.category,
+                    heroTag: 'stock_card_image_${product.id}',
+                  ),
+                  child: Hero(
+                    tag: 'stock_card_image_${product.id}',
+                    child: SafeImage(
+                      source: imageSource,
+                      width: 52,
+                      height: 52,
+                      borderRadius: BorderRadius.circular(8),
+                      fallbackIcon: Icons.inventory_2_outlined,
+                    ),
+                  ),
                 )
               else
                 Container(
@@ -789,14 +807,14 @@ class _ProductCard extends GetView<StockController> {
                     Row(
                       children: [
                         Text(
-                          '${'buy'.tr}: ${product.costPrice.format()}',
+                          '${'buy'.tr}: ${product.costPrice.format()}/${product.unit}',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey.shade700,
                           ),
                         ),
                         Text(
-                          '  •  ${'sell'.tr}: ${product.suggestedSellPrice.format()}',
+                          '  •  ${'sell'.tr}: ${product.suggestedSellPrice.format()}/${product.sellUnit}',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -819,8 +837,8 @@ class _ProductCard extends GetView<StockController> {
                           ),
                           child: Text(
                             isOutOfStock
-                                ? 'outOfStock'.tr
-                                : '${'stockLabel'.tr} ${product.qty.toStringAsFixed(product.qty == product.qty.roundToDouble() ? 0 : 2)} pcs',
+                                 ? 'outOfStock'.tr
+                                 : '${'stockLabel'.tr} ${product.qty.toStringAsFixed(product.qty == product.qty.roundToDouble() ? 0 : 2)} ${product.sellUnit}',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,

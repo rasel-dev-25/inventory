@@ -42,7 +42,7 @@ class CloudStorageStats {
   factory CloudStorageStats.fromJson(Map<String, dynamic> json) {
     return CloudStorageStats(
       totalBytes: (json['total_bytes'] as num?)?.toInt() ?? 0,
-      quotaBytes: (json['quota_bytes'] as num?)?.toInt() ?? 1073741824, // 1 GB default
+      quotaBytes: (json['quota_bytes'] as num?)?.toInt() ?? 26843545600, // 25 GB Cloudinary quota
       productImages: BucketStorageStats.fromJson(
         (json['product_images'] as Map<String, dynamic>?) ?? const {},
       ),

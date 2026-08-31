@@ -10,8 +10,27 @@ import '../tables/investors.dart';
 
 part 'investor_dao.g.dart';
 
+(Money, String?) _extractCashInvestment(String? notes) {
+  if (notes == null || notes.isEmpty) return (Money.zeroBdt, null);
+  final match = RegExp(r'^\[INVESTMENT:(\d+)\]\s*(.*)', dotAll: true).firstMatch(notes);
+  if (match != null) {
+    final minor = int.tryParse(match.group(1) ?? '0') ?? 0;
+    final cleanNotes = match.group(2)?.trim();
+    return (Money.fromMinor(minor), cleanNotes?.isEmpty == true ? null : cleanNotes);
+  }
+  return (Money.zeroBdt, notes);
+}
+
+String? _encodeCashInvestment(Money cash, String? notes) {
+  if (cash.isZero) return notes;
+  final prefix = '[INVESTMENT:${cash.minorUnits}]';
+  if (notes == null || notes.trim().isEmpty) return prefix;
+  return '$prefix\n${notes.trim()}';
+}
+
 extension _InvestorRowMapping on InvestorRow {
   domain.Investor toDomain() {
+    final (cash, cleanNotes) = _extractCashInvestment(notes);
     return domain.Investor(
       id: id,
       name: name,
@@ -20,7 +39,8 @@ extension _InvestorRowMapping on InvestorRow {
       profitSharePercent: profitSharePercent,
       capitalReturnTermDays: capitalReturnTermDays,
       profitPayoutCycle: profitPayoutCycle,
-      notes: notes,
+      initialCashInvestment: cash,
+      notes: cleanNotes,
     );
   }
 }
@@ -121,6 +141,10 @@ class InvestorDao extends DatabaseAccessor<AppDatabase>
     required String shopId,
     required DateTime now,
   }) {
+    final encodedNotes = _encodeCashInvestment(
+      investor.initialCashInvestment,
+      investor.notes,
+    );
     return InvestorsCompanion.insert(
       id: investor.id,
       shopId: shopId,
@@ -130,7 +154,7 @@ class InvestorDao extends DatabaseAccessor<AppDatabase>
       profitSharePercent: Value(investor.profitSharePercent),
       capitalReturnTermDays: Value(investor.capitalReturnTermDays),
       profitPayoutCycle: investor.profitPayoutCycle,
-      notes: Value(investor.notes),
+      notes: Value(encodedNotes),
       createdAt: now,
       updatedAt: now,
       syncedAt: now,
@@ -214,13 +238,29 @@ class InvestorDao extends DatabaseAccessor<AppDatabase>
     );
   }
 
-  /// No general `update` — every field except [status] is filled in once
-  /// at creation and never edited again (see the class doc comment on
-  /// `LegacySettlement`); this is the only mutation this row ever gets.
   Future<void> markSettled(String id, DateTime now) {
     return (update(legacySettlements)..where((s) => s.id.equals(id))).write(
       LegacySettlementsCompanion(
         status: const Value(LegacySettlementStatus.settled),
+        updatedAt: Value(now),
+      ),
+    );
+  }
+
+  Future<void> updateSettlementPayment({
+    required String id,
+    required Money newTotalAlreadyReturned,
+    required Money newNetSettlementAmount,
+    required LegacySettlementStatus newStatus,
+    required String? newNotes,
+    required DateTime now,
+  }) {
+    return (update(legacySettlements)..where((s) => s.id.equals(id))).write(
+      LegacySettlementsCompanion(
+        totalAlreadyReturnedMinor: Value(newTotalAlreadyReturned.minorUnits),
+        netSettlementAmountMinor: Value(newNetSettlementAmount.minorUnits),
+        status: Value(newStatus),
+        notes: Value(newNotes),
         updatedAt: Value(now),
       ),
     );

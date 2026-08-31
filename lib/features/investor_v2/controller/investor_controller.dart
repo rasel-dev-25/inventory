@@ -140,6 +140,7 @@ class InvestorController extends GetxController {
     required InvestmentType investmentType,
     required double profitSharePercent,
     required ProfitPayoutCycle profitPayoutCycle,
+    Money initialCashInvestment = Money.zeroBdt,
     String? contact,
     int? capitalReturnTermDays,
     String? notes,
@@ -160,6 +161,7 @@ class InvestorController extends GetxController {
           profitSharePercent: profitSharePercent,
           capitalReturnTermDays: capitalReturnTermDays,
           profitPayoutCycle: profitPayoutCycle,
+          initialCashInvestment: initialCashInvestment,
           notes: notes,
         ),
         shopId: defaultShopId,
@@ -184,6 +186,7 @@ class InvestorController extends GetxController {
     double? profitSharePercent,
     int? capitalReturnTermDays,
     ProfitPayoutCycle? profitPayoutCycle,
+    Money? initialCashInvestment,
     String? notes,
   }) async {
     errorMessage.value = null;
@@ -195,6 +198,7 @@ class InvestorController extends GetxController {
         profitSharePercent: profitSharePercent,
         capitalReturnTermDays: capitalReturnTermDays,
         profitPayoutCycle: profitPayoutCycle,
+        initialCashInvestment: initialCashInvestment,
         notes: notes,
       );
       await _investorUseCases.update(
@@ -207,6 +211,31 @@ class InvestorController extends GetxController {
       errorMessage.value = e.toString();
       return false;
     }
+  }
+
+  /// Records additional cash investment intake from an investor.
+  Future<bool> addCashInvestment({
+    required String investorId,
+    required Money amount,
+    PaymentMethod paymentMethod = PaymentMethod.cash,
+    String? note,
+  }) async {
+    final existing = investorById(investorId);
+    if (existing == null) return false;
+    if (amount <= Money.zeroBdt) return false;
+
+    final newTotalCash = existing.initialCashInvestment + amount;
+    final dateStr = DateTime.now().toLocal().toString().split(' ')[0];
+    final logEntry = '+$dateStr: ${amount.format()} [${paymentMethod.name}]${note != null && note.trim().isNotEmpty ? ' (${note.trim()})' : ''}';
+    final updatedNotes = existing.notes == null || existing.notes!.trim().isEmpty
+        ? logEntry
+        : '${existing.notes}\n$logEntry';
+
+    return updateInvestor(
+      existing,
+      initialCashInvestment: newTotalCash,
+      notes: updatedNotes,
+    );
   }
 
   Future<bool> recordRepayment({
@@ -267,6 +296,41 @@ class InvestorController extends GetxController {
       notes: notes,
       shopId: defaultShopId,
       now: DateTime.now().toUtc(),
+    );
+    isSaving.value = false;
+    return result.fold(
+      onOk: (_) => true,
+      onErr: (failure) {
+        errorMessage.value = failure.message;
+        return false;
+      },
+    );
+  }
+
+  Investor? investorById(String id) {
+    for (final i in investors) {
+      if (i.id == id) return i;
+    }
+    return null;
+  }
+
+  List<Product> productsForInvestor(String investorId) {
+    return products.where((p) => p.fundSource.investorId == investorId).toList();
+  }
+
+  Future<bool> recordLegacySettlementPayment({
+    required String settlementId,
+    required Money paymentAmount,
+    String? note,
+  }) async {
+    isSaving.value = true;
+    errorMessage.value = null;
+    final result = await _legacySettlementUseCases.recordPayment(
+      settlementId: settlementId,
+      paymentAmount: paymentAmount,
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+      note: note,
     );
     isSaving.value = false;
     return result.fold(

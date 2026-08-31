@@ -39,4 +39,42 @@ class QuickCapture {
     this.convertedToType,
     this.convertedToId,
   });
+
+  /// Extract the photo path if present.
+  String? get photoPath {
+    if (type != QuickCaptureType.photoNote) return null;
+    if (fileLocalPath.contains('|')) {
+      final p = fileLocalPath.split('|').first.trim();
+      return p.isNotEmpty ? p : null;
+    }
+    if (fileLocalPath.startsWith('/') ||
+        fileLocalPath.startsWith('http') ||
+        fileLocalPath.contains('\\') ||
+        fileLocalPath.endsWith('.jpg') ||
+        fileLocalPath.endsWith('.jpeg') ||
+        fileLocalPath.endsWith('.png')) {
+      return fileLocalPath.trim();
+    }
+    return null;
+  }
+
+  /// Extract the text note if present.
+  String get note {
+    if (fileLocalPath.contains('|')) {
+      final parts = fileLocalPath.split('|');
+      return parts.sublist(1).join('|').trim();
+    }
+    if (type == QuickCaptureType.voiceNote) {
+      return fileLocalPath.trim();
+    }
+    if (!fileLocalPath.startsWith('/') &&
+        !fileLocalPath.startsWith('http') &&
+        !fileLocalPath.contains('\\') &&
+        !fileLocalPath.endsWith('.jpg') &&
+        !fileLocalPath.endsWith('.jpeg') &&
+        !fileLocalPath.endsWith('.png')) {
+      return fileLocalPath.trim();
+    }
+    return '';
+  }
 }

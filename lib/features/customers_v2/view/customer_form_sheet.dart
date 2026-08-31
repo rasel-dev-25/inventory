@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../core/design/tokens.dart';
+import '../../../core/widgets/full_screen_image_viewer.dart';
+import '../../../core/widgets/safe_image.dart';
 import '../../../domain/entities/customer.dart';
 
 /// What [CustomerFormSheet] hands back on save — `CustomersScreen` decides
@@ -20,8 +22,8 @@ class CustomerFormResult {
 
   const CustomerFormResult({
     required this.name,
-    required this.suspicionFlag,
-    required this.isBlocked,
+    this.suspicionFlag = false,
+    this.isBlocked = false,
     this.address,
     this.contact,
     this.photoLocalPath,
@@ -36,12 +38,14 @@ class CustomerFormSheet extends StatefulWidget {
   final Customer? existing;
   final Future<String?> Function()? onCapturePhoto;
   final String? existingPhotoSource;
+  final Future<void> Function()? onDelete;
 
   const CustomerFormSheet({
     super.key,
     this.existing,
     this.onCapturePhoto,
     this.existingPhotoSource,
+    this.onDelete,
   });
 
   @override
@@ -59,8 +63,6 @@ class _CustomerFormSheetState extends State<CustomerFormSheet> {
   late final _contactController = TextEditingController(
     text: widget.existing?.contact,
   );
-  late bool _suspicionFlag = widget.existing?.suspicionFlag ?? false;
-  late bool _isBlocked = widget.existing?.isBlocked ?? false;
   String? _photoLocalPath;
   late String? _photoPreviewSource = widget.existingPhotoSource;
 
@@ -122,42 +124,86 @@ class _CustomerFormSheetState extends State<CustomerFormSheet> {
               ),
               if (_photoPreviewSource case final photoSource?) ...[
                 const SizedBox(height: AppSpacing.sm),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                  child: photoSource.startsWith('http')
-                      ? Image.network(
-                          photoSource,
-                          height: 160,
-                          fit: BoxFit.cover,
-                        )
-                      : Image.file(
-                          File(photoSource),
-                          height: 160,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => const SizedBox(
-                            height: 160,
-                            child: Center(
-                              child: Icon(Icons.broken_image_outlined),
-                            ),
-                          ),
+                GestureDetector(
+                  onTap: () => showFullScreenImageViewer(
+                    context,
+                    imagePath: photoSource,
+                    title: _nameController.text.trim().isNotEmpty
+                        ? _nameController.text.trim()
+                        : 'Customer Photo',
+                  ),
+                  child: Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      SafeImage(
+                        source: photoSource,
+                        height: 160,
+                        width: double.infinity,
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        fallbackIcon: Icons.broken_image_outlined,
+                      ),
+                      Container(
+                        margin: const EdgeInsets.all(6),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.6),
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
                         ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.zoom_in, color: Colors.white, size: 12),
+                            const SizedBox(width: 4),
+                            Text('tapToZoom'.tr, style: const TextStyle(color: Colors.white, fontSize: 10)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
-              const SizedBox(height: AppSpacing.md),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text('suspicionFlag'.tr),
-                value: _suspicionFlag,
-                onChanged: (v) => setState(() => _suspicionFlag = v),
-              ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text('isBlockedLabel'.tr),
-                value: _isBlocked,
-                onChanged: (v) => setState(() => _isBlocked = v),
-              ),
               const SizedBox(height: AppSpacing.lg),
               FilledButton(onPressed: _submit, child: Text('save'.tr)),
+              if (widget.existing != null && widget.onDelete != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.error,
+                    side: BorderSide(color: Theme.of(context).colorScheme.error),
+                  ),
+                  icon: const Icon(Icons.delete_outline),
+                  label: Text('deleteCustomer'.tr),
+                  onPressed: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: Text('${'delete'.tr} ${widget.existing!.name}?'),
+                        content: Text('deleteCustomerConfirm'.tr),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(false),
+                            child: Text('cancel'.tr),
+                          ),
+                          FilledButton(
+                            style: FilledButton.styleFrom(
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.error,
+                            ),
+                            onPressed: () => Navigator.of(ctx).pop(true),
+                            child: Text('delete'.tr),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirmed == true) {
+                      await widget.onDelete!();
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                      }
+                    }
+                  },
+                ),
+              ],
             ],
           ),
         ),
@@ -185,8 +231,8 @@ class _CustomerFormSheetState extends State<CustomerFormSheet> {
         contact: _contactController.text.trim().isEmpty
             ? null
             : _contactController.text.trim(),
-        suspicionFlag: _suspicionFlag,
-        isBlocked: _isBlocked,
+        suspicionFlag: widget.existing?.suspicionFlag ?? false,
+        isBlocked: widget.existing?.isBlocked ?? false,
         photoLocalPath: _photoLocalPath,
       ),
     );

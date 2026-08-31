@@ -95,4 +95,28 @@ void main() {
 
     expect(controller.orders, isEmpty);
   });
+
+  test('status counts and customer image helpers work properly', () async {
+    await controller.createOrder(
+      customerId: 'cust-1',
+      itemDescription: 'Order 1',
+      requestedDate: DateTime.now(),
+    );
+    await controller.createOrder(
+      customerId: 'cust-1',
+      itemDescription: 'Order 2',
+      requestedDate: DateTime.now(),
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(controller.allCount, 2);
+    expect(controller.pendingCount, 2);
+    expect(controller.fulfilledCount, 0);
+
+    await controller.markFulfilled(controller.orders.first.id);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(controller.pendingCount, 1);
+    expect(controller.fulfilledCount, 1);
+  });
 }

@@ -38,6 +38,24 @@ class SupabaseStorageUploadTransport implements StorageUploadTransport {
   }
 
   @override
+  Future<Result<void>> delete({
+    required String bucketName,
+    required String storagePath,
+  }) async {
+    try {
+      await _client.storage.from(bucketName).remove([storagePath]);
+      return const Result.ok(null);
+    } on sb.StorageException catch (error) {
+      if (error.statusCode == '401' || error.statusCode == '403') {
+        return Result.err(PermissionFailure(error.message));
+      }
+      return Result.err(UnknownFailure(error.message));
+    } catch (error, stackTrace) {
+      return Result.err(UnknownFailure(error, stackTrace: stackTrace));
+    }
+  }
+
+  @override
   Future<Result<String>> createSignedUrl({
     required String bucketName,
     required String storagePath,

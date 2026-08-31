@@ -160,4 +160,43 @@ void main() {
     expect(controller.customerDueGroups.any((g) => g.customerId == 'cust-rahim'), isFalse);
     expect(controller.totalDueCustomersCount, 1);
   });
+
+  test('records and tracks payment history for customers and dues', () async {
+    // Initial payments should be empty
+    expect(controller.duePayments.isEmpty, isTrue);
+    expect(controller.totalCollectedAmount, Money.zero());
+
+    // Pay ৳15 to due-1
+    await controller.payDue(
+      dueId: 'due-1',
+      paymentAmount: Money.fromMinor(1500),
+      paymentMethod: PaymentMethod.mobileBanking,
+    );
+    await pumpEventQueue();
+
+    expect(controller.duePayments.length, 1);
+    expect(controller.totalCollectedAmount, Money.fromMinor(1500));
+
+    final teererPayments = controller.paymentsForCustomer('cust-teerer');
+    expect(teererPayments.length, 1);
+    expect(teererPayments.first.amount, Money.fromMinor(1500));
+    expect(teererPayments.first.paymentMethod, PaymentMethod.mobileBanking);
+
+    final due1Payments = controller.paymentsForDue('due-1');
+    expect(due1Payments.length, 1);
+    expect(due1Payments.first.amount, Money.fromMinor(1500));
+
+    // Pay another ৳5 to due-1 (settling it completely)
+    await controller.payDue(
+      dueId: 'due-1',
+      paymentAmount: Money.fromMinor(500),
+      paymentMethod: PaymentMethod.cash,
+    );
+    await pumpEventQueue();
+
+    expect(controller.duePayments.length, 2);
+    expect(controller.totalCollectedAmount, Money.fromMinor(2000));
+    expect(controller.totalCollectedForCustomer('cust-teerer'), Money.fromMinor(2000));
+    expect(controller.paymentsForDue('due-1').length, 2);
+  });
 }

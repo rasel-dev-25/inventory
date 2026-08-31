@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/error/failure.dart';
@@ -159,6 +160,80 @@ class LegacySettlementUseCases {
         ),
       ],
       localWrite: () => db.investorDao.markSettled(settlementId, now),
+    );
+
+    return const Result.ok(null);
+  }
+
+  /// Records a partial or full installment payment against the old ledger balance.
+  /// Deducts from the remaining balance, appends a timestamped note to the
+  /// history, and marks status as [LegacySettlementStatus.settled] if the
+  /// remaining balance reaches zero.
+  Future<Result<void>> recordPayment({
+    required String settlementId,
+    required Money paymentAmount,
+    required String shopId,
+    required DateTime now,
+    String? note,
+  }) async {
+    final row = await (db.select(
+      db.legacySettlements,
+    )..where((s) => s.id.equals(settlementId))).getSingleOrNull();
+    if (row == null) {
+      return Result.err(NotFoundFailure('legacySettlement', settlementId));
+    }
+    if (row.status == LegacySettlementStatus.settled) {
+      return const Result.err(
+        BusinessRuleFailure('This legacy settlement is already settled'),
+      );
+    }
+    if (paymentAmount.isZero || paymentAmount.isNegative) {
+      return const Result.err(
+        ValidationFailure('paymentAmount', 'Payment amount must be positive'),
+      );
+    }
+
+    final currentReturned = Money.fromMinor(row.totalAlreadyReturnedMinor);
+    final totalHistorical = Money.fromMinor(row.totalHistoricalInvestmentMinor);
+    final newReturned = currentReturned + paymentAmount;
+    final newNet = (totalHistorical > newReturned)
+        ? (totalHistorical - newReturned)
+        : Money.zero();
+    final newStatus = newNet.isZero
+        ? LegacySettlementStatus.settled
+        : LegacySettlementStatus.pending;
+
+    final dateStr = DateFormat('dd/MM/yyyy').format(now);
+    final paymentEntry = '$dateStr: ${paymentAmount.format()}${note != null && note.trim().isNotEmpty ? ' (${note.trim()})' : ''}';
+    final updatedNotes = row.notes == null || row.notes!.trim().isEmpty
+        ? paymentEntry
+        : '${row.notes}\n$paymentEntry';
+
+    await writeAndEnqueue(
+      db: db,
+      eventType: 'legacy_settlement_payment_recorded',
+      upserts: [
+        TableUpsert(
+          table: 'legacy_settlements',
+          row: {
+            'id': settlementId,
+            'shop_id': shopId,
+            'total_already_returned_minor': newReturned.minorUnits,
+            'net_settlement_amount_minor': newNet.minorUnits,
+            'status': newStatus.name,
+            'notes': updatedNotes,
+            'updated_at': now.toUtc().toIso8601String(),
+          },
+        ),
+      ],
+      localWrite: () => db.investorDao.updateSettlementPayment(
+        id: settlementId,
+        newTotalAlreadyReturned: newReturned,
+        newNetSettlementAmount: newNet,
+        newStatus: newStatus,
+        newNotes: updatedNotes,
+        now: now,
+      ),
     );
 
     return const Result.ok(null);

@@ -51,6 +51,10 @@ class DashboardTotals {
   final Money totalExpense;
   final Money totalInvestorRemaining;
   final Money dailyInvestorObligation;
+  final Money monthlyShopRent;
+  final Money rentPaidThisMonth;
+  final Money rentRemainingThisMonth;
+  final Money dailyRentObligation;
 
   const DashboardTotals({
     required this.totalCash,
@@ -62,7 +66,16 @@ class DashboardTotals {
     required this.totalExpense,
     required this.totalInvestorRemaining,
     required this.dailyInvestorObligation,
+    this.monthlyShopRent = Money.zeroBdt,
+    this.rentPaidThisMonth = Money.zeroBdt,
+    this.rentRemainingThisMonth = Money.zeroBdt,
+    this.dailyRentObligation = Money.zeroBdt,
   });
+
+  Money get totalPayableObligations =>
+      totalInvestorRemaining + rentRemainingThisMonth;
+  Money get dailyTotalObligation =>
+      dailyInvestorObligation + dailyRentObligation;
 }
 
 /// Computes every Dashboard card's figure from whatever rows the caller
@@ -78,6 +91,10 @@ DashboardTotals computeDashboardTotals({
   List<Due> duesInRange = const [],
   Money? totalInvestorRemaining,
   Money? dailyInvestorObligation,
+  Money? monthlyShopRent,
+  Money? rentPaidThisMonth,
+  Money? rentRemainingThisMonth,
+  Money? dailyRentObligation,
   Currency currency = Currency.bdt,
 }) {
   final zero = Money.zero(currency: currency);
@@ -128,5 +145,9 @@ DashboardTotals computeDashboardTotals({
     totalExpense: totalExpense,
     totalInvestorRemaining: totalInvestorRemaining ?? zero,
     dailyInvestorObligation: dailyInvestorObligation ?? zero,
+    monthlyShopRent: monthlyShopRent ?? zero,
+    rentPaidThisMonth: rentPaidThisMonth ?? zero,
+    rentRemainingThisMonth: rentRemainingThisMonth ?? zero,
+    dailyRentObligation: dailyRentObligation ?? zero,
   );
 }

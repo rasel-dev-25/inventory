@@ -19,9 +19,11 @@ import '../../../data/usecases/category_usecases.dart';
 import '../../../data/usecases/product_image_usecases.dart';
 import '../../../data/usecases/product_usecases.dart';
 import '../../../data/usecases/sync_enqueue_helper.dart';
+import '../../../data/usecases/unit_usecases.dart';
 import '../../../domain/entities/fund_source.dart';
 import '../../../domain/entities/investor.dart';
 import '../../../domain/entities/product.dart';
+import '../../../domain/entities/product_unit.dart';
 import '../../pricing_settings_v2/controller/pricing_settings_controller.dart';
 
 /// Sentinel used for [StockController.selectedFundFilter] to mean
@@ -45,6 +47,7 @@ class StockController extends GetxController {
   StockController(this.db, {this.pricingSettings, this.imageStorage});
 
   late final CategoryUseCases _categoryUseCases = CategoryUseCases(db);
+  late final UnitUseCases _unitUseCases = UnitUseCases(db);
   late final ProductUseCases _productUseCases = ProductUseCases(db);
   late final ProductImageUseCases _productImageUseCases = ProductImageUseCases(
     db,
@@ -53,6 +56,7 @@ class StockController extends GetxController {
 
   final products = <Product>[].obs;
   final categories = <CategoryRow>[].obs;
+  final units = <ProductUnit>[].obs;
   final investors = <Investor>[].obs;
   final saleMovements = <StockMovementRow>[].obs;
   final productImages = <ProductImageRow>[].obs;
@@ -77,6 +81,11 @@ class StockController extends GetxController {
       db.productDao
           .watchAll(defaultShopId)
           .listen((rows) => products.assignAll(rows)),
+    );
+    _subscriptions.add(
+      _unitUseCases
+          .watchAll(defaultShopId)
+          .listen((rows) => units.assignAll(rows)),
     );
     _subscriptions.add(
       db.categoryDao
@@ -207,7 +216,9 @@ class StockController extends GetxController {
     final local = image.localPath;
     if (local != null && File(local).existsSync()) return local;
     final remote = image.remoteUrl;
-    if (remote != null) return signedImageUrls[remote] ?? remote;
+    if (remote != null) {
+      return signedImageUrls[image.id] ?? signedImageUrls[remote] ?? remote;
+    }
     return null;
   }
 
@@ -238,6 +249,8 @@ class StockController extends GetxController {
     required Money costPrice,
     required Money suggestedSellPrice,
     required FundSource fundSource,
+    String unit = 'pcs',
+    String sellUnit = 'pcs',
     bool isRentable = false,
     double initialQty = 0,
     String? barcode,
@@ -254,6 +267,8 @@ class StockController extends GetxController {
         suggestedSellPrice: suggestedSellPrice,
         qty: initialQty,
         fundSource: fundSource,
+        unit: unit,
+        sellUnit: sellUnit,
         isRentable: isRentable,
         barcode: barcode,
         sku: sku,
@@ -316,6 +331,8 @@ class StockController extends GetxController {
     Money? suggestedSellPrice,
     double? qty,
     FundSource? fundSource,
+    String? unit,
+    String? sellUnit,
     bool? isRentable,
     String? barcode,
     String? sku,
@@ -330,6 +347,8 @@ class StockController extends GetxController {
         suggestedSellPrice: suggestedSellPrice,
         qty: qty,
         fundSource: fundSource,
+        unit: unit,
+        sellUnit: sellUnit,
         isRentable: isRentable,
         barcode: barcode,
         sku: sku,
@@ -341,7 +360,7 @@ class StockController extends GetxController {
 
         if (qty != null && qty != existing.qty) {
           final delta = qty - existing.qty;
-          final movementId = 'sm-${const Uuid().v4()}';
+          final movementId = _uuid.v7();
           final movementRow = {
             'id': movementId,
             'shop_id': defaultShopId,
@@ -392,6 +411,13 @@ class StockController extends GetxController {
 
   Future<bool> softDeleteProduct(String id) async {
     try {
+      final imageRow = primaryImageFor(id);
+      if (imageRow != null) {
+        await _productImageUseCases.delete(
+          imageId: imageRow.id,
+          storage: imageStorage,
+        );
+      }
       await _productUseCases.softDelete(
         id,
         shopId: defaultShopId,
@@ -402,6 +428,13 @@ class StockController extends GetxController {
       errorMessage.value = e.toString();
       return false;
     }
+  }
+
+  Future<void> deleteProductImage(String imageId) async {
+    await _productImageUseCases.delete(
+      imageId: imageId,
+      storage: imageStorage,
+    );
   }
 
   Future<String?> captureProductPhoto() async {

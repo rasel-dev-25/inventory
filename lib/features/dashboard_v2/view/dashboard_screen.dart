@@ -4,9 +4,13 @@ import 'package:get/get.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../core/design/tokens.dart';
 import '../../../core/money/money.dart';
+import '../../../core/widgets/notification_bell_action.dart';
 import '../../../core/widgets/shop_app_bar_title.dart';
+import '../../../domain/services/dashboard_calculator.dart';
+import '../../reminders_v2/controller/reminder_controller.dart';
 import '../../shell/controller/shell_controller.dart';
 import '../controller/dashboard_controller.dart';
+import 'widgets/payable_obligations_sheet.dart';
 
 /// The Dashboard screen — Day/All-time toggle over the totals
 /// `notes/business_logic.md` §ঝ specifies, backed by
@@ -23,20 +27,222 @@ class DashboardScreen extends GetView<DashboardController> {
     }
   }
 
+  void _showPayableObligations(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => PayableObligationsSheet(controller: controller),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isReminderRegistered = Get.isRegistered<ReminderController>();
+    final reminderController =
+        isReminderRegistered ? Get.find<ReminderController>() : null;
+
     return Scaffold(
       appBar: AppBar(
         title: ShopAppBarTitle(pageTitle: 'overview'.tr),
         leading: onMenuTap == null
             ? null
             : IconButton(icon: const Icon(Icons.menu), onPressed: onMenuTap),
+        actions: const [
+          NotificationBellAction(),
+          SizedBox(width: 4),
+        ],
       ),
       body: Obx(() {
         final totals = controller.totals;
         return ListView(
           padding: const EdgeInsets.all(AppSpacing.md),
           children: [
+            // 0. Smart Reminder & Low Stock Alert Banner
+            if (reminderController != null)
+              Obx(() {
+                final hasActive = reminderController.hasAnyActiveAlerts;
+                final allResolved = reminderController.allResolvedToday;
+                final summary = reminderController.activeAlertSummaryText;
+                final theme = Theme.of(context);
+
+                if (!hasActive && !allResolved) return const SizedBox.shrink();
+
+                if (allResolved) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.green.shade300),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle_rounded,
+                            size: 20,
+                            color: Colors.green.shade700,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              '✓ সকল অ্যালার্ট চেক করা হয়েছে (সব ঠিক আছে)',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green.shade800,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            onPressed: () =>
+                                reminderController.unresolveAll(),
+                            child: Text(
+                              'পুনরায় চালু',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.green.shade900,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                final overdue = reminderController.activeOverdueCount > 0;
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: overdue
+                        ? theme.colorScheme.errorContainer.withValues(alpha: 0.85)
+                        : theme.colorScheme.primaryContainer.withValues(alpha: 0.75),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: overdue
+                          ? theme.colorScheme.error.withValues(alpha: 0.4)
+                          : theme.colorScheme.primary.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          overdue
+                              ? Icons.warning_amber_rounded
+                              : Icons.info_outline_rounded,
+                          size: 22,
+                          color: overdue
+                              ? theme.colorScheme.error
+                              : theme.colorScheme.primary,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () => Get.toNamed(AppRoutes.remindersV2),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    summary,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: overdue
+                                          ? theme.colorScheme.onErrorContainer
+                                          : theme.colorScheme.onPrimaryContainer,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'দেখুন',
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: overdue
+                                        ? theme.colorScheme.error
+                                        : theme.colorScheme.primary,
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.chevron_right_rounded,
+                                  size: 16,
+                                  color: overdue
+                                      ? theme.colorScheme.error
+                                      : theme.colorScheme.primary,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // ── Tick / Resolve Button ──
+                        FilledButton.tonal(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.white.withValues(alpha: 0.8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: () {
+                            reminderController.markAllResolved();
+                            Get.snackbar(
+                              'অ্যালার্ট চেক করা হয়েছে',
+                              'নোটিফিকেশনগুলো সম্পন্ন হিসেবে চিহ্নিত করা হয়েছে।',
+                              snackPosition: SnackPosition.BOTTOM,
+                              duration: const Duration(seconds: 2),
+                            );
+                          },
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.check_circle_outline_rounded,
+                                size: 16,
+                                color: Colors.green.shade800,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'টিক দিন',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green.shade900,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+
             Align(
               alignment: Alignment.centerRight,
               child: Wrap(
@@ -124,17 +330,16 @@ class DashboardScreen extends GetView<DashboardController> {
               onTap: () => Get.toNamed(AppRoutes.expenseV2),
             ),
 
-            // 7. To Give Away / Investor Obligation (ইনভেস্টরদের প্রদেয় -> Investor Screen)
+            // 7. To Give Away / Obligations (পরিশোধের জন্য -> Investor & Rent Obligations Sheet)
             _DashboardCard(
               label: 'toGiveAway'.tr,
-              value: totals.totalInvestorRemaining,
-              subtitle: controller.isDayView.value &&
-                      totals.dailyInvestorObligation.isPositive
-                  ? '${'dailyPayback'.tr}: ${totals.dailyInvestorObligation.format()}'
-                  : null,
+              value: totals.totalPayableObligations.isPositive
+                  ? totals.totalPayableObligations
+                  : totals.totalInvestorRemaining,
+              subtitle: _buildObligationsSubtitle(controller.isDayView.value, totals),
               icon: Icons.handshake_outlined,
               color: Colors.deepPurple,
-              onTap: () => Get.toNamed(AppRoutes.investorV2),
+              onTap: () => _showPayableObligations(context),
             ),
 
             // 8. Net Profit / Net Loss (নেট লাভ / ক্ষতি)
@@ -269,4 +474,27 @@ class _DashboardCard extends StatelessWidget {
       ),
     );
   }
+}
+
+String? _buildObligationsSubtitle(bool isDayView, DashboardTotals totals) {
+  if (isDayView) {
+    if (totals.dailyTotalObligation.isPositive) {
+      if (totals.dailyInvestorObligation.isPositive &&
+          totals.dailyRentObligation.isPositive) {
+        return '${'dailyPayback'.tr}: ${totals.dailyTotalObligation.format()} (${'investor'.tr}: ${totals.dailyInvestorObligation.format()} + ${'rent'.tr}: ${totals.dailyRentObligation.format()})';
+      } else if (totals.dailyInvestorObligation.isPositive) {
+        return '${'dailyPayback'.tr}: ${totals.dailyInvestorObligation.format()}';
+      } else {
+        return '${'dailyRentShare'.tr}: ${totals.dailyRentObligation.format()}';
+      }
+    }
+  } else {
+    if (totals.monthlyShopRent.isPositive &&
+        totals.totalInvestorRemaining.isPositive) {
+      return '${'investor'.tr}: ${totals.totalInvestorRemaining.format()} • ${'rentRemaining'.tr}: ${totals.rentRemainingThisMonth.format()}';
+    } else if (totals.monthlyShopRent.isPositive) {
+      return '${'rentRemaining'.tr}: ${totals.rentRemainingThisMonth.format()} (${'monthly'.tr}: ${totals.monthlyShopRent.format()})';
+    }
+  }
+  return null;
 }

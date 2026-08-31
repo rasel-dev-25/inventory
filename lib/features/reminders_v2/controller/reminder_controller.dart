@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:get/get.dart';
 
@@ -17,22 +18,11 @@ import '../../../domain/services/reminder_engine.dart';
 /// Backs the v2 Reminders screen — the single inbox for every reminder
 /// source `notes/business_logic.md` calls out (§ছ Due, §ঙ Investor, §জ
 /// suspicious-customer/overdue-rent), computed via `reminder_engine.dart`
-/// from live-watched data. See `CatalogScreen`'s doc comment for why
-/// this reads the v2 database only.
-///
-/// Also the one place that decides when to push a real Android
-/// notification — every time the computed inbox changes, any reminder
-/// this session hasn't already notified about gets one via
-/// [NotificationService.show]. [_notifiedReminderIds] is deliberately
-/// in-memory only, not persisted: a fresh app session re-notifies about
-/// anything still outstanding, which is the honest, simple behavior for
-/// a reminder that (by definition) hasn't been resolved yet — see
-/// `NotificationService`'s own doc comment for the bigger, deliberately
-/// out-of-scope limitation this shares (foreground-triggered only, no
-/// exact-alarm wake-the-device scheduling).
+/// with support for user acknowledgement / ticking / resolving alerts.
 class ReminderController extends GetxController {
   final AppDatabase db;
   final NotificationService notificationService;
+  static const _resolvedSettingsKey = 'resolved_reminder_ids_v1';
 
   ReminderController(this.db, this.notificationService);
 
@@ -44,8 +34,7 @@ class ReminderController extends GetxController {
   final products = <Product>[].obs;
   final orders = <Order>[].obs;
 
-  final _notifiedReminderIds = <String>{};
-
+  final resolvedReminderIds = <String>{}.obs;
   final List<StreamSubscription<Object?>> _subscriptions = [];
 
   @override
@@ -54,45 +43,39 @@ class ReminderController extends GetxController {
     _subscriptions.add(
       db.dueDao.watchAll(defaultShopId).listen((rows) {
         dues.assignAll(rows);
-        _notifyNewReminders();
       }),
     );
     _subscriptions.add(
       db.investorDao.watchAll(defaultShopId).listen((rows) {
         investors.assignAll(rows);
-        _notifyNewReminders();
       }),
     );
     _subscriptions.add(
       db.purchaseDao.watchAll(defaultShopId).listen((rows) {
         purchaseTrips.assignAll(rows);
-        _notifyNewReminders();
       }),
     );
     _subscriptions.add(
       db.customerDao.watchAll(defaultShopId).listen((rows) {
         customers.assignAll(rows);
-        _notifyNewReminders();
       }),
     );
     _subscriptions.add(
       db.rentDao.watchAll(defaultShopId).listen((rows) {
         rentals.assignAll(rows);
-        _notifyNewReminders();
       }),
     );
     _subscriptions.add(
       db.productDao.watchAll(defaultShopId).listen((rows) {
         products.assignAll(rows);
-        _notifyNewReminders();
       }),
     );
     _subscriptions.add(
       db.orderDao.watchAll(defaultShopId).listen((rows) {
         orders.assignAll(rows);
-        _notifyNewReminders();
       }),
     );
+    loadResolvedReminders();
   }
 
   @override
@@ -102,6 +85,55 @@ class ReminderController extends GetxController {
     }
     super.onClose();
   }
+
+  // ── Resolution / Ticking Logic ──────────────────────────────────────────
+
+  Future<void> loadResolvedReminders() async {
+    try {
+      final raw = await db.appSettingsDao.get(_resolvedSettingsKey);
+      if (raw != null && raw.isNotEmpty) {
+        final list = (jsonDecode(raw) as List<dynamic>).cast<String>();
+        resolvedReminderIds.assignAll(list);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _persistResolvedReminders() async {
+    final raw = jsonEncode(resolvedReminderIds.toList());
+    await db.appSettingsDao.upsert(_resolvedSettingsKey, raw);
+  }
+
+  bool isResolved(String id) => resolvedReminderIds.contains(id);
+
+  void toggleResolved(String id) {
+    if (resolvedReminderIds.contains(id)) {
+      resolvedReminderIds.remove(id);
+    } else {
+      resolvedReminderIds.add(id);
+    }
+    _persistResolvedReminders();
+  }
+
+  void markAllResolved() {
+    for (final r in inbox) {
+      resolvedReminderIds.add(r.id);
+    }
+    _persistResolvedReminders();
+  }
+
+  void markAllLowStockResolved() {
+    for (final r in inbox.whereType<LowStockReminder>()) {
+      resolvedReminderIds.add(r.id);
+    }
+    _persistResolvedReminders();
+  }
+
+  void unresolveAll() {
+    resolvedReminderIds.clear();
+    _persistResolvedReminders();
+  }
+
+  // ── Inbox Computed Data ─────────────────────────────────────────────────
 
   String _customerNameOf(String id) =>
       customers.where((c) => c.id == id).firstOrNull?.name ?? id;
@@ -129,37 +161,59 @@ class ReminderController extends GetxController {
     return inbox.where((r) => r.isOverdueAsOf(now)).toList();
   }
 
-  void _notifyNewReminders() {
-    final now = DateTime.now().toUtc();
-    for (final reminder in inbox) {
-      if (!reminder.isOverdueAsOf(now)) continue;
-      if (_notifiedReminderIds.contains(reminder.id)) continue;
-      _notifiedReminderIds.add(reminder.id);
-      notificationService.show(
-        id: reminder.id.hashCode & 0x7fffffff,
-        title: 'reminderNotificationTitle'.tr,
-        body: _bodyFor(reminder),
-      );
+  List<Reminder> get activeInbox =>
+      inbox.where((r) => !isResolved(r.id)).toList();
+
+  List<Reminder> get resolvedInbox =>
+      inbox.where((r) => isResolved(r.id)).toList();
+
+  int get totalCount => inbox.length;
+  int get activeCount => activeInbox.length;
+  int get resolvedCount => resolvedInbox.length;
+
+  int get overdueCount => overdueOnly.length;
+  int get activeOverdueCount =>
+      overdueOnly.where((r) => !isResolved(r.id)).length;
+
+  int get lowStockCount => inbox.whereType<LowStockReminder>().length;
+  int get activeLowStockCount => inbox
+      .whereType<LowStockReminder>()
+      .where((r) => !isResolved(r.id))
+      .length;
+
+  int get dueCount => inbox.whereType<DueBalanceReminder>().length;
+  int get activeDueCount => inbox
+      .whereType<DueBalanceReminder>()
+      .where((r) => !isResolved(r.id))
+      .length;
+
+  int get orderCount => inbox.whereType<OrderDeadlineReminder>().length;
+  int get suspiciousCount =>
+      inbox.whereType<SuspiciousCustomerReminder>().length;
+
+  bool get hasAnyActiveAlerts => activeCount > 0;
+  bool get allResolvedToday => inbox.isNotEmpty && activeCount == 0;
+
+  String get activeAlertSummaryText {
+    final parts = <String>[];
+    if (activeLowStockCount > 0) {
+      parts.add('$activeLowStockCountটি পণ্যের স্টক কম');
     }
+    if (activeDueCount > 0) {
+      parts.add('$activeDueCountটি বকেয়া রিমাইন্ডার');
+    }
+    final activeOrders = inbox
+        .whereType<OrderDeadlineReminder>()
+        .where((r) => !isResolved(r.id))
+        .length;
+    if (activeOrders > 0) {
+      parts.add('$activeOrdersটি অর্ডার ডেলিভারি');
+    }
+    if (parts.isEmpty && activeOverdueCount > 0) {
+      parts.add('$activeOverdueCountটি জরুরি রিমাইন্ডার');
+    }
+    return parts.join(' এবং ');
   }
 
-  String _bodyFor(Reminder reminder) {
-    return switch (reminder) {
-      DueBalanceReminder r =>
-        '${'reminderDueBody'.tr}${r.customerName} · ${r.remaining.format()}',
-      InvestorCapitalReturnReminder r =>
-        '${'reminderInvestorCapitalBody'.tr}${r.investor.name}',
-      InvestorProfitPayoutReminder r =>
-        '${'reminderInvestorPayoutBody'.tr}${r.investor.name}',
-      SuspiciousCustomerReminder r =>
-        '${'reminderSuspiciousBody'.tr}${r.customer.name}',
-      OverdueRentReminder r =>
-        '${'reminderOverdueRentBody'.tr}${r.customerName} · ${r.bookName}',
-      OrderDeadlineReminder r =>
-        '${'reminderOrderDeadlineBody'.tr}${r.customerName} · '
-            '${r.order.itemDescription}',
-      LowStockReminder r =>
-        '${'reminderLowStockBody'.tr}${r.product.name} · ${r.product.qty}',
-    };
-  }
+  String get alertSummaryText => activeAlertSummaryText;
 }

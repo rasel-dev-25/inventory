@@ -1,11 +1,15 @@
 import 'dart:async';
 
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../core/money/money.dart';
+import '../../../core/settings/settings_registry.dart';
 import '../../../core/time/date_range.dart';
 import '../../../data/local/app_database.dart';
 import '../../../data/local/default_shop.dart';
+import '../../../data/usecases/expense_usecases.dart';
 import '../../../domain/entities/cash_ledger_entry.dart';
 import '../../../domain/entities/due.dart';
 import '../../../domain/entities/enums.dart';
@@ -18,6 +22,20 @@ import '../../../domain/entities/purchase.dart';
 import '../../../domain/entities/sale.dart';
 import '../../../domain/services/dashboard_calculator.dart';
 import '../../../domain/services/investor_metrics.dart';
+
+class InvestorObligationDetail {
+  final Investor investor;
+  final Money remainingBalance;
+  final Money dailyObligation;
+  final int? termDays;
+
+  const InvestorObligationDetail({
+    required this.investor,
+    required this.remainingBalance,
+    required this.dailyObligation,
+    this.termDays,
+  });
+}
 
 /// Backs the Dashboard screen — `notes/business_logic.md` §ঝ's Day
 /// view (default, today) vs. All-time view toggle, both served by the
@@ -121,17 +139,22 @@ class DashboardController extends GetxController {
     isDayView.value = true;
   }
 
-  DashboardTotals get totals {
-    final range = _range;
-    final byId = {for (final p in products) p.id: p};
+  Money get monthlyShopRent {
+    try {
+      if (Get.isRegistered<SettingsRegistry>()) {
+        return Get.find<SettingsRegistry>().get(
+          SettingKey.money(
+            'pricing.monthlyShopRent',
+            defaultValue: Money.zero(),
+          ),
+        );
+      }
+    } catch (_) {}
+    return Money.zero();
+  }
 
-    final duesInRange = isDayView.value
-        ? dues.where((d) => range.contains(d.createdAt)).toList()
-        : dues.where((d) => d.status != DueStatus.paid).toList();
-
-    var totalInvestorRemaining = Money.zero();
-    var dailyInvestorObligation = Money.zero();
-
+  List<InvestorObligationDetail> get investorObligationDetails {
+    final list = <InvestorObligationDetail>[];
     for (final inv in investors) {
       final purchaseItems = [
         for (final trip in purchaseTrips)
@@ -160,29 +183,67 @@ class DashboardController extends GetxController {
       );
 
       if (metrics.remainingBalance.isPositive) {
-        totalInvestorRemaining =
-            totalInvestorRemaining + metrics.remainingBalance;
-
         final termDays = inv.capitalReturnTermDays;
-        if (termDays != null && termDays > 0) {
-          final dailyMinor =
-              (metrics.remainingBalance.minorUnits / termDays).round();
-          dailyInvestorObligation = dailyInvestorObligation +
-              Money.fromMinor(
-                dailyMinor,
-                currency: metrics.remainingBalance.currency,
-              );
-        } else {
-          final dailyMinor =
-              (metrics.remainingBalance.minorUnits / 30.0).round();
-          dailyInvestorObligation = dailyInvestorObligation +
-              Money.fromMinor(
-                dailyMinor,
-                currency: metrics.remainingBalance.currency,
-              );
-        }
+        final dailyMinor = termDays != null && termDays > 0
+            ? (metrics.remainingBalance.minorUnits / termDays).round()
+            : (metrics.remainingBalance.minorUnits / 30.0).round();
+        final daily = Money.fromMinor(
+          dailyMinor,
+          currency: metrics.remainingBalance.currency,
+        );
+
+        list.add(
+          InvestorObligationDetail(
+            investor: inv,
+            remainingBalance: metrics.remainingBalance,
+            dailyObligation: daily,
+            termDays: termDays,
+          ),
+        );
       }
     }
+    return list;
+  }
+
+  DashboardTotals get totals {
+    final range = _range;
+    final byId = {for (final p in products) p.id: p};
+
+    final duesInRange = isDayView.value
+        ? dues.where((d) => range.contains(d.createdAt)).toList()
+        : dues.where((d) => d.status != DueStatus.paid).toList();
+
+    var totalInvestorRemaining = Money.zero();
+    var dailyInvestorObligation = Money.zero();
+
+    for (final detail in investorObligationDetails) {
+      totalInvestorRemaining =
+          totalInvestorRemaining + detail.remainingBalance;
+      dailyInvestorObligation =
+          dailyInvestorObligation + detail.dailyObligation;
+    }
+
+    final targetMonth = selectedDay.value ?? DateTime.now();
+    final rentPaidThisMonth = expenses
+        .where(
+          (e) =>
+              e.category == ExpenseCategory.monthlyRent &&
+              e.date.year == targetMonth.year &&
+              e.date.month == targetMonth.month,
+        )
+        .fold(Money.zero(), (sum, e) => sum + e.amount);
+
+    final configuredRent = monthlyShopRent;
+    final rentRemainingThisMonth = configuredRent > rentPaidThisMonth
+        ? (configuredRent - rentPaidThisMonth)
+        : Money.zero();
+
+    final dailyRentObligation = configuredRent.isPositive
+        ? Money.fromMinor(
+            (configuredRent.minorUnits / 30.0).round(),
+            currency: configuredRent.currency,
+          )
+        : Money.zero();
 
     return computeDashboardTotals(
       ledgerEntriesInRange: ledgerEntries
@@ -209,6 +270,33 @@ class DashboardController extends GetxController {
       duesInRange: duesInRange,
       totalInvestorRemaining: totalInvestorRemaining,
       dailyInvestorObligation: dailyInvestorObligation,
+      monthlyShopRent: configuredRent,
+      rentPaidThisMonth: rentPaidThisMonth,
+      rentRemainingThisMonth: rentRemainingThisMonth,
+      dailyRentObligation: dailyRentObligation,
     );
+  }
+
+  Future<bool> payRent({
+    required Money amount,
+    required PaymentMethod paymentMethod,
+    String? note,
+  }) async {
+    final useCases = ExpenseUseCases(db);
+    final now = DateTime.now();
+    final monthName = DateFormat('MMMM yyyy').format(now);
+    final result = await useCases.create(
+      Expense(
+        id: const Uuid().v7(),
+        category: ExpenseCategory.monthlyRent,
+        amount: amount,
+        date: now,
+        paymentMethod: paymentMethod,
+        description: note ?? 'দোকান ভাড়া - $monthName',
+      ),
+      shopId: defaultShopId,
+      now: now.toUtc(),
+    );
+    return result.isOk;
   }
 }

@@ -34,6 +34,9 @@ class Products extends Table {
   TextColumn get fundSourceType => textEnum<FundSourceType>()();
   TextColumn get fundSourceInvestorId => text().nullable()();
 
+  TextColumn get unit => text().withDefault(const Constant('pcs'))();
+  TextColumn get sellUnit => text().withDefault(const Constant('pcs'))();
+
   BoolColumn get isRentable => boolean().withDefault(const Constant(false))();
   TextColumn get barcode => text().nullable()();
   TextColumn get sku => text().nullable()();
@@ -44,6 +47,23 @@ class Products extends Table {
   /// than a category-restricted column: most products never rent, so
   /// most rows never set this.
   IntColumn get pageCount => integer().nullable()();
+
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+  DateTimeColumn get syncedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Units of measurement (e.g. 'pcs', 'kg', 'box', 'litre', 'dozen', etc.)
+@DataClassName('UnitRow')
+class Units extends Table {
+  TextColumn get id => text()();
+  TextColumn get shopId => text().references(Shops, #id)();
+  TextColumn get name => text()();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();

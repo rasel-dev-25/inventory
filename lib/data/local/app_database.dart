@@ -25,6 +25,7 @@ import 'daos/quick_capture_dao.dart';
 import 'daos/rent_dao.dart';
 import 'daos/sale_dao.dart';
 import 'daos/sync_metadata_dao.dart';
+import 'daos/unit_dao.dart';
 import 'default_shop.dart';
 import '../../domain/entities/enums.dart';
 import 'tables/assets.dart';
@@ -79,6 +80,7 @@ part 'app_database.g.dart';
   tables: [
     Shops,
     Categories,
+    Units,
     AppSettings,
     Products,
     ProductImages,
@@ -117,6 +119,7 @@ part 'app_database.g.dart';
     PurchaseDao,
     SyncMetadataDao,
     CategoryDao,
+    UnitDao,
     LedgerDao,
     SaleDao,
     DueDao,
@@ -141,7 +144,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -157,6 +160,16 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(customerImages);
         await m.createTable(fixedAssetImages);
       }
+      if (from < 4) {
+        await m.addColumn(products, products.unit);
+        await m.createTable(units);
+      }
+      if (from < 5) {
+        await m.addColumn(products, products.sellUnit);
+      }
+    },
+    beforeOpen: (details) async {
+      await unitDao.seedDefaultUnits(defaultShopId, DateTime.now().toUtc());
     },
   );
 }

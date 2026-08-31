@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get/get.dart';
 
+import '../../../core/utils/app_logger.dart';
 import '../../../data/local/app_database.dart';
+import '../../../data/sync/pending_upload_service.dart';
 import '../../../data/sync/sync_pull_service.dart';
 import '../../../data/sync/sync_push_service.dart';
-import '../../../data/sync/pending_upload_service.dart';
+import '../../../domain/entities/auth_session.dart';
 import '../../auth/controller/auth_controller.dart';
 
 /// What the "Sync Now" affordance shows — kept as one enum rather than
@@ -61,9 +63,15 @@ class SyncController extends GetxController {
   final statusMessage = RxnString();
   final pendingOutboxCount = 0.obs;
 
+  /// Progress state used during full / initial sync UI
+  final isInitialSyncing = false.obs;
+  final syncProgressMessage = 'আপনার ডেটা প্রস্তুত হচ্ছে...'.obs;
+  final syncProgressFraction = 0.0.obs;
+
   StreamSubscription<Object?>? _outboxCountSub;
   StreamSubscription<Object?>? _uploadCountSub;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
+  StreamSubscription<AuthSession?>? _sessionSub;
   Timer? _periodicTimer;
 
   /// Tracks whether the last connectivity reading was "offline", so a
@@ -96,6 +104,14 @@ class SyncController extends GetxController {
       _wasOffline = isOffline;
       if (regainedConnectivity) _autoSync();
     });
+
+    _sessionSub = authController.session.listen((sess) {
+      if (sess?.hasShop == true &&
+          !isInitialSyncing.value &&
+          status.value != SyncStatus.syncing) {
+        _autoSync();
+      }
+    });
   }
 
   @override
@@ -103,12 +119,33 @@ class SyncController extends GetxController {
     _outboxCountSub?.cancel();
     _uploadCountSub?.cancel();
     _connectivitySub?.cancel();
+    _sessionSub?.cancel();
     _periodicTimer?.cancel();
     super.onClose();
   }
 
   void _updatePendingWorkCount() {
     pendingOutboxCount.value = _pendingOutboxEntries + _pendingUploads;
+  }
+
+  /// Performs full initial sync when a user signs in or connects to a shop.
+  Future<void> performInitialSync(String shopId) async {
+    isInitialSyncing.value = true;
+    syncProgressFraction.value = 0.05;
+    syncProgressMessage.value = 'সার্ভারের সাথে সংযোগ স্থাপন করা হচ্ছে...';
+    try {
+      await _performSync(
+        shopId,
+        onProgress: (table, index, total) {
+          syncProgressFraction.value = (index / total).clamp(0.0, 1.0);
+          syncProgressMessage.value = _tableFriendlyLabel(table);
+        },
+      );
+    } catch (e) {
+      AppLogger.w('SyncController', 'Initial sync caught exception: $e');
+    } finally {
+      isInitialSyncing.value = false;
+    }
   }
 
   /// The user-facing "Sync Now" button — reports "no shop yet" as a
@@ -132,13 +169,16 @@ class SyncController extends GetxController {
   /// while a sync is already in flight, rather than surfacing either as
   /// a failure the user didn't ask about.
   Future<void> _autoSync() async {
-    if (status.value == SyncStatus.syncing) return;
+    if (status.value == SyncStatus.syncing || isInitialSyncing.value) return;
     final shopId = authController.session.value?.shopId;
     if (shopId == null) return;
     await _performSync(shopId);
   }
 
-  Future<void> _performSync(String shopId) async {
+  Future<void> _performSync(
+    String shopId, {
+    void Function(String table, int index, int totalTables)? onProgress,
+  }) async {
     status.value = SyncStatus.syncing;
     statusMessage.value = null;
     try {
@@ -170,7 +210,10 @@ class SyncController extends GetxController {
         return;
       }
 
-      final pullResult = await pullService.pullAll(remoteShopId: shopId);
+      final pullResult = await pullService.pullAll(
+        remoteShopId: shopId,
+        onProgress: onProgress,
+      );
       if (pullResult.isErr) {
         status.value = SyncStatus.failure;
         statusMessage.value = pullResult.failureOrNull!.message;
@@ -185,6 +228,49 @@ class SyncController extends GetxController {
     } catch (e) {
       status.value = SyncStatus.failure;
       statusMessage.value = e.toString();
+    }
+  }
+
+  String _tableFriendlyLabel(String table) {
+    switch (table) {
+      case 'categories':
+      case 'units':
+        return 'ক্যাটাগরি ও ইউনিট লোড হচ্ছে...';
+      case 'products':
+      case 'product_images':
+        return 'পণ্য ও পণ্যের ছবি লোড হচ্ছে...';
+      case 'customers':
+      case 'customer_images':
+        return 'গ্রাহক ও হিসাবের তথ্য লোড হচ্ছে...';
+      case 'sales':
+        return 'বিক্রয়ের হিসাব লোড হচ্ছে...';
+      case 'dues':
+      case 'due_payments':
+        return 'বকেয়া ও পরিশোধের তথ্য লোড হচ্ছে...';
+      case 'purchase_trips':
+      case 'purchase_items':
+      case 'purchase_other_costs':
+        return 'ক্রয় ও খরচের হিসাব লোড হচ্ছে...';
+      case 'investors':
+      case 'investor_repayments':
+      case 'legacy_settlements':
+        return 'বিনিয়োগ ও আর্থিক হিসাব লোড হচ্ছে...';
+      case 'rent_pricing_tiers':
+      case 'rent_transactions':
+        return 'ভাড়া ও সার্ভিস রেকর্ড লোড হচ্ছে...';
+      case 'expenses':
+        return 'দোকানের খরচের তালিকা লোড হচ্ছে...';
+      case 'orders':
+      case 'fixed_assets':
+      case 'fixed_asset_images':
+        return 'অর্ডার ও সম্পদ লোড হচ্ছে...';
+      case 'quick_captures':
+      case 'cash_ledger_entries':
+      case 'stock_movements':
+      case 'audit_log_entries':
+        return 'লেজার ও অডিট হিস্ট্রি সিঙ্ক হচ্ছে...';
+      default:
+        return 'দোকানের ডেটা প্রস্তুত করা হচ্ছে...';
     }
   }
 }

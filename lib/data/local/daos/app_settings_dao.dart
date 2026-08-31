@@ -26,6 +26,11 @@ class AppSettingsDao extends DatabaseAccessor<AppDatabase>
 
   Future<List<AppSettingRow>> getAll() => select(appSettings).get();
 
+  Future<String?> get(String key) async {
+    final row = await (select(appSettings)..where((s) => s.key.equals(key))).getSingleOrNull();
+    return row?.value;
+  }
+
   Future<void> upsert(String key, String value) {
     return into(appSettings).insertOnConflictUpdate(
       AppSettingsCompanion.insert(key: key, value: value),

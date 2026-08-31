@@ -189,5 +189,38 @@ void main() {
     expect(controller.totalCashAmount, Money.fromMinor(2000));
     expect(controller.totalDueAmount, Money.fromMinor(14000));
   });
+
+  test('createQuickCustomer creates a customer and outstandingDueForCustomer calculates correctly', () async {
+    // 1. Create quick customer
+    final created = await controller.createQuickCustomer(
+      name: 'Rahim Khan',
+      contact: '01822222222',
+      address: 'Chittagong',
+    );
+    expect(created, isNotNull);
+    expect(created!.name, 'Rahim Khan');
+    expect(created.contact, '01822222222');
+    await pumpEventQueue();
+
+    // Verify it is in controller.customers
+    expect(controller.customers.any((c) => c.id == created.id), isTrue);
+
+    // Initial due should be zero
+    expect(controller.outstandingDueForCustomer(created.id), Money.zero());
+
+    // Log a partial sale for this new customer
+    await controller.logSale(
+      productId: 'prod-1',
+      qty: 1,
+      actualSellPrice: Money.fromMinor(8000),
+      amountReceivedNow: Money.fromMinor(3000),
+      paymentMethod: PaymentMethod.cash,
+      customerId: created.id,
+    );
+    await pumpEventQueue();
+
+    // Now due should be ৳50.00 (5000 minor units)
+    expect(controller.outstandingDueForCustomer(created.id), Money.fromMinor(5000));
+  });
 }
 

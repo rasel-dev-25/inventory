@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:get/get.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../core/money/money.dart';
 import '../../../data/local/app_database.dart';
 import '../../../data/local/default_shop.dart';
+import '../../../data/usecases/customer_usecases.dart';
 import '../../../data/usecases/delete_sale_usecase.dart';
 import '../../../data/usecases/edit_sale_usecase.dart';
 import '../../../data/usecases/save_sale_usecase.dart';
@@ -24,6 +26,7 @@ class DailySalesController extends GetxController {
   late final SaveSaleUseCase _useCase = SaveSaleUseCase(db);
   late final DeleteSaleUseCase _deleteUseCase = DeleteSaleUseCase(db);
   late final EditSaleUseCase _editUseCase = EditSaleUseCase(db);
+  late final CustomerUseCases _customerUseCases = CustomerUseCases(db);
 
   final products = <Product>[].obs;
   final customers = <Customer>[].obs;
@@ -193,6 +196,45 @@ class DailySalesController extends GetxController {
       if (c.id == id) return c;
     }
     return null;
+  }
+
+  Money outstandingDueForCustomer(String customerId) {
+    int totalMinor = 0;
+    for (final d in dues) {
+      if (d.customerId == customerId && d.status != DueStatus.paid) {
+        totalMinor += (d.originalAmount.minorUnits - d.paidAmount.minorUnits);
+      }
+    }
+    return Money.fromMinor(totalMinor);
+  }
+
+  Future<Customer?> createQuickCustomer({
+    required String name,
+    String? contact,
+    String? address,
+  }) async {
+    final cleanName = name.trim();
+    if (cleanName.isEmpty) return null;
+    final newCustomer = Customer(
+      id: const Uuid().v4(),
+      name: cleanName,
+      contact: contact?.trim().isEmpty == true ? null : contact?.trim(),
+      address: address?.trim().isEmpty == true ? null : address?.trim(),
+    );
+    try {
+      await _customerUseCases.create(
+        newCustomer,
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+      if (!customers.any((c) => c.id == newCustomer.id)) {
+        customers.add(newCustomer);
+      }
+      return newCustomer;
+    } catch (e) {
+      errorMessage.value = e.toString();
+      return null;
+    }
   }
 
   Future<bool> logSale({

@@ -1,13 +1,15 @@
+import 'package:collection/collection.dart';
 import 'package:drift/native.dart';
+import 'package:test/test.dart';
+
 import 'package:inventory/core/money/money.dart';
 import 'package:inventory/data/local/app_database.dart';
 import 'package:inventory/data/local/default_shop.dart';
 import 'package:inventory/data/usecases/product_usecases.dart';
-import 'package:inventory/domain/entities/fund_source.dart';
 import 'package:inventory/domain/entities/enums.dart';
+import 'package:inventory/domain/entities/fund_source.dart';
 import 'package:inventory/domain/entities/product.dart';
 import 'package:inventory/features/purchase_entry/controller/purchase_entry_controller.dart';
-import 'package:test/test.dart';
 
 /// Covers [PurchaseEntryController.recentTrips]/[PurchaseEntryController.deleteTrip]
 /// — the first real UI trigger for `DeletePurchaseTripUseCase`, previously
@@ -71,16 +73,37 @@ void main() {
     );
   });
 
-  test('save requires the actual cash taken out', () async {
+  test('save succeeds even without cash taken out (optional)', () async {
     controller.addItem();
     controller.items.single.productId = 'notebook';
     controller.items.single.unitPrice = Money.fromMinor(4000);
+    controller.items.single.qty = 1;
     controller.items.refresh();
 
     final ok = await controller.save();
+    await Future<void>.delayed(Duration.zero);
 
-    expect(ok, isFalse);
-    expect(controller.errorMessage.value, 'actualCashRequired');
+    expect(ok, isTrue);
+    expect(controller.recentTrips, hasLength(1));
+  });
+
+  test('save auto-creates new product in catalog from item name', () async {
+    controller.addItem();
+    controller.items.single.productName = 'Attar Musk';
+    controller.items.single.unitPrice = Money.fromMinor(6000);
+    controller.items.single.qty = 3;
+    controller.items.refresh();
+
+    final ok = await controller.save();
+    await Future<void>.delayed(Duration.zero);
+
+    expect(ok, isTrue);
+    final created = controller.products.firstWhereOrNull((p) => p.name == 'Attar Musk');
+    expect(created, isNotNull);
+    expect(created!.costPrice, Money.fromMinor(6000));
+    final inDb = await db.productDao.getById(created.id);
+    expect(inDb, isNotNull);
+    expect(inDb!.qty, 3);
   });
 
   test('reconciliation preview compares calculated and actual cash', () {

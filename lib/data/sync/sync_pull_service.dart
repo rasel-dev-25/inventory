@@ -40,9 +40,15 @@ class SyncPullService {
   /// nothing else writes rows this device doesn't already have), flagged
   /// here as the thing to revisit if a genuine multi-device conflict
   /// shows up before real dependency-ordering is worth building.
-  Future<Result<int>> pullAll({required String remoteShopId}) async {
+  Future<Result<int>> pullAll({
+    required String remoteShopId,
+    void Function(String table, int index, int totalTables)? onProgress,
+  }) async {
     var total = 0;
-    for (final table in SyncTableRegistry.syncableTables) {
+    final tables = SyncTableRegistry.syncableTables.toList();
+    for (var i = 0; i < tables.length; i++) {
+      final table = tables[i];
+      onProgress?.call(table, i + 1, tables.length);
       final result = await pullTable(table, remoteShopId: remoteShopId);
       if (result.isErr) return result;
       total += result.valueOrNull!;
@@ -87,11 +93,13 @@ class SyncPullService {
       // actually returned", independent of what ShopIdBridge/
       // EnumCaseBridge do to other columns.
       final lastRemoteRow = page.rows.last;
+      final syncedAtStr = lastRemoteRow['synced_at'] as String?;
+      final syncedAt = syncedAtStr != null
+          ? DateTime.parse(syncedAtStr).toUtc()
+          : DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
       await _dao.upsertCursor(
         table: table,
-        lastSyncedAt: DateTime.parse(
-          lastRemoteRow['synced_at'] as String,
-        ).toUtc(),
+        lastSyncedAt: syncedAt,
         lastSyncedId: lastRemoteRow['id'] as String,
       );
 

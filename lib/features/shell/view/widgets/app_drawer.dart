@@ -49,10 +49,6 @@ class AppDrawer extends GetView<ShellController> {
             () => controller.switchTab(5),
           ),
           const Divider(),
-          _tile(Iconsax.category_2, 'products'.tr, () {
-            Navigator.pop(context);
-            Get.toNamed(AppRoutes.catalogV2);
-          }),
           _tile(Iconsax.chart, 'investor'.tr, () {
             Navigator.pop(context);
             Get.toNamed(AppRoutes.investorV2);

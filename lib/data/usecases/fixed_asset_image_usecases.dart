@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
 
 import '../local/app_database.dart';
 import '../sync/outbox_event.dart';
+import '../sync/storage_upload_transport.dart';
 import 'sync_enqueue_helper.dart';
 
 class FixedAssetImageUseCases {
@@ -57,5 +60,29 @@ class FixedAssetImageUseCases {
     });
 
     return imageId;
+  }
+
+  Future<void> delete({
+    required String imageId,
+    StorageUploadTransport? storage,
+  }) async {
+    final image = await db.fixedAssetImageDao.getById(imageId);
+    if (image == null) return;
+
+    if (image.remoteUrl != null && storage != null) {
+      await storage.delete(
+        bucketName: bucketName,
+        storagePath: image.remoteUrl!,
+      );
+    }
+    if (image.localPath != null) {
+      final file = File(image.localPath!);
+      if (file.existsSync()) {
+        try {
+          await file.delete();
+        } catch (_) {}
+      }
+    }
+    await db.fixedAssetImageDao.deleteImage(imageId);
   }
 }

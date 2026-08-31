@@ -9,6 +9,7 @@ import '../../../data/local/default_shop.dart';
 import '../../../data/usecases/delete_purchase_trip_usecase.dart';
 import '../../../data/usecases/edit_purchase_trip_usecase.dart';
 import '../../../data/usecases/investor_usecases.dart';
+import '../../../data/usecases/product_usecases.dart';
 import '../../../data/usecases/save_purchase_trip_usecase.dart';
 import '../../../domain/entities/enums.dart';
 import '../../../domain/entities/fund_source.dart';
@@ -23,13 +24,25 @@ import '../../../domain/services/purchase_reconciliation.dart';
 class DraftPurchaseItem {
   final String id;
   String? productId;
+  String productName = '';
   String shopName = '';
   double qty = 1;
   Money unitPrice = Money.zero();
   FundSource fundSource = FundSource.shop();
   bool isInKind = false;
 
-  DraftPurchaseItem({String? id}) : id = id ?? const Uuid().v7();
+  DraftPurchaseItem({
+    String? id,
+    this.productId,
+    this.productName = '',
+    this.shopName = '',
+    this.qty = 1,
+    Money? unitPrice,
+    FundSource? fundSource,
+    this.isInKind = false,
+  })  : id = id ?? const Uuid().v7(),
+        unitPrice = unitPrice ?? Money.zero(),
+        fundSource = fundSource ?? FundSource.shop();
 }
 
 class DraftOtherCost {
@@ -51,6 +64,7 @@ class PurchaseEntryController extends GetxController {
   late final DeletePurchaseTripUseCase _deleteUseCase =
       DeletePurchaseTripUseCase(db);
   late final EditPurchaseTripUseCase _editUseCase = EditPurchaseTripUseCase(db);
+  late final ProductUseCases _productUseCases = ProductUseCases(db);
   late final InvestorUseCases _investorUseCases = InvestorUseCases(db);
   static const _uuid = Uuid();
 
@@ -170,7 +184,13 @@ class PurchaseEntryController extends GetxController {
   }
 
   PurchaseTrip? _buildTrip() {
-    final validItems = items.where((i) => i.productId != null).toList();
+    final validItems = items
+        .where(
+          (i) =>
+              (i.productId != null || i.productName.trim().isNotEmpty) &&
+              i.qty > 0,
+        )
+        .toList();
     if (validItems.isEmpty) return null;
 
     return PurchaseTrip(
@@ -189,7 +209,7 @@ class PurchaseEntryController extends GetxController {
           PurchaseItem(
             id: i.id,
             shopName: i.shopName,
-            productId: i.productId!,
+            productId: i.productId ?? i.productName.trim(),
             qty: i.qty,
             unitPrice: i.unitPrice,
             fundSource: i.fundSource,
@@ -201,19 +221,61 @@ class PurchaseEntryController extends GetxController {
 
   Future<bool> save() async {
     errorMessage.value = null;
-    final trip = _buildTrip();
-    if (trip == null) {
+    final validItems = items
+        .where(
+          (i) =>
+              (i.productId != null || i.productName.trim().isNotEmpty) &&
+              i.qty > 0,
+        )
+        .toList();
+    if (validItems.isEmpty) {
       errorMessage.value = 'itemsRequired'.tr;
-      return false;
-    }
-    if (actualCashTakenOut.value == null) {
-      errorMessage.value = 'actualCashRequired'.tr;
       return false;
     }
 
     isSaving.value = true;
     try {
       final now = DateTime.now().toUtc();
+
+      // Ensure every item has a valid registered productId. If the product
+      // doesn't exist in the catalog yet, automatically create it on the fly!
+      for (final item in validItems) {
+        if (item.productId == null || item.productId!.isEmpty) {
+          final trimmedName = item.productName.trim();
+          final existing = products.firstWhereOrNull(
+            (p) => p.name.trim().toLowerCase() == trimmedName.toLowerCase(),
+          );
+          if (existing != null) {
+            item.productId = existing.id;
+          } else {
+            final newProduct = Product(
+              id: _uuid.v7(),
+              name: trimmedName,
+              category: 'General',
+              costPrice: item.unitPrice,
+              suggestedSellPrice: item.unitPrice,
+              qty: 0,
+              fundSource: item.fundSource,
+            );
+            await _productUseCases.create(
+              newProduct,
+              shopId: defaultShopId,
+              now: now,
+            );
+            item.productId = newProduct.id;
+            if (!products.any((p) => p.id == newProduct.id)) {
+              products.add(newProduct);
+            }
+          }
+        }
+      }
+
+      final trip = _buildTrip();
+      if (trip == null) {
+        errorMessage.value = 'itemsRequired'.tr;
+        return false;
+      }
+
       if (editingOriginalTripId.value == null) {
         await _useCase.call(trip, shopId: defaultShopId, now: now);
       } else {
@@ -228,7 +290,7 @@ class PurchaseEntryController extends GetxController {
           return false;
         }
       }
-      _resetDraft();
+      resetDraft();
       return true;
     } catch (e) {
       errorMessage.value = e.toString();
@@ -238,7 +300,7 @@ class PurchaseEntryController extends GetxController {
     }
   }
 
-  void _resetDraft() {
+  void resetDraft() {
     tripDate.value = DateTime.now();
     transportCost.value = Money.zero();
     cashReturned.value = Money.zero();
@@ -265,13 +327,17 @@ class PurchaseEntryController extends GetxController {
     ]);
     items.assignAll([
       for (final item in trip.items)
-        (DraftPurchaseItem()
-          ..productId = item.productId
-          ..shopName = item.shopName
-          ..qty = item.qty
-          ..unitPrice = item.unitPrice
-          ..fundSource = item.fundSource
-          ..isInKind = item.isInKind),
+        DraftPurchaseItem(
+          productId: item.productId,
+          productName:
+              products.firstWhereOrNull((p) => p.id == item.productId)?.name ??
+              '',
+          shopName: item.shopName,
+          qty: item.qty,
+          unitPrice: item.unitPrice,
+          fundSource: item.fundSource,
+          isInKind: item.isInKind,
+        ),
     ]);
   }
 

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../../core/design/tokens.dart';
 import '../../../core/money/money.dart';
+import '../../../core/widgets/calculator_keypad.dart';
 import '../controller/pricing_settings_controller.dart';
 
 /// The Settings-page UI for `notes/business_logic.md`'s "প্রাইসিং
@@ -209,48 +210,34 @@ class _MoneyEditRow extends StatelessWidget {
         IconButton(
           tooltip: 'edit'.tr,
           icon: const Icon(Icons.edit_outlined),
-          onPressed: () => _editDialog(context),
+          onPressed: () => _editMoneyDialog(
+            context: context,
+            label: label,
+            value: value,
+            onSave: onSave,
+          ),
         ),
       ],
     );
   }
+}
 
-  Future<void> _editDialog(BuildContext context) async {
-    final controller = TextEditingController(
-      text: value.format(showSymbol: false),
-    );
-    final formKey = GlobalKey<FormState>();
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(label),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            controller: controller,
-            autofocus: true,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            validator: (v) =>
-                _parseMoneyOrNull(v ?? '') == null ? 'invalidQty'.tr : null,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text('cancel'.tr),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (!formKey.currentState!.validate()) return;
-              onSave(_parseMoneyOrNull(controller.text)!);
-              Navigator.of(dialogContext).pop();
-            },
-            child: Text('save'.tr),
-          ),
-        ],
-      ),
-    );
+Future<void> _editMoneyDialog({
+  required BuildContext context,
+  required String label,
+  required Money value,
+  required void Function(Money) onSave,
+}) async {
+  final res = await showCalculatorModal(
+    context,
+    initialValue: value.format(showSymbol: false),
+    title: label,
+  );
+  if (res != null) {
+    final parsed = _parseMoneyOrNull(res);
+    if (parsed != null) {
+      onSave(parsed);
+    }
   }
 }
 

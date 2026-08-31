@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../../core/money/money.dart';
 import '../../../domain/entities/due.dart' as domain;
+import '../../../domain/entities/due_payment.dart' as domain_payment;
 import '../../../domain/entities/enums.dart';
 import '../app_database.dart';
 import '../tables/dues.dart';
@@ -19,6 +20,19 @@ extension _DueRowMapping on DueRow {
       paidAmount: Money.fromMinor(paidAmountMinor),
       promisedDays: promisedDays,
       status: status,
+      createdAt: createdAt,
+    );
+  }
+}
+
+extension _DuePaymentRowMapping on DuePaymentRow {
+  domain_payment.DuePayment toDomain() {
+    return domain_payment.DuePayment(
+      id: id,
+      dueId: dueId,
+      amount: Money.fromMinor(amountMinor),
+      paymentMethod: paymentMethod,
+      date: date,
       createdAt: createdAt,
     );
   }
@@ -123,5 +137,18 @@ class DueDao extends DatabaseAccessor<AppDatabase> with _$DueDaoMixin {
         updatedAt: Value(now),
       ),
     );
+  }
+
+  Stream<List<domain_payment.DuePayment>> watchAllPayments() {
+    final query = select(duePayments)
+      ..orderBy([(p) => OrderingTerm.desc(p.date)]);
+    return query.watch().map((rows) => rows.map((r) => r.toDomain()).toList());
+  }
+
+  Stream<List<domain_payment.DuePayment>> watchPaymentsForDue(String dueId) {
+    final query = select(duePayments)
+      ..where((p) => p.dueId.equals(dueId))
+      ..orderBy([(p) => OrderingTerm.desc(p.date)]);
+    return query.watch().map((rows) => rows.map((r) => r.toDomain()).toList());
   }
 }

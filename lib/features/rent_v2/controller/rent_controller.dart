@@ -74,8 +74,29 @@ class RentController extends GetxController {
   List<RentTransaction> get activeRentals =>
       rentals.where((r) => r.status == RentStatus.active).toList();
 
+  List<RentTransaction> get overdueRentals =>
+      activeRentals.where((r) => rentIsOverdue(r)).toList();
+
   List<RentTransaction> get history =>
       rentals.where((r) => r.status != RentStatus.active).toList();
+
+  int get activeCount => activeRentals.length;
+  int get overdueCount => overdueRentals.length;
+  int get historyCount => history.length;
+
+  Money get totalActiveDeposits =>
+      activeRentals.fold(Money.zeroBdt, (sum, r) => sum + r.deposit);
+
+  Money get totalRentRevenue => rentals
+      .where((r) => r.status == RentStatus.returned)
+      .fold(
+        Money.zeroBdt,
+        (sum, r) =>
+            sum +
+            r.rentPrice +
+            (r.extraDayCharge ?? Money.zeroBdt) +
+            (r.damageCharge ?? Money.zeroBdt),
+      );
 
   /// How many copies of [product] are free to rent right now —
   /// `product.qty` minus how many of *this shop's* rentals of it are

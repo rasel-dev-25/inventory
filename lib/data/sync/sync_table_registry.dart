@@ -18,6 +18,7 @@ abstract final class SyncTableRegistry {
   /// `app_settings` (composite primary key, device-local by nature).
   static const syncableTables = <String>{
     'categories',
+    'units',
     'products',
     'product_images',
     'customers',

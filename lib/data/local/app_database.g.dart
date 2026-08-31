@@ -567,6 +567,515 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
   }
 }
 
+class $UnitsTable extends Units with TableInfo<$UnitsTable, UnitRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UnitsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _shopIdMeta = const VerificationMeta('shopId');
+  @override
+  late final GeneratedColumn<String> shopId = GeneratedColumn<String>(
+    'shop_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES shops (id)',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> syncedAt = GeneratedColumn<DateTime>(
+    'synced_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    shopId,
+    name,
+    sortOrder,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'units';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<UnitRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('shop_id')) {
+      context.handle(
+        _shopIdMeta,
+        shopId.isAcceptableOrUnknown(data['shop_id']!, _shopIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_shopIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_syncedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  UnitRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UnitRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      shopId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}shop_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}synced_at'],
+      )!,
+    );
+  }
+
+  @override
+  $UnitsTable createAlias(String alias) {
+    return $UnitsTable(attachedDatabase, alias);
+  }
+}
+
+class UnitRow extends DataClass implements Insertable<UnitRow> {
+  final String id;
+  final String shopId;
+  final String name;
+  final int sortOrder;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final DateTime syncedAt;
+  const UnitRow({
+    required this.id,
+    required this.shopId,
+    required this.name,
+    required this.sortOrder,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['shop_id'] = Variable<String>(shopId);
+    map['name'] = Variable<String>(name);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['synced_at'] = Variable<DateTime>(syncedAt);
+    return map;
+  }
+
+  UnitsCompanion toCompanion(bool nullToAbsent) {
+    return UnitsCompanion(
+      id: Value(id),
+      shopId: Value(shopId),
+      name: Value(name),
+      sortOrder: Value(sortOrder),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: Value(syncedAt),
+    );
+  }
+
+  factory UnitRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UnitRow(
+      id: serializer.fromJson<String>(json['id']),
+      shopId: serializer.fromJson<String>(json['shopId']),
+      name: serializer.fromJson<String>(json['name']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      syncedAt: serializer.fromJson<DateTime>(json['syncedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'shopId': serializer.toJson<String>(shopId),
+      'name': serializer.toJson<String>(name),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'syncedAt': serializer.toJson<DateTime>(syncedAt),
+    };
+  }
+
+  UnitRow copyWith({
+    String? id,
+    String? shopId,
+    String? name,
+    int? sortOrder,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    DateTime? syncedAt,
+  }) => UnitRow(
+    id: id ?? this.id,
+    shopId: shopId ?? this.shopId,
+    name: name ?? this.name,
+    sortOrder: sortOrder ?? this.sortOrder,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt ?? this.syncedAt,
+  );
+  UnitRow copyWithCompanion(UnitsCompanion data) {
+    return UnitRow(
+      id: data.id.present ? data.id.value : this.id,
+      shopId: data.shopId.present ? data.shopId.value : this.shopId,
+      name: data.name.present ? data.name.value : this.name,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UnitRow(')
+          ..write('id: $id, ')
+          ..write('shopId: $shopId, ')
+          ..write('name: $name, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    shopId,
+    name,
+    sortOrder,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UnitRow &&
+          other.id == this.id &&
+          other.shopId == this.shopId &&
+          other.name == this.name &&
+          other.sortOrder == this.sortOrder &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class UnitsCompanion extends UpdateCompanion<UnitRow> {
+  final Value<String> id;
+  final Value<String> shopId;
+  final Value<String> name;
+  final Value<int> sortOrder;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<DateTime> syncedAt;
+  final Value<int> rowid;
+  const UnitsCompanion({
+    this.id = const Value.absent(),
+    this.shopId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  UnitsCompanion.insert({
+    required String id,
+    required String shopId,
+    required String name,
+    this.sortOrder = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    required DateTime syncedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       shopId = Value(shopId),
+       name = Value(name),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt),
+       syncedAt = Value(syncedAt);
+  static Insertable<UnitRow> custom({
+    Expression<String>? id,
+    Expression<String>? shopId,
+    Expression<String>? name,
+    Expression<int>? sortOrder,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<DateTime>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (shopId != null) 'shop_id': shopId,
+      if (name != null) 'name': name,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  UnitsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? shopId,
+    Value<String>? name,
+    Value<int>? sortOrder,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<DateTime>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return UnitsCompanion(
+      id: id ?? this.id,
+      shopId: shopId ?? this.shopId,
+      name: name ?? this.name,
+      sortOrder: sortOrder ?? this.sortOrder,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (shopId.present) {
+      map['shop_id'] = Variable<String>(shopId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<DateTime>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UnitsCompanion(')
+          ..write('id: $id, ')
+          ..write('shopId: $shopId, ')
+          ..write('name: $name, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $AppSettingsTable extends AppSettings
     with TableInfo<$AppSettingsTable, AppSettingRow> {
   @override
@@ -874,6 +1383,28 @@ class $ProductsTable extends Products
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+    'unit',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pcs'),
+  );
+  static const VerificationMeta _sellUnitMeta = const VerificationMeta(
+    'sellUnit',
+  );
+  @override
+  late final GeneratedColumn<String> sellUnit = GeneratedColumn<String>(
+    'sell_unit',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pcs'),
+  );
   static const VerificationMeta _isRentableMeta = const VerificationMeta(
     'isRentable',
   );
@@ -975,6 +1506,8 @@ class $ProductsTable extends Products
     qty,
     fundSourceType,
     fundSourceInvestorId,
+    unit,
+    sellUnit,
     isRentable,
     barcode,
     sku,
@@ -1060,6 +1593,18 @@ class $ProductsTable extends Products
           data['fund_source_investor_id']!,
           _fundSourceInvestorIdMeta,
         ),
+      );
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+        _unitMeta,
+        unit.isAcceptableOrUnknown(data['unit']!, _unitMeta),
+      );
+    }
+    if (data.containsKey('sell_unit')) {
+      context.handle(
+        _sellUnitMeta,
+        sellUnit.isAcceptableOrUnknown(data['sell_unit']!, _sellUnitMeta),
       );
     }
     if (data.containsKey('is_rentable')) {
@@ -1163,6 +1708,14 @@ class $ProductsTable extends Products
         DriftSqlType.string,
         data['${effectivePrefix}fund_source_investor_id'],
       ),
+      unit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unit'],
+      )!,
+      sellUnit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sell_unit'],
+      )!,
       isRentable: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_rentable'],
@@ -1219,6 +1772,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
   final double qty;
   final FundSourceType fundSourceType;
   final String? fundSourceInvestorId;
+  final String unit;
+  final String sellUnit;
   final bool isRentable;
   final String? barcode;
   final String? sku;
@@ -1243,6 +1798,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     required this.qty,
     required this.fundSourceType,
     this.fundSourceInvestorId,
+    required this.unit,
+    required this.sellUnit,
     required this.isRentable,
     this.barcode,
     this.sku,
@@ -1270,6 +1827,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     if (!nullToAbsent || fundSourceInvestorId != null) {
       map['fund_source_investor_id'] = Variable<String>(fundSourceInvestorId);
     }
+    map['unit'] = Variable<String>(unit);
+    map['sell_unit'] = Variable<String>(sellUnit);
     map['is_rentable'] = Variable<bool>(isRentable);
     if (!nullToAbsent || barcode != null) {
       map['barcode'] = Variable<String>(barcode);
@@ -1302,6 +1861,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
       fundSourceInvestorId: fundSourceInvestorId == null && nullToAbsent
           ? const Value.absent()
           : Value(fundSourceInvestorId),
+      unit: Value(unit),
+      sellUnit: Value(sellUnit),
       isRentable: Value(isRentable),
       barcode: barcode == null && nullToAbsent
           ? const Value.absent()
@@ -1340,6 +1901,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
       fundSourceInvestorId: serializer.fromJson<String?>(
         json['fundSourceInvestorId'],
       ),
+      unit: serializer.fromJson<String>(json['unit']),
+      sellUnit: serializer.fromJson<String>(json['sellUnit']),
       isRentable: serializer.fromJson<bool>(json['isRentable']),
       barcode: serializer.fromJson<String?>(json['barcode']),
       sku: serializer.fromJson<String?>(json['sku']),
@@ -1367,6 +1930,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
         $ProductsTable.$converterfundSourceType.toJson(fundSourceType),
       ),
       'fundSourceInvestorId': serializer.toJson<String?>(fundSourceInvestorId),
+      'unit': serializer.toJson<String>(unit),
+      'sellUnit': serializer.toJson<String>(sellUnit),
       'isRentable': serializer.toJson<bool>(isRentable),
       'barcode': serializer.toJson<String?>(barcode),
       'sku': serializer.toJson<String?>(sku),
@@ -1388,6 +1953,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     double? qty,
     FundSourceType? fundSourceType,
     Value<String?> fundSourceInvestorId = const Value.absent(),
+    String? unit,
+    String? sellUnit,
     bool? isRentable,
     Value<String?> barcode = const Value.absent(),
     Value<String?> sku = const Value.absent(),
@@ -1409,6 +1976,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     fundSourceInvestorId: fundSourceInvestorId.present
         ? fundSourceInvestorId.value
         : this.fundSourceInvestorId,
+    unit: unit ?? this.unit,
+    sellUnit: sellUnit ?? this.sellUnit,
     isRentable: isRentable ?? this.isRentable,
     barcode: barcode.present ? barcode.value : this.barcode,
     sku: sku.present ? sku.value : this.sku,
@@ -1437,6 +2006,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
       fundSourceInvestorId: data.fundSourceInvestorId.present
           ? data.fundSourceInvestorId.value
           : this.fundSourceInvestorId,
+      unit: data.unit.present ? data.unit.value : this.unit,
+      sellUnit: data.sellUnit.present ? data.sellUnit.value : this.sellUnit,
       isRentable: data.isRentable.present
           ? data.isRentable.value
           : this.isRentable,
@@ -1462,6 +2033,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
           ..write('qty: $qty, ')
           ..write('fundSourceType: $fundSourceType, ')
           ..write('fundSourceInvestorId: $fundSourceInvestorId, ')
+          ..write('unit: $unit, ')
+          ..write('sellUnit: $sellUnit, ')
           ..write('isRentable: $isRentable, ')
           ..write('barcode: $barcode, ')
           ..write('sku: $sku, ')
@@ -1485,6 +2058,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     qty,
     fundSourceType,
     fundSourceInvestorId,
+    unit,
+    sellUnit,
     isRentable,
     barcode,
     sku,
@@ -1507,6 +2082,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
           other.qty == this.qty &&
           other.fundSourceType == this.fundSourceType &&
           other.fundSourceInvestorId == this.fundSourceInvestorId &&
+          other.unit == this.unit &&
+          other.sellUnit == this.sellUnit &&
           other.isRentable == this.isRentable &&
           other.barcode == this.barcode &&
           other.sku == this.sku &&
@@ -1527,6 +2104,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
   final Value<double> qty;
   final Value<FundSourceType> fundSourceType;
   final Value<String?> fundSourceInvestorId;
+  final Value<String> unit;
+  final Value<String> sellUnit;
   final Value<bool> isRentable;
   final Value<String?> barcode;
   final Value<String?> sku;
@@ -1546,6 +2125,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     this.qty = const Value.absent(),
     this.fundSourceType = const Value.absent(),
     this.fundSourceInvestorId = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.sellUnit = const Value.absent(),
     this.isRentable = const Value.absent(),
     this.barcode = const Value.absent(),
     this.sku = const Value.absent(),
@@ -1566,6 +2147,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     this.qty = const Value.absent(),
     required FundSourceType fundSourceType,
     this.fundSourceInvestorId = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.sellUnit = const Value.absent(),
     this.isRentable = const Value.absent(),
     this.barcode = const Value.absent(),
     this.sku = const Value.absent(),
@@ -1595,6 +2178,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     Expression<double>? qty,
     Expression<String>? fundSourceType,
     Expression<String>? fundSourceInvestorId,
+    Expression<String>? unit,
+    Expression<String>? sellUnit,
     Expression<bool>? isRentable,
     Expression<String>? barcode,
     Expression<String>? sku,
@@ -1617,6 +2202,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
       if (fundSourceType != null) 'fund_source_type': fundSourceType,
       if (fundSourceInvestorId != null)
         'fund_source_investor_id': fundSourceInvestorId,
+      if (unit != null) 'unit': unit,
+      if (sellUnit != null) 'sell_unit': sellUnit,
       if (isRentable != null) 'is_rentable': isRentable,
       if (barcode != null) 'barcode': barcode,
       if (sku != null) 'sku': sku,
@@ -1639,6 +2226,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     Value<double>? qty,
     Value<FundSourceType>? fundSourceType,
     Value<String?>? fundSourceInvestorId,
+    Value<String>? unit,
+    Value<String>? sellUnit,
     Value<bool>? isRentable,
     Value<String?>? barcode,
     Value<String?>? sku,
@@ -1660,6 +2249,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
       qty: qty ?? this.qty,
       fundSourceType: fundSourceType ?? this.fundSourceType,
       fundSourceInvestorId: fundSourceInvestorId ?? this.fundSourceInvestorId,
+      unit: unit ?? this.unit,
+      sellUnit: sellUnit ?? this.sellUnit,
       isRentable: isRentable ?? this.isRentable,
       barcode: barcode ?? this.barcode,
       sku: sku ?? this.sku,
@@ -1708,6 +2299,12 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
         fundSourceInvestorId.value,
       );
     }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
+    if (sellUnit.present) {
+      map['sell_unit'] = Variable<String>(sellUnit.value);
+    }
     if (isRentable.present) {
       map['is_rentable'] = Variable<bool>(isRentable.value);
     }
@@ -1750,6 +2347,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
           ..write('qty: $qty, ')
           ..write('fundSourceType: $fundSourceType, ')
           ..write('fundSourceInvestorId: $fundSourceInvestorId, ')
+          ..write('unit: $unit, ')
+          ..write('sellUnit: $sellUnit, ')
           ..write('isRentable: $isRentable, ')
           ..write('barcode: $barcode, ')
           ..write('sku: $sku, ')
@@ -17530,6 +18129,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $ShopsTable shops = $ShopsTable(this);
   late final $CategoriesTable categories = $CategoriesTable(this);
+  late final $UnitsTable units = $UnitsTable(this);
   late final $AppSettingsTable appSettings = $AppSettingsTable(this);
   late final $ProductsTable products = $ProductsTable(this);
   late final $ProductImagesTable productImages = $ProductImagesTable(this);
@@ -17588,6 +18188,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this as AppDatabase,
   );
   late final CategoryDao categoryDao = CategoryDao(this as AppDatabase);
+  late final UnitDao unitDao = UnitDao(this as AppDatabase);
   late final LedgerDao ledgerDao = LedgerDao(this as AppDatabase);
   late final SaleDao saleDao = SaleDao(this as AppDatabase);
   late final DueDao dueDao = DueDao(this as AppDatabase);
@@ -17609,6 +18210,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     shops,
     categories,
+    units,
     appSettings,
     products,
     productImages,
@@ -17688,6 +18290,25 @@ final class $$ShopsTableReferences
     ).filter((f) => f.shopId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_categoriesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$UnitsTable, List<UnitRow>> _unitsRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.units,
+    aliasName: 'shops__id__units__shop_id',
+  );
+
+  $$UnitsTableProcessedTableManager get unitsRefs {
+    final manager = $$UnitsTableTableManager(
+      $_db,
+      $_db.units,
+    ).filter((f) => f.shopId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_unitsRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -18060,6 +18681,31 @@ class $$ShopsTableFilterComposer extends Composer<_$AppDatabase, $ShopsTable> {
           }) => $$CategoriesTableFilterComposer(
             $db: $db,
             $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> unitsRefs(
+    Expression<bool> Function($$UnitsTableFilterComposer f) f,
+  ) {
+    final $$UnitsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.units,
+      getReferencedColumn: (t) => t.shopId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UnitsTableFilterComposer(
+            $db: $db,
+            $table: $db.units,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -18563,6 +19209,31 @@ class $$ShopsTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> unitsRefs<T extends Object>(
+    Expression<T> Function($$UnitsTableAnnotationComposer a) f,
+  ) {
+    final $$UnitsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.units,
+      getReferencedColumn: (t) => t.shopId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UnitsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.units,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<T> productsRefs<T extends Object>(
     Expression<T> Function($$ProductsTableAnnotationComposer a) f,
   ) {
@@ -19007,6 +19678,7 @@ class $$ShopsTableTableManager
           ShopRow,
           PrefetchHooks Function({
             bool categoriesRefs,
+            bool unitsRefs,
             bool productsRefs,
             bool customersRefs,
             bool investorsRefs,
@@ -19070,6 +19742,7 @@ class $$ShopsTableTableManager
           prefetchHooksCallback:
               ({
                 categoriesRefs = false,
+                unitsRefs = false,
                 productsRefs = false,
                 customersRefs = false,
                 investorsRefs = false,
@@ -19092,6 +19765,7 @@ class $$ShopsTableTableManager
                   db: db,
                   explicitlyWatchedTables: [
                     if (categoriesRefs) db.categories,
+                    if (unitsRefs) db.units,
                     if (productsRefs) db.products,
                     if (customersRefs) db.customers,
                     if (investorsRefs) db.investors,
@@ -19128,6 +19802,23 @@ class $$ShopsTableTableManager
                                 table,
                                 p0,
                               ).categoriesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.shopId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (unitsRefs)
+                        await $_getPrefetchedData<
+                          ShopRow,
+                          $ShopsTable,
+                          UnitRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ShopsTableReferences
+                              ._unitsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ShopsTableReferences(db, table, p0).unitsRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
                                 (e) => e.shopId == item.id,
@@ -19497,6 +20188,7 @@ typedef $$ShopsTableProcessedTableManager =
       ShopRow,
       PrefetchHooks Function({
         bool categoriesRefs,
+        bool unitsRefs,
         bool productsRefs,
         bool customersRefs,
         bool investorsRefs,
@@ -19814,6 +20506,377 @@ typedef $$CategoriesTableProcessedTableManager =
       CategoryRow,
       PrefetchHooks Function({bool shopId})
     >;
+typedef $$UnitsTableCreateCompanionBuilder =
+    UnitsCompanion Function({
+      required String id,
+      required String shopId,
+      required String name,
+      Value<int> sortOrder,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      required DateTime syncedAt,
+      Value<int> rowid,
+    });
+typedef $$UnitsTableUpdateCompanionBuilder =
+    UnitsCompanion Function({
+      Value<String> id,
+      Value<String> shopId,
+      Value<String> name,
+      Value<int> sortOrder,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<DateTime> syncedAt,
+      Value<int> rowid,
+    });
+
+final class $$UnitsTableReferences
+    extends BaseReferences<_$AppDatabase, $UnitsTable, UnitRow> {
+  $$UnitsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $ShopsTable _shopIdTable(_$AppDatabase db) =>
+      db.shops.createAlias('units__shop_id__shops__id');
+
+  $$ShopsTableProcessedTableManager get shopId {
+    final $_column = $_itemColumn<String>('shop_id')!;
+
+    final manager = $$ShopsTableTableManager(
+      $_db,
+      $_db.shops,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_shopIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$UnitsTableFilterComposer extends Composer<_$AppDatabase, $UnitsTable> {
+  $$UnitsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ShopsTableFilterComposer get shopId {
+    final $$ShopsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.shopId,
+      referencedTable: $db.shops,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShopsTableFilterComposer(
+            $db: $db,
+            $table: $db.shops,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UnitsTableOrderingComposer
+    extends Composer<_$AppDatabase, $UnitsTable> {
+  $$UnitsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ShopsTableOrderingComposer get shopId {
+    final $$ShopsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.shopId,
+      referencedTable: $db.shops,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShopsTableOrderingComposer(
+            $db: $db,
+            $table: $db.shops,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UnitsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UnitsTable> {
+  $$UnitsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+
+  $$ShopsTableAnnotationComposer get shopId {
+    final $$ShopsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.shopId,
+      referencedTable: $db.shops,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShopsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.shops,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UnitsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $UnitsTable,
+          UnitRow,
+          $$UnitsTableFilterComposer,
+          $$UnitsTableOrderingComposer,
+          $$UnitsTableAnnotationComposer,
+          $$UnitsTableCreateCompanionBuilder,
+          $$UnitsTableUpdateCompanionBuilder,
+          (UnitRow, $$UnitsTableReferences),
+          UnitRow,
+          PrefetchHooks Function({bool shopId})
+        > {
+  $$UnitsTableTableManager(_$AppDatabase db, $UnitsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UnitsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UnitsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$UnitsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> shopId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<DateTime> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UnitsCompanion(
+                id: id,
+                shopId: shopId,
+                name: name,
+                sortOrder: sortOrder,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String shopId,
+                required String name,
+                Value<int> sortOrder = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                required DateTime syncedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => UnitsCompanion.insert(
+                id: id,
+                shopId: shopId,
+                name: name,
+                sortOrder: sortOrder,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) =>
+                    (e.readTable(table), $$UnitsTableReferences(db, table, e)),
+              )
+              .toList(),
+          prefetchHooksCallback: ({shopId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (shopId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.shopId,
+                                referencedTable: $$UnitsTableReferences
+                                    ._shopIdTable(db),
+                                referencedColumn: $$UnitsTableReferences
+                                    ._shopIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$UnitsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $UnitsTable,
+      UnitRow,
+      $$UnitsTableFilterComposer,
+      $$UnitsTableOrderingComposer,
+      $$UnitsTableAnnotationComposer,
+      $$UnitsTableCreateCompanionBuilder,
+      $$UnitsTableUpdateCompanionBuilder,
+      (UnitRow, $$UnitsTableReferences),
+      UnitRow,
+      PrefetchHooks Function({bool shopId})
+    >;
 typedef $$AppSettingsTableCreateCompanionBuilder =
     AppSettingsCompanion Function({
       required String key,
@@ -19964,6 +21027,8 @@ typedef $$ProductsTableCreateCompanionBuilder =
       Value<double> qty,
       required FundSourceType fundSourceType,
       Value<String?> fundSourceInvestorId,
+      Value<String> unit,
+      Value<String> sellUnit,
       Value<bool> isRentable,
       Value<String?> barcode,
       Value<String?> sku,
@@ -19985,6 +21050,8 @@ typedef $$ProductsTableUpdateCompanionBuilder =
       Value<double> qty,
       Value<FundSourceType> fundSourceType,
       Value<String?> fundSourceInvestorId,
+      Value<String> unit,
+      Value<String> sellUnit,
       Value<bool> isRentable,
       Value<String?> barcode,
       Value<String?> sku,
@@ -20176,6 +21243,16 @@ class $$ProductsTableFilterComposer
 
   ColumnFilters<String> get fundSourceInvestorId => $composableBuilder(
     column: $table.fundSourceInvestorId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sellUnit => $composableBuilder(
+    column: $table.sellUnit,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -20442,6 +21519,16 @@ class $$ProductsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sellUnit => $composableBuilder(
+    column: $table.sellUnit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isRentable => $composableBuilder(
     column: $table.isRentable,
     builder: (column) => ColumnOrderings(column),
@@ -20547,6 +21634,12 @@ class $$ProductsTableAnnotationComposer
     column: $table.fundSourceInvestorId,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<String> get sellUnit =>
+      $composableBuilder(column: $table.sellUnit, builder: (column) => column);
 
   GeneratedColumn<bool> get isRentable => $composableBuilder(
     column: $table.isRentable,
@@ -20793,6 +21886,8 @@ class $$ProductsTableTableManager
                 Value<double> qty = const Value.absent(),
                 Value<FundSourceType> fundSourceType = const Value.absent(),
                 Value<String?> fundSourceInvestorId = const Value.absent(),
+                Value<String> unit = const Value.absent(),
+                Value<String> sellUnit = const Value.absent(),
                 Value<bool> isRentable = const Value.absent(),
                 Value<String?> barcode = const Value.absent(),
                 Value<String?> sku = const Value.absent(),
@@ -20812,6 +21907,8 @@ class $$ProductsTableTableManager
                 qty: qty,
                 fundSourceType: fundSourceType,
                 fundSourceInvestorId: fundSourceInvestorId,
+                unit: unit,
+                sellUnit: sellUnit,
                 isRentable: isRentable,
                 barcode: barcode,
                 sku: sku,
@@ -20833,6 +21930,8 @@ class $$ProductsTableTableManager
                 Value<double> qty = const Value.absent(),
                 required FundSourceType fundSourceType,
                 Value<String?> fundSourceInvestorId = const Value.absent(),
+                Value<String> unit = const Value.absent(),
+                Value<String> sellUnit = const Value.absent(),
                 Value<bool> isRentable = const Value.absent(),
                 Value<String?> barcode = const Value.absent(),
                 Value<String?> sku = const Value.absent(),
@@ -20852,6 +21951,8 @@ class $$ProductsTableTableManager
                 qty: qty,
                 fundSourceType: fundSourceType,
                 fundSourceInvestorId: fundSourceInvestorId,
+                unit: unit,
+                sellUnit: sellUnit,
                 isRentable: isRentable,
                 barcode: barcode,
                 sku: sku,
@@ -33408,6 +34509,8 @@ class $AppDatabaseManager {
       $$ShopsTableTableManager(_db, _db.shops);
   $$CategoriesTableTableManager get categories =>
       $$CategoriesTableTableManager(_db, _db.categories);
+  $$UnitsTableTableManager get units =>
+      $$UnitsTableTableManager(_db, _db.units);
   $$AppSettingsTableTableManager get appSettings =>
       $$AppSettingsTableTableManager(_db, _db.appSettings);
   $$ProductsTableTableManager get products =>

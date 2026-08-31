@@ -5,13 +5,20 @@ import 'package:get/get.dart';
 
 import '../../../core/design/tokens.dart';
 import '../../../core/money/money.dart';
-import '../../../core/widgets/barcode_scanner_view.dart';
+import '../../../core/utils/calculator_evaluator.dart';
+import '../../../core/widgets/calculator_keypad.dart';
+import '../../../core/widgets/full_screen_image_viewer.dart';
+import '../../../core/widgets/safe_image.dart';
+import '../../../data/local/app_database.dart';
+import '../../../data/local/daos/unit_dao.dart';
+import '../../../data/local/default_shop.dart';
 import '../../../domain/entities/fund_source.dart';
 import '../../../domain/entities/investor.dart';
 import '../../../domain/entities/product.dart';
 import '../../../domain/services/pricing_engine.dart';
+import 'unit_management_sheet.dart';
 
-/// What [ProductFormSheet] hands back on save — [CatalogScreen] / [StockScreen] decides
+/// What [ProductFormSheet] hands back on save â€” [CatalogScreen] / [StockScreen] decides
 /// whether that means a create or an update, since only it knows whether
 /// [ProductFormSheet.existing] was passed.
 class ProductFormResult {
@@ -20,6 +27,8 @@ class ProductFormResult {
   final Money costPrice;
   final Money suggestedSellPrice;
   final FundSource fundSource;
+  final String unit;
+  final String sellUnit;
   final bool isRentable;
   final double initialQty;
   final String? barcode;
@@ -33,6 +42,8 @@ class ProductFormResult {
     required this.costPrice,
     required this.suggestedSellPrice,
     required this.fundSource,
+    this.unit = 'pcs',
+    this.sellUnit = 'pcs',
     required this.isRentable,
     this.initialQty = 0,
     this.barcode,
@@ -42,7 +53,7 @@ class ProductFormResult {
   });
 }
 
-/// Create/edit form for a single [Product]. Pure form state — validation
+/// Create/edit form for a single [Product]. Pure form state â€” validation
 /// and the actual create/update call both live in [CatalogController]/[StockController],
 /// this widget only ever returns a [ProductFormResult] via
 /// `Navigator.pop`.
@@ -50,11 +61,12 @@ class ProductFormSheet extends StatefulWidget {
   final Product? existing;
   final List<String> categories;
   final List<Investor> investors;
+  final List<String>? units;
   final Future<String?> Function(String name)? onCreateCategory;
   final Future<String?> Function()? onCapturePhoto;
   final String? existingPhotoPath;
 
-  /// Null hides the suggestion entirely — see `computeOverheadMarkupPercent`
+  /// Null hides the suggestion entirely â€” see `computeOverheadMarkupPercent`
   /// (`pricing_engine.dart`) for the exact conditions (the pricing
   /// engine's bootstrap period, or no usable revenue estimate yet).
   final double? overheadMarkupPercent;
@@ -63,6 +75,7 @@ class ProductFormSheet extends StatefulWidget {
     required this.categories,
     required this.investors,
     super.key,
+    this.units,
     this.onCreateCategory,
     this.existing,
     this.overheadMarkupPercent,
@@ -116,10 +129,31 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
   late String? _photoLocalPath = widget.existingPhotoPath;
   late bool _isRentable = widget.existing?.isRentable ?? false;
 
+  late String _buyUnit = widget.existing?.unit ?? 'pcs';
+  late String _sellUnit = widget.existing?.sellUnit ?? widget.existing?.unit ?? 'pcs';
+  late List<String> _availableUnits = widget.units != null && widget.units!.isNotEmpty
+      ? [...widget.units!]
+      : [...UnitDao.defaultUnitNames];
+
   @override
   void initState() {
     super.initState();
     _costController.addListener(_onCostChanged);
+    _loadUnits();
+  }
+
+  Future<void> _loadUnits() async {
+    try {
+      final db = Get.find<AppDatabase>();
+      final units = await db.unitDao.getAll(defaultShopId);
+      if (units.isNotEmpty && mounted) {
+        setState(() {
+          _availableUnits = units.map((u) => u.name).toList();
+          if (!_availableUnits.contains(_buyUnit)) _availableUnits.add(_buyUnit);
+          if (!_availableUnits.contains(_sellUnit)) _availableUnits.add(_sellUnit);
+        });
+      }
+    } catch (_) {}
   }
 
   void _onCostChanged() => setState(() {});
@@ -158,33 +192,65 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
     }
   }
 
-  Future<void> _capturePhoto() async {
-    final photoPath = await widget.onCapturePhoto?.call();
-    if (photoPath != null && mounted) {
-      setState(() => _photoLocalPath = photoPath);
-    }
-  }
-
-  Future<void> _scanBarcode() async {
-    final scanned = await showBarcodeScanner(context);
-    if (scanned != null && scanned.isNotEmpty && mounted) {
+  Future<void> _openUnitManagement({required bool forSellUnit}) async {
+    final initial = forSellUnit ? _sellUnit : _buyUnit;
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => UnitManagementSheet(initialSelectedUnit: initial),
+    );
+    await _loadUnits();
+    if (selected != null && selected.isNotEmpty && mounted) {
       setState(() {
-        _barcodeController.text = scanned;
+        if (forSellUnit) {
+          _sellUnit = selected;
+        } else {
+          final wasMatching = _sellUnit == _buyUnit;
+          _buyUnit = selected;
+          if (wasMatching) _sellUnit = selected;
+        }
+        if (!_availableUnits.contains(selected)) {
+          _availableUnits.add(selected);
+        }
       });
     }
   }
 
-  @override
-  void dispose() {
-    _costController.removeListener(_onCostChanged);
-    _nameController.dispose();
-    _costController.dispose();
-    _priceController.dispose();
-    _initialQtyController.dispose();
-    _barcodeController.dispose();
-    _skuController.dispose();
-    _pageCountController.dispose();
-    super.dispose();
+  String? _activeCalculatorField;
+
+  void _setActiveField(String? field) {
+    if (_activeCalculatorField != field) {
+      if (_activeCalculatorField != null) {
+        if (_activeCalculatorField == 'cost') finalizeCalculatorController(_costController);
+        if (_activeCalculatorField == 'price') finalizeCalculatorController(_priceController);
+        if (_activeCalculatorField == 'stock') finalizeCalculatorController(_initialQtyController);
+      }
+      setState(() => _activeCalculatorField = field);
+      if (field != null) {
+        FocusScope.of(context).unfocus();
+      }
+    }
+  }
+
+  void _onCalculatorKeyPress(String key) {
+    if (_activeCalculatorField == null) return;
+    setState(() {
+      if (_activeCalculatorField == 'cost') {
+        applyCalculatorKeyToController(_costController, key);
+      } else if (_activeCalculatorField == 'price') {
+        applyCalculatorKeyToController(_priceController, key);
+      } else if (_activeCalculatorField == 'stock') {
+        applyCalculatorKeyToController(_initialQtyController, key);
+      }
+    });
+  }
+
+  Future<void> _capturePhoto() async {
+    final captured = await widget.onCapturePhoto!();
+    if (captured != null && mounted) {
+      setState(() => _photoLocalPath = captured);
+    }
   }
 
   Money? get _suggestedSellPrice {
@@ -192,304 +258,449 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
     if (markup == null) return null;
     final cost = _parseMoneyOrNull(_costController.text);
     if (cost == null) return null;
-
-    final fundSource = _fundSourceValue == _shopFundValue
-        ? FundSource.shop()
-        : FundSource.investor(_fundSourceValue);
-
-    final investor = fundSource.isInvestor
-        ? widget.investors
-              .where((i) => i.id == fundSource.investorId)
-              .firstOrNull
-        : null;
-
+    final investor = widget.investors
+        .where((i) => i.id == _fundSourceValue)
+        .firstOrNull;
     return suggestSellPrice(
       costPrice: cost,
       overheadMarkupPercent: markup,
-      fundSource: fundSource,
+      fundSource: _fundSourceValue == _shopFundValue
+          ? FundSource.shop()
+          : FundSource.investor(_fundSourceValue),
       fundingInvestor: investor,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final keypadVisible = _activeCalculatorField != null;
+
+    // â”€â”€â”€ shared scrollable form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    final formContent = SingleChildScrollView(
       padding: EdgeInsets.only(
         left: AppSpacing.lg,
         right: AppSpacing.lg,
-        top: AppSpacing.lg,
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
+        top: AppSpacing.md,
+        bottom: keypadVisible ? AppSpacing.sm : AppSpacing.lg,
       ),
-      child: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                widget.existing == null ? 'addNewProduct'.tr : 'editProduct'.tr,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Drag handle
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: colorScheme.outlineVariant,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
                 ),
               ),
-              const SizedBox(height: AppSpacing.md),
+            ),
 
-              // Product Name
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: 'productName'.tr,
-                  prefixIcon: const Icon(Icons.inventory_2_outlined),
-                ),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'nameRequired'.tr : null,
-              ),
-              const SizedBox(height: AppSpacing.md),
-
-              // Photo capture
-              OutlinedButton.icon(
-                onPressed: widget.onCapturePhoto == null ? null : _capturePhoto,
-                icon: const Icon(Icons.add_a_photo_outlined),
-                label: Text(
-                  _photoLocalPath == null
-                      ? 'Add product photo'
-                      : 'Change product photo',
-                ),
-              ),
-              if (_photoLocalPath case final photoPath?) ...[
-                const SizedBox(height: AppSpacing.sm),
-                Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                      child: Image.file(
-                        File(photoPath),
-                        height: 140,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => const SizedBox.shrink(),
-                      ),
-                    ),
-                    Positioned(
-                      top: 4,
-                      right: 4,
-                      child: CircleAvatar(
-                        backgroundColor: Colors.black54,
-                        radius: 16,
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          icon: const Icon(Icons.close, color: Colors.white, size: 18),
-                          onPressed: () => setState(() => _photoLocalPath = null),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-              const SizedBox(height: AppSpacing.md),
-
-              // Category dropdown
-              DropdownButtonFormField<String>(
-                initialValue: _category,
-                decoration: InputDecoration(
-                  labelText: 'category'.tr,
-                  prefixIcon: const Icon(Icons.category_outlined),
-                  suffixIcon: widget.onCreateCategory == null
-                      ? null
-                      : IconButton(
-                          tooltip: 'addCategory'.tr,
-                          icon: const Icon(Icons.add_circle_outline),
-                          onPressed: _createCategoryInline,
-                        ),
-                ),
-                items: [
-                  for (final c in _categories)
-                    DropdownMenuItem(value: c, child: Text(c)),
-                ],
-                onChanged: (v) => setState(() => _category = v),
-                validator: (v) => v == null ? 'nameRequired'.tr : null,
-              ),
-              const SizedBox(height: AppSpacing.md),
-
-              // Buy Price & Sell Price
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _costController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      decoration: InputDecoration(
-                        labelText: 'costLabel'.tr,
-                        prefixText: '৳ ',
-                      ),
-                      validator: _validateMoney,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _priceController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      decoration: InputDecoration(
-                        labelText: 'sellPriceLabel'.tr,
-                        prefixText: '৳ ',
-                      ),
-                      validator: _validateMoney,
-                    ),
-                  ),
-                ],
-              ),
-              if (_suggestedSellPrice case final suggestion?) ...[
-                const SizedBox(height: AppSpacing.xs),
-                InkWell(
-                  onTap: () => setState(
-                    () => _priceController.text = suggestion.format(
-                      showSymbol: false,
-                    ),
-                  ),
+            // Title bar
+            Row(
+              children: [
+                Expanded(
                   child: Text(
-                    '${'suggestedSellPriceLabel'.tr}${suggestion.format()} '
-                    '· ${'tapToUse'.tr}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w600,
+                    widget.existing == null ? 'newProduct'.tr : 'editProduct'.tr,
+                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            // Product Name
+            TextFormField(
+              controller: _nameController,
+              onTap: () => _setActiveField(null),
+              decoration: InputDecoration(
+                labelText: 'productName'.tr,
+                prefixIcon: const Icon(Icons.inventory_2_outlined),
+              ),
+              validator: (v) =>
+                  v == null || v.trim().isEmpty ? 'nameRequired'.tr : null,
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            // Photo
+            OutlinedButton.icon(
+              onPressed: widget.onCapturePhoto == null ? null : _capturePhoto,
+              icon: const Icon(Icons.add_a_photo_outlined),
+              label: Text(_photoLocalPath == null ? 'Add product photo' : 'Change product photo'),
+            ),
+            if (_photoLocalPath case final photoPath?) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Stack(
+                children: [
+                  GestureDetector(
+                    onTap: () => showFullScreenImageViewer(
+                      context,
+                      imagePath: photoPath,
+                      title: _nameController.text.trim().isNotEmpty
+                          ? _nameController.text.trim()
+                          : 'Product Photo',
                     ),
+                    child: Stack(
+                      alignment: Alignment.bottomRight,
+                      children: [
+                        SafeImage(
+                          source: photoPath,
+                          height: 140,
+                          width: double.infinity,
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          fallbackIcon: Icons.broken_image_outlined,
+                        ),
+                        Container(
+                          margin: const EdgeInsets.all(6),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.6),
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.zoom_in, color: Colors.white, size: 12),
+                              const SizedBox(width: 4),
+                              Text('tapToZoom'.tr, style: const TextStyle(color: Colors.white, fontSize: 10)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: CircleAvatar(
+                      backgroundColor: Colors.black54,
+                      radius: 16,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.close, color: Colors.white, size: 18),
+                        onPressed: () => setState(() => _photoLocalPath = null),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: AppSpacing.md),
+
+            // Category & Investor
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    initialValue: _category,
+                    decoration: InputDecoration(
+                      labelText: 'category'.tr,
+                      prefixIcon: const Icon(Icons.category_outlined, size: 20),
+                      suffixIcon: widget.onCreateCategory == null
+                          ? null
+                          : IconButton(
+                              tooltip: 'addCategory'.tr,
+                              icon: const Icon(Icons.add_circle_outline, size: 18),
+                              onPressed: _createCategoryInline,
+                            ),
+                    ),
+                    items: [
+                      for (final c in _categories)
+                        DropdownMenuItem(value: c, child: Text(c, overflow: TextOverflow.ellipsis)),
+                    ],
+                    onChanged: (v) {
+                      setState(() => _category = v);
+                      _setActiveField(null);
+                    },
+                    validator: (v) => v == null ? 'nameRequired'.tr : null,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    initialValue: _fundSourceValue,
+                    decoration: InputDecoration(
+                      labelText: 'investor'.tr,
+                      prefixIcon: const Icon(Icons.account_balance_outlined, size: 20),
+                    ),
+                    items: [
+                      DropdownMenuItem(
+                        value: _shopFundValue,
+                        child: Text('shop'.tr, overflow: TextOverflow.ellipsis),
+                      ),
+                      for (final investor in widget.investors)
+                        DropdownMenuItem(
+                          value: investor.id,
+                          child: Text(investor.name, overflow: TextOverflow.ellipsis),
+                        ),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() => _fundSourceValue = value);
+                        _setActiveField(null);
+                      }
+                    },
                   ),
                 ),
               ],
-              const SizedBox(height: AppSpacing.md),
+            ),
+            const SizedBox(height: AppSpacing.md),
 
-              // Stock Quantity (for both new creation & edit mode)
-              TextFormField(
-                controller: _initialQtyController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
+            // Buy Unit & Sell Unit
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _availableUnits.contains(_buyUnit) ? _buyUnit : null,
+                    decoration: InputDecoration(
+                      labelText: 'buyUnit'.tr,
+                      prefixIcon: const Icon(Icons.shopping_bag_outlined, size: 20),
+                      suffixIcon: IconButton(
+                        tooltip: 'manageUnits'.tr,
+                        icon: const Icon(Icons.add_circle_outline, size: 18),
+                        onPressed: () => _openUnitManagement(forSellUnit: false),
+                      ),
+                    ),
+                    items: [
+                      for (final u in _availableUnits)
+                        DropdownMenuItem(value: u, child: Text(u)),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) {
+                        setState(() {
+                          final wasMatching = _sellUnit == _buyUnit;
+                          _buyUnit = v;
+                          if (wasMatching) _sellUnit = v;
+                        });
+                      }
+                    },
+                  ),
                 ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _availableUnits.contains(_sellUnit) ? _sellUnit : null,
+                    decoration: InputDecoration(
+                      labelText: 'sellUnit'.tr,
+                      prefixIcon: const Icon(Icons.point_of_sale_outlined, size: 20),
+                      suffixIcon: IconButton(
+                        tooltip: 'manageUnits'.tr,
+                        icon: const Icon(Icons.add_circle_outline, size: 18),
+                        onPressed: () => _openUnitManagement(forSellUnit: true),
+                      ),
+                    ),
+                    items: [
+                      for (final u in _availableUnits)
+                        DropdownMenuItem(value: u, child: Text(u)),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) setState(() => _sellUnit = v);
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            // Cost & Sell Price â€” tap activates in-place keypad
+            Row(
+              children: [
+                Expanded(
+                  child: CalculatorFieldCard(
+                    label: '${'costLabel'.tr} ($_buyUnit)',
+                    value: _costController.text,
+                    isSelected: _activeCalculatorField == 'cost',
+                    onTap: () => _setActiveField('cost'),
+                    prefixText: 'à§³ ',
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: CalculatorFieldCard(
+                    label: '${'sellPriceLabel'.tr} ($_sellUnit)',
+                    value: _priceController.text,
+                    isSelected: _activeCalculatorField == 'price',
+                    onTap: () => _setActiveField('price'),
+                    prefixText: 'à§³ ',
+                  ),
+                ),
+              ],
+            ),
+            if (_suggestedSellPrice case final suggestion?) ...[
+              const SizedBox(height: AppSpacing.xs),
+              InkWell(
+                onTap: () {
+                  setState(() => _priceController.text = suggestion.format(showSymbol: false));
+                  _setActiveField('price');
+                },
+                child: Text(
+                  '${'suggestedSellPriceLabel'.tr}${suggestion.format()} / $_sellUnit Â· ${'tapToUse'.tr}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.md),
+
+            // Stock â€” tap activates in-place keypad
+            CalculatorFieldCard(
+              label: '${widget.existing == null ? 'initialStock'.tr : 'currentStock'.tr} ($_sellUnit)',
+              value: _initialQtyController.text,
+              isSelected: _activeCalculatorField == 'stock',
+              onTap: () => _setActiveField('stock'),
+              prefixText: '',
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            // Rentable
+            SwitchListTile(
+              title: Text('rentable'.tr),
+              subtitle: Text('allowRentProduct'.tr),
+              value: _isRentable,
+              onChanged: (value) => setState(() => _isRentable = value),
+            ),
+
+            if (_isRentable) ...[
+              const SizedBox(height: AppSpacing.sm),
+              TextFormField(
+                controller: _pageCountController,
+                keyboardType: TextInputType.number,
+                onTap: () => _setActiveField(null),
                 decoration: InputDecoration(
-                  labelText: widget.existing == null
-                      ? 'initialStock'.tr
-                      : 'currentStock'.tr,
-                  prefixIcon: const Icon(Icons.inventory_2_outlined),
-                  suffixText: 'unitPcs'.tr,
-                  helperText: widget.existing == null
-                      ? 'initialStockHelper'.tr
-                      : 'editStockHelper'.tr,
+                  labelText: 'pageCount'.tr,
+                  prefixIcon: const Icon(Icons.menu_book),
+                  helperText: 'pageCountHelper'.tr,
                 ),
                 validator: (v) {
+                  if (!_isRentable) return null;
                   if (v == null || v.trim().isEmpty) return null;
-                  final parsed = double.tryParse(v);
-                  if (parsed == null || parsed < 0) return 'invalidQty'.tr;
+                  final count = int.tryParse(v);
+                  if (count == null || count <= 0) return 'invalidQty'.tr;
                   return null;
                 },
               ),
               const SizedBox(height: AppSpacing.md),
+            ],
 
-              // Fund Source (Shop vs Investor)
-              DropdownButtonFormField<String>(
-                initialValue: _fundSourceValue,
-                decoration: InputDecoration(
-                  labelText: 'fundSource'.tr,
-                  prefixIcon: const Icon(Icons.account_balance_outlined),
-                ),
-                items: [
-                  DropdownMenuItem(
-                    value: _shopFundValue,
-                    child: Text('shop'.tr),
-                  ),
-                  for (final investor in widget.investors)
-                    DropdownMenuItem(
-                      value: investor.id,
-                      child: Text(investor.name),
-                    ),
-                ],
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() => _fundSourceValue = value);
-                  }
-                },
-              ),
+            // Save button â€” shown only when keypad is NOT visible
+            if (!keypadVisible) ...[
               const SizedBox(height: AppSpacing.md),
-
-              // Barcode with Scanner
-              TextFormField(
-                controller: _barcodeController,
-                decoration: InputDecoration(
-                  labelText: 'barcode'.tr,
-                  prefixIcon: const Icon(Icons.qr_code),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.qr_code_scanner),
-                    tooltip: 'scanBarcode'.tr,
-                    onPressed: _scanBarcode,
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-
-              // SKU
-              TextFormField(
-                controller: _skuController,
-                decoration: InputDecoration(
-                  labelText: 'sku'.tr,
-                  prefixIcon: const Icon(Icons.tag),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-
-              // Rentable Toggle
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text('rentable'.tr),
-                subtitle: const Text('Allow this product to be rented'),
-                value: _isRentable,
-                onChanged: (v) => setState(() => _isRentable = v),
-              ),
-              if (_isRentable) ...[
-                TextFormField(
-                  controller: _pageCountController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: 'pageCount'.tr,
-                    helperText: 'For books / rental tier calculations',
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-              ],
-
-              const SizedBox(height: AppSpacing.lg),
               FilledButton(
                 onPressed: _submit,
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 child: Text('save'.tr, style: const TextStyle(fontSize: 16)),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+
+    // ————————————————————————————————————————————————————————————————
+    // Keypad visible  → fix sheet height to 92%
+    // Keypad hidden   → hug content naturally (≤ 92% screen height).
+    final sheetDecoration = BoxDecoration(
+      color: colorScheme.surface,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+    );
+
+    if (keypadVisible) {
+      return SizedBox(
+        height: screenHeight * 0.92,
+        child: Container(
+          decoration: sheetDecoration,
+          child: SafeArea(
+            top: false,
+            child: Column(
+              children: [
+                // Tap anywhere on the scrollable form to dismiss the keypad
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => _setActiveField(null),
+                    behavior: HitTestBehavior.translucent,
+                    child: formContent,
+                  ),
+                ),
+
+                // Live expression / Confirm bar
+                InPlaceCalculatorBar(
+                  label: _activeCalculatorField == 'cost'
+                      ? '${'costLabel'.tr} ($_buyUnit)'
+                      : (_activeCalculatorField == 'price'
+                          ? '${'sellPriceLabel'.tr} ($_sellUnit)'
+                          : '${'stockLabel'.tr} ($_sellUnit)'),
+                  currentText: _activeCalculatorField == 'cost'
+                      ? _costController.text
+                      : (_activeCalculatorField == 'price'
+                          ? _priceController.text
+                          : _initialQtyController.text),
+                  prefixText: _activeCalculatorField == 'stock' ? '' : '৳ ',
+                  onDone: () => _setActiveField(null),
+                ),
+
+                // 5-row keypad — no Save button here.
+                // User taps Confirm bar or anywhere outside to dismiss,
+                // then uses the regular Save button shown below the form.
+                CalculatorKeypad(onKeyPress: _onCalculatorKeyPress),
+              ],
+            ),
           ),
         ),
+      );
+    }
+
+    // No keypad â€” hug content height
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: screenHeight * 0.92),
+      child: Container(
+        decoration: sheetDecoration,
+        child: SafeArea(top: false, child: formContent),
       ),
     );
   }
 
-  String? _validateMoney(String? value) {
-    if (value == null || value.trim().isEmpty) return 'nameRequired'.tr;
+  Money? _parseMoneyOrNull(String text) {
+    if (text.trim().isEmpty) return null;
     try {
-      Money.parse(value);
+      final evaluated = CalculatorEvaluator.evaluate(text) ??
+          CalculatorEvaluator.evaluatePreview(text);
+      if (evaluated != null) {
+        return Money.parse(CalculatorEvaluator.formatResult(evaluated));
+      }
+      return Money.parse(text);
+    } catch (_) {
       return null;
-    } on MoneyException {
-      return 'invalidQty'.tr;
     }
   }
 
   void _submit() {
+    finalizeCalculatorController(_costController);
+    finalizeCalculatorController(_priceController);
+    finalizeCalculatorController(_initialQtyController);
+
     if (!_formKey.currentState!.validate()) return;
+
+    final cost = _parseMoneyOrNull(_costController.text) ?? Money.zero();
+    final price = _parseMoneyOrNull(_priceController.text) ?? Money.zero();
     final initialQty = double.tryParse(_initialQtyController.text) ??
         (widget.existing?.qty ?? 0.0);
     final pageCount = int.tryParse(_pageCountController.text);
@@ -498,11 +709,13 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
       ProductFormResult(
         name: _nameController.text,
         category: _category!,
-        costPrice: Money.parse(_costController.text),
-        suggestedSellPrice: Money.parse(_priceController.text),
+        costPrice: cost,
+        suggestedSellPrice: price,
         fundSource: _fundSourceValue == _shopFundValue
             ? FundSource.shop()
             : FundSource.investor(_fundSourceValue),
+        unit: _buyUnit,
+        sellUnit: _sellUnit,
         isRentable: _isRentable,
         initialQty: initialQty,
         barcode: _barcodeController.text.trim().isEmpty
@@ -515,14 +728,5 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
         photoLocalPath: _photoLocalPath,
       ),
     );
-  }
-}
-
-Money? _parseMoneyOrNull(String text) {
-  if (text.trim().isEmpty) return null;
-  try {
-    return Money.parse(text);
-  } on MoneyException {
-    return null;
   }
 }

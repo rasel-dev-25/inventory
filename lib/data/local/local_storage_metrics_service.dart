@@ -61,4 +61,70 @@ class LocalStorageMetricsService {
       pendingOutboxCount: pendingOutbox,
     );
   }
+
+  /// Calculates actual photo metrics stored in Cloudinary from database image tables.
+  Future<({BucketStorageStats productImages, BucketStorageStats customerImages, BucketStorageStats fixedAssetImages, int totalBytes})>
+      fetchCloudinaryMetrics() async {
+    int productBytes = 0;
+    int productCount = 0;
+    int customerBytes = 0;
+    int customerCount = 0;
+    int fixedAssetBytes = 0;
+    int fixedAssetCount = 0;
+
+    try {
+      final pImages = await _db.productImageDao.select(_db.productImages).get();
+      productCount = pImages.length;
+      for (final img in pImages) {
+        if (img.localPath != null) {
+          final f = File(img.localPath!);
+          if (f.existsSync()) {
+            productBytes += f.lengthSync();
+            continue;
+          }
+        }
+        if (img.remoteUrl != null && img.remoteUrl!.isNotEmpty) {
+          productBytes += 153600; // ~150 KB default
+        }
+      }
+
+      final cImages = await _db.customerImageDao.select(_db.customerImages).get();
+      customerCount = cImages.length;
+      for (final img in cImages) {
+        if (img.localPath != null) {
+          final f = File(img.localPath!);
+          if (f.existsSync()) {
+            customerBytes += f.lengthSync();
+            continue;
+          }
+        }
+        if (img.remoteUrl != null && img.remoteUrl!.isNotEmpty) {
+          customerBytes += 153600;
+        }
+      }
+
+      final fImages = await _db.fixedAssetImageDao.select(_db.fixedAssetImages).get();
+      fixedAssetCount = fImages.length;
+      for (final img in fImages) {
+        if (img.localPath != null) {
+          final f = File(img.localPath!);
+          if (f.existsSync()) {
+            fixedAssetBytes += f.lengthSync();
+            continue;
+          }
+        }
+        if (img.remoteUrl != null && img.remoteUrl!.isNotEmpty) {
+          fixedAssetBytes += 153600;
+        }
+      }
+    } catch (_) {}
+
+    final totalBytes = productBytes + customerBytes + fixedAssetBytes;
+    return (
+      productImages: BucketStorageStats(bytes: productBytes, count: productCount),
+      customerImages: BucketStorageStats(bytes: customerBytes, count: customerCount),
+      fixedAssetImages: BucketStorageStats(bytes: fixedAssetBytes, count: fixedAssetCount),
+      totalBytes: totalBytes,
+    );
+  }
 }

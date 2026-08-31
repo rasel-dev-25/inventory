@@ -99,6 +99,17 @@ class _FakeLocalMetricsService implements LocalStorageMetricsService {
   Future<LocalDeviceStorageStats> fetchLocalMetrics() async {
     return nextResult;
   }
+
+  @override
+  Future<({BucketStorageStats productImages, BucketStorageStats customerImages, BucketStorageStats fixedAssetImages, int totalBytes})>
+      fetchCloudinaryMetrics() async {
+    return (
+      productImages: const BucketStorageStats(count: 1, bytes: 1024),
+      customerImages: const BucketStorageStats(count: 0, bytes: 0),
+      fixedAssetImages: const BucketStorageStats(count: 0, bytes: 0),
+      totalBytes: 1024,
+    );
+  }
 }
 
 void main() {
@@ -145,10 +156,10 @@ void main() {
     expect(usage.local.databaseSizeBytes, 2097152);
     expect(usage.local.pendingOutboxCount, 2);
 
-    expect(controller.usedPercentage, closeTo(4.88, 0.05));
+    expect(controller.usedPercentage, closeTo(0.195, 0.01));
     expect(controller.formattedCloudUsed, '50.0 MB');
-    expect(controller.formattedCloudQuota, '1.0 GB');
-    expect(controller.formattedCloudRemaining, '974.0 MB');
+    expect(controller.formattedCloudQuota, '25.0 GB');
+    expect(controller.formattedCloudRemaining, '25.0 GB');
   });
 
   test('handles remote failure gracefully without crashing', () async {

@@ -44,8 +44,9 @@ class SyncPushService {
 
       final localUpserts = OutboxEvent.decodePayload(entry.payloadJson);
       final remoteUpserts = localUpserts.map((u) {
+        final sanitizedRow = _sanitizeUuidFields(u.row);
         final withRemoteShopId = ShopIdBridge.toRemote(
-          u.row,
+          sanitizedRow,
           localKey: 'shop_id',
           remoteShopId: remoteShopId,
         );
@@ -82,5 +83,18 @@ class SyncPushService {
     }
 
     return SyncPushSummary(succeeded: succeeded, failed: failed);
+  }
+
+  static Map<String, Object?> _sanitizeUuidFields(Map<String, Object?> row) {
+    final sanitized = <String, Object?>{};
+    for (final entry in row.entries) {
+      final val = entry.value;
+      if (val is String && val.startsWith('sm-')) {
+        sanitized[entry.key] = val.substring(3);
+      } else {
+        sanitized[entry.key] = val;
+      }
+    }
+    return sanitized;
   }
 }

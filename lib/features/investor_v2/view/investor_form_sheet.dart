@@ -1,22 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/design/tokens.dart';
 import '../../../core/money/money.dart';
+import '../../../core/widgets/calculator_keypad.dart';
 import '../../../domain/entities/enums.dart';
 import '../../../domain/entities/investor.dart';
 
-/// What [InvestorFormSheet] hands back on save — `InvestorScreen` decides
-/// whether that means a create or an update, since only it knows whether
-/// [InvestorFormSheet.existing] was passed. Same split of responsibility
-/// as `ProductFormSheet`/`CustomerFormSheet`.
-///
-/// [legacySettlement] is only ever non-null on a *create* result (see
-/// `InvestorFormSheet`'s "has an old ledger-book account?" toggle, which
-/// this form only shows when [InvestorFormSheet.existing] is null) —
-/// `InvestorScreen` creates the investor first, then, only if this is
-/// set, creates the matching [LegacySettlement] against the new
-/// investor's id.
+/// What [InvestorFormSheet] hands back on save.
 class InvestorFormResult {
   final String name;
   final String? contact;
@@ -24,6 +16,7 @@ class InvestorFormResult {
   final double profitSharePercent;
   final int? capitalReturnTermDays;
   final ProfitPayoutCycle profitPayoutCycle;
+  final Money initialCashInvestment;
   final String? notes;
   final LegacySettlementFormResult? legacySettlement;
 
@@ -32,6 +25,7 @@ class InvestorFormResult {
     required this.investmentType,
     required this.profitSharePercent,
     required this.profitPayoutCycle,
+    this.initialCashInvestment = Money.zeroBdt,
     this.contact,
     this.capitalReturnTermDays,
     this.notes,
@@ -40,9 +34,7 @@ class InvestorFormResult {
 }
 
 /// The one-time §৬ fields, filled in only when the "has an old ledger-book
-/// account?" toggle is on. [netSettlementAmount] is deliberately absent
-/// here — `LegacySettlementUseCases.create` always computes it itself
-/// from these two amounts, never trusts a UI-computed value.
+/// account?" toggle is on.
 class LegacySettlementFormResult {
   final Money totalHistoricalInvestment;
   final Money totalAlreadyReturned;
@@ -57,10 +49,7 @@ class LegacySettlementFormResult {
   });
 }
 
-/// Create/edit form for a single [Investor]. Pure form state — validation
-/// and the actual create/update call both live in `InvestorController`,
-/// this widget only ever returns an [InvestorFormResult] via
-/// `Navigator.pop`.
+/// Create/edit form for a single [Investor].
 class InvestorFormSheet extends StatefulWidget {
   final Investor? existing;
   final bool includeLegacySettlement;
@@ -83,24 +72,27 @@ class _InvestorFormSheetState extends State<InvestorFormSheet> {
   late final _contactController = TextEditingController(
     text: widget.existing?.contact,
   );
+  late final _cashInvestmentController = TextEditingController(
+    text: widget.existing == null || widget.existing!.initialCashInvestment.isZero
+        ? ''
+        : widget.existing!.initialCashInvestment.format(showSymbol: false),
+  );
   late final _profitShareController = TextEditingController(
     text: widget.existing?.profitSharePercent.toString() ?? '0',
-  );
-  late final _termDaysController = TextEditingController(
-    text: widget.existing?.capitalReturnTermDays?.toString(),
   );
   late final _notesController = TextEditingController(
     text: widget.existing?.notes,
   );
+
+  int? _selectedTermDays;
+  late final _termDaysController = TextEditingController();
+
   late InvestmentType _investmentType =
       widget.existing?.investmentType ?? InvestmentType.cashMudaraba;
   late ProfitPayoutCycle _profitPayoutCycle =
       widget.existing?.profitPayoutCycle ?? ProfitPayoutCycle.monthly;
 
-  // ── business_logic.md §৬ — only ever shown/used when creating a brand
-  // new investor (see the `if (widget.existing == null)` guard in build()
-  // below); an already-existing investor already went through this
-  // decision once, at their own creation time.
+  // ── Legacy Settlement (Old Ledger) State ──────────────────────────────────
   bool _hasLegacySettlement = false;
   final _legacyTotalController = TextEditingController();
   final _legacyReturnedController = TextEditingController(text: '0');
@@ -108,9 +100,27 @@ class _InvestorFormSheetState extends State<InvestorFormSheet> {
   DateTime _legacySettlementDate = DateTime.now();
 
   @override
+  void initState() {
+    super.initState();
+    _selectedTermDays = widget.existing?.capitalReturnTermDays;
+    _updateTermDaysText();
+  }
+
+  void _updateTermDaysText() {
+    if (_selectedTermDays != null && _selectedTermDays! > 0) {
+      final targetDate = DateTime.now().add(Duration(days: _selectedTermDays!));
+      _termDaysController.text =
+          '${DateFormat('dd MMM yyyy').format(targetDate)} ($_selectedTermDays ${'daysLater'.tr})';
+    } else {
+      _termDaysController.text = '';
+    }
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _contactController.dispose();
+    _cashInvestmentController.dispose();
     _profitShareController.dispose();
     _termDaysController.dispose();
     _notesController.dispose();
@@ -122,179 +132,408 @@ class _InvestorFormSheetState extends State<InvestorFormSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: AppSpacing.lg,
-        right: AppSpacing.lg,
-        top: AppSpacing.lg,
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
-      ),
-      child: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                widget.existing == null ? 'addInvestor'.tr : 'editInvestor'.tr,
-                style: Theme.of(context).textTheme.titleLarge,
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    final sheetDecoration = BoxDecoration(
+      color: colorScheme.surface,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.15),
+          blurRadius: 16,
+          offset: const Offset(0, -4),
+        ),
+      ],
+    );
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: screenHeight * 0.92),
+      child: Container(
+        decoration: sheetDecoration,
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(
+                left: AppSpacing.lg,
+                right: AppSpacing.lg,
+                top: AppSpacing.md,
+                bottom: AppSpacing.lg,
               ),
-              const SizedBox(height: AppSpacing.lg),
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(labelText: 'investorName'.tr),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'nameRequired'.tr : null,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextFormField(
-                controller: _contactController,
-                keyboardType: TextInputType.phone,
-                decoration: InputDecoration(labelText: 'phone'.tr),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              DropdownButtonFormField<InvestmentType>(
-                initialValue: _investmentType,
-                decoration: InputDecoration(labelText: 'investmentType'.tr),
-                items: [
-                  DropdownMenuItem(
-                    value: InvestmentType.cashLoan,
-                    child: Text('cashLoan'.tr),
-                  ),
-                  DropdownMenuItem(
-                    value: InvestmentType.cashMudaraba,
-                    child: Text('mudaraba'.tr),
-                  ),
-                  DropdownMenuItem(
-                    value: InvestmentType.cashMusharaka,
-                    child: Text('musharaka'.tr),
-                  ),
-                  DropdownMenuItem(
-                    value: InvestmentType.goodsInKind,
-                    child: Text('productConsignment'.tr),
-                  ),
-                ],
-                onChanged: (v) => setState(() => _investmentType = v!),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              if (_investmentType != InvestmentType.cashLoan)
-                TextFormField(
-                  controller: _profitShareController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: InputDecoration(labelText: 'profitShare'.tr),
-                  validator: (v) =>
-                      double.tryParse(v ?? '') == null ? 'invalidQty'.tr : null,
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // ── Drag Handle ──────────────────────────────────────────
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: colorScheme.outlineVariant,
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                        ),
+                      ),
+                    ),
+
+                    // ── Title Bar ────────────────────────────────────────────
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            widget.existing == null ? 'addInvestor'.tr : 'editInvestor'.tr,
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+
+                    // ── Investor Name ────────────────────────────────────────
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: InputDecoration(
+                        labelText: '${'investorName'.tr} *',
+                        prefixIcon: const Icon(Icons.person_outline),
+                      ),
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty) ? 'nameRequired'.tr : null,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+
+                    // ── Phone / Contact ──────────────────────────────────────
+                    TextFormField(
+                      controller: _contactController,
+                      keyboardType: TextInputType.phone,
+                      decoration: InputDecoration(
+                        labelText: 'phone'.tr,
+                        prefixIcon: const Icon(Icons.phone_outlined),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+
+                    // ── Cash Investment Amount (মূলধন গ্রহণ) ─────────────────
+                    TextFormField(
+                      controller: _cashInvestmentController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'cashInvestmentAmount'.tr,
+                        prefixText: '৳ ',
+                        prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.calculate_outlined, size: 20),
+                          tooltip: 'calculator'.tr,
+                          onPressed: () async {
+                            final res = await showCalculatorModal(
+                              context,
+                              initialValue: _cashInvestmentController.text,
+                              title: 'cashInvestmentAmount'.tr,
+                            );
+                            if (res != null) {
+                              _cashInvestmentController.text = res;
+                              setState(() {});
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+
+                    // ── Investment Type ──────────────────────────────────────
+                    DropdownButtonFormField<InvestmentType>(
+                      initialValue: _investmentType,
+                      decoration: InputDecoration(
+                        labelText: 'investmentType'.tr,
+                        prefixIcon: const Icon(Icons.account_balance_outlined),
+                      ),
+                      items: [
+                        DropdownMenuItem(
+                          value: InvestmentType.cashMudaraba,
+                          child: Text('mudaraba'.tr),
+                        ),
+                        DropdownMenuItem(
+                          value: InvestmentType.cashMusharaka,
+                          child: Text('musharaka'.tr),
+                        ),
+                        DropdownMenuItem(
+                          value: InvestmentType.cashLoan,
+                          child: Text('cashLoan'.tr),
+                        ),
+                        DropdownMenuItem(
+                          value: InvestmentType.goodsInKind,
+                          child: Text('productConsignment'.tr),
+                        ),
+                      ],
+                      onChanged: (v) => setState(() => _investmentType = v!),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+
+                    // ── Profit Share (%) (if not cashLoan) ───────────────────
+                    if (_investmentType != InvestmentType.cashLoan) ...[
+                      TextFormField(
+                        controller: _profitShareController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        decoration: InputDecoration(
+                          labelText: '${'profitShare'.tr} (%)',
+                          prefixIcon: const Icon(Icons.percent_outlined),
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.calculate_outlined, size: 20),
+                            tooltip: 'calculator'.tr,
+                            onPressed: () async {
+                              final res = await showCalculatorModal(
+                                context,
+                                initialValue: _profitShareController.text,
+                                title: 'profitShare'.tr,
+                                currencySymbol: '',
+                                unitLabel: '%',
+                              );
+                              if (res != null) {
+                                _profitShareController.text = res;
+                                setState(() {});
+                              }
+                            },
+                          ),
+                        ),
+                        validator: (v) =>
+                            double.tryParse(v ?? '') == null ? 'invalidQty'.tr : null,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                    ],
+
+                    // ── Capital Return Date / Term ───────────────────────────
+                    TextFormField(
+                      controller: _termDaysController,
+                      readOnly: true,
+                      onTap: _pickCapitalReturnDate,
+                      decoration: InputDecoration(
+                        labelText: 'capitalReturnTermDays'.tr,
+                        hintText: 'selectDateOptional'.tr,
+                        prefixIcon: const Icon(Icons.event_outlined),
+                        suffixIcon: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (_selectedTermDays != null)
+                              IconButton(
+                                icon: const Icon(Icons.clear, size: 18),
+                                onPressed: () {
+                                  setState(() {
+                                    _selectedTermDays = null;
+                                    _updateTermDaysText();
+                                  });
+                                },
+                              ),
+                            IconButton(
+                              tooltip: 'date'.tr,
+                              icon: const Icon(Icons.calendar_month_outlined),
+                              onPressed: _pickCapitalReturnDate,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+
+                    // ── Profit Payout Cycle ──────────────────────────────────
+                    DropdownButtonFormField<ProfitPayoutCycle>(
+                      initialValue: _profitPayoutCycle,
+                      decoration: InputDecoration(
+                        labelText: 'profitPayoutCycle'.tr,
+                        prefixIcon: const Icon(Icons.repeat_outlined),
+                      ),
+                      items: [
+                        DropdownMenuItem(
+                          value: ProfitPayoutCycle.monthly,
+                          child: Text('monthly'.tr),
+                        ),
+                        DropdownMenuItem(
+                          value: ProfitPayoutCycle.daily,
+                          child: Text('daily'.tr),
+                        ),
+                        DropdownMenuItem(
+                          value: ProfitPayoutCycle.perContract,
+                          child: Text('perContract'.tr),
+                        ),
+                      ],
+                      onChanged: (v) => setState(() => _profitPayoutCycle = v!),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+
+                    // ── Notes ────────────────────────────────────────────────
+                    TextFormField(
+                      controller: _notesController,
+                      maxLines: 2,
+                      decoration: InputDecoration(
+                        labelText: 'notes'.tr,
+                        prefixIcon: const Icon(Icons.notes_outlined),
+                      ),
+                    ),
+
+                    // ── Legacy Settlement (Old Ledger) Toggle ────────────────
+                    if (widget.existing == null && widget.includeLegacySettlement) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        decoration: BoxDecoration(
+                          color: _hasLegacySettlement
+                              ? Colors.amber.withValues(alpha: 0.08)
+                              : theme.colorScheme.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          border: Border.all(
+                            color: _hasLegacySettlement
+                                ? Colors.amber.shade400
+                                : theme.colorScheme.outline.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SwitchListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(
+                                'hasLegacySettlement'.tr,
+                                style: const TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              value: _hasLegacySettlement,
+                              onChanged: (v) => setState(() => _hasLegacySettlement = v),
+                            ),
+                            if (_hasLegacySettlement) ...[
+                              const Divider(height: 1),
+                              const SizedBox(height: AppSpacing.sm),
+                              Text(
+                                'legacySettlementSectionTitle'.tr,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.amber.shade900,
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              TextFormField(
+                                controller: _legacyTotalController,
+                                keyboardType: const TextInputType.numberWithOptions(
+                                  decimal: true,
+                                ),
+                                decoration: InputDecoration(
+                                  labelText: '${'totalHistoricalInvestment'.tr} *',
+                                  prefixText: '৳ ',
+                                  suffixIcon: IconButton(
+                                    icon: const Icon(Icons.calculate_outlined, size: 20),
+                                    onPressed: () async {
+                                      final res = await showCalculatorModal(
+                                        context,
+                                        initialValue: _legacyTotalController.text,
+                                        title: 'totalHistoricalInvestment'.tr,
+                                      );
+                                      if (res != null) {
+                                        _legacyTotalController.text = res;
+                                        setState(() {});
+                                      }
+                                    },
+                                  ),
+                                ),
+                                validator: (v) => !_hasLegacySettlement
+                                    ? null
+                                    : (_parseMoneyOrNull(v ?? '') == null
+                                        ? 'invalidQty'.tr
+                                        : null),
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              TextFormField(
+                                controller: _legacyReturnedController,
+                                keyboardType: const TextInputType.numberWithOptions(
+                                  decimal: true,
+                                ),
+                                decoration: InputDecoration(
+                                  labelText: 'totalAlreadyReturned'.tr,
+                                  prefixText: '৳ ',
+                                  suffixIcon: IconButton(
+                                    icon: const Icon(Icons.calculate_outlined, size: 20),
+                                    onPressed: () async {
+                                      final res = await showCalculatorModal(
+                                        context,
+                                        initialValue: _legacyReturnedController.text,
+                                        title: 'totalAlreadyReturned'.tr,
+                                      );
+                                      if (res != null) {
+                                        _legacyReturnedController.text = res;
+                                        setState(() {});
+                                      }
+                                    },
+                                  ),
+                                ),
+                                validator: (v) => !_hasLegacySettlement
+                                    ? null
+                                    : (_parseMoneyOrNull(v ?? '') == null
+                                        ? 'invalidQty'.tr
+                                        : null),
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              ListTile(
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                leading: const Icon(Icons.calendar_today_outlined, size: 20),
+                                title: Text('settlementDate'.tr),
+                                subtitle: Text(
+                                  DateFormat('dd MMM yyyy').format(_legacySettlementDate),
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                trailing: TextButton(
+                                  onPressed: _pickSettlementDate,
+                                  child: Text('selectDate'.tr),
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.xs),
+                              TextFormField(
+                                controller: _legacyNotesController,
+                                decoration: InputDecoration(
+                                  labelText: 'legacySettlementNotes'.tr,
+                                  hintText: 'e.g. আব্বার খাতা পৃষ্ঠা ১২',
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: AppSpacing.lg),
+
+                    // ── Save Button ──────────────────────────────────────────
+                    SizedBox(
+                      height: 48,
+                      child: FilledButton.icon(
+                        icon: const Icon(Icons.save_outlined),
+                        label: Text(
+                          'save'.tr,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        onPressed: _submit,
+                      ),
+                    ),
+                  ],
                 ),
-              const SizedBox(height: AppSpacing.md),
-              TextFormField(
-                controller: _termDaysController,
-                readOnly: true,
-                decoration: InputDecoration(
-                  labelText: 'capitalReturnTermDays'.tr,
-                  suffixIcon: IconButton(
-                    tooltip: 'date'.tr,
-                    icon: const Icon(Icons.calendar_today),
-                    onPressed: _pickCapitalReturnDate,
-                  ),
-                ),
               ),
-              const SizedBox(height: AppSpacing.md),
-              DropdownButtonFormField<ProfitPayoutCycle>(
-                initialValue: _profitPayoutCycle,
-                decoration: InputDecoration(labelText: 'profitPayoutCycle'.tr),
-                items: [
-                  DropdownMenuItem(
-                    value: ProfitPayoutCycle.daily,
-                    child: Text('daily'.tr),
-                  ),
-                  DropdownMenuItem(
-                    value: ProfitPayoutCycle.monthly,
-                    child: Text('monthly'.tr),
-                  ),
-                  DropdownMenuItem(
-                    value: ProfitPayoutCycle.perContract,
-                    child: Text('perContract'.tr),
-                  ),
-                ],
-                onChanged: (v) => setState(() => _profitPayoutCycle = v!),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextFormField(
-                controller: _notesController,
-                maxLines: 3,
-                decoration: InputDecoration(labelText: 'notes'.tr),
-              ),
-              if (widget.existing == null &&
-                  widget.includeLegacySettlement) ...[
-                const SizedBox(height: AppSpacing.lg),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text('hasLegacySettlement'.tr),
-                  value: _hasLegacySettlement,
-                  onChanged: (v) => setState(() => _hasLegacySettlement = v),
-                ),
-                if (_hasLegacySettlement) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    'legacySettlementSectionTitle'.tr,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  TextFormField(
-                    controller: _legacyTotalController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: 'totalHistoricalInvestment'.tr,
-                    ),
-                    validator: (v) => !_hasLegacySettlement
-                        ? null
-                        : (_parseMoneyOrNull(v ?? '') == null
-                              ? 'invalidQty'.tr
-                              : null),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  TextFormField(
-                    controller: _legacyReturnedController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: 'totalAlreadyReturned'.tr,
-                    ),
-                    validator: (v) => !_hasLegacySettlement
-                        ? null
-                        : (_parseMoneyOrNull(v ?? '') == null
-                              ? 'invalidQty'.tr
-                              : null),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text('settlementDate'.tr),
-                    subtitle: Text(
-                      _legacySettlementDate.toLocal().toString().split(' ')[0],
-                    ),
-                    trailing: const Icon(Icons.calendar_today),
-                    onTap: _pickSettlementDate,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  TextFormField(
-                    controller: _legacyNotesController,
-                    maxLines: 2,
-                    decoration: InputDecoration(
-                      labelText: 'legacySettlementNotes'.tr,
-                    ),
-                  ),
-                ],
-              ],
-              const SizedBox(height: AppSpacing.lg),
-              FilledButton(onPressed: _submit, child: Text('save'.tr)),
-            ],
+            ),
           ),
         ),
       ),
@@ -315,19 +554,23 @@ class _InvestorFormSheetState extends State<InvestorFormSheet> {
 
   Future<void> _pickCapitalReturnDate() async {
     final today = DateTime.now();
+    final initialDate = _selectedTermDays != null && _selectedTermDays! > 0
+        ? today.add(Duration(days: _selectedTermDays!))
+        : today.add(const Duration(days: 30));
+
     final picked = await showDatePicker(
       context: context,
-      initialDate: today.add(
-        Duration(days: int.tryParse(_termDaysController.text) ?? 30),
-      ),
+      initialDate: initialDate.isAfter(today) ? initialDate : today,
       firstDate: today,
       lastDate: DateTime(today.year + 20),
     );
     if (picked == null) return;
     final start = DateTime(today.year, today.month, today.day);
     final end = DateTime(picked.year, picked.month, picked.day);
+    final diffDays = end.difference(start).inDays;
     setState(() {
-      _termDaysController.text = end.difference(start).inDays.toString();
+      _selectedTermDays = diffDays;
+      _updateTermDaysText();
     });
   }
 
@@ -342,8 +585,9 @@ class _InvestorFormSheetState extends State<InvestorFormSheet> {
         investmentType: _investmentType,
         profitSharePercent: _investmentType == InvestmentType.cashLoan
             ? 0
-            : double.parse(_profitShareController.text),
-        capitalReturnTermDays: int.tryParse(_termDaysController.text),
+            : (double.tryParse(_profitShareController.text) ?? 0),
+        initialCashInvestment: _parseMoneyOrNull(_cashInvestmentController.text) ?? Money.zeroBdt,
+        capitalReturnTermDays: _selectedTermDays,
         profitPayoutCycle: _profitPayoutCycle,
         notes: _notesController.text.trim().isEmpty
             ? null
@@ -367,9 +611,6 @@ class _InvestorFormSheetState extends State<InvestorFormSheet> {
   }
 }
 
-/// Same pattern as every other live-input `Money` field in the app —
-/// `Money` has no `tryParse`, see `daily_sales_v2`'s doc comment for why
-/// every screen wraps `Money.parse` like this.
 Money? _parseMoneyOrNull(String text) {
   if (text.trim().isEmpty) return null;
   try {

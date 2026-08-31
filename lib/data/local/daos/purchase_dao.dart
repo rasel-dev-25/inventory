@@ -2,10 +2,10 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/money/money.dart';
-import '../app_database.dart';
 import '../../../domain/entities/enums.dart';
 import '../../../domain/entities/fund_source.dart';
 import '../../../domain/entities/purchase.dart' as domain;
+import '../app_database.dart';
 import '../tables/purchases.dart';
 
 part 'purchase_dao.g.dart';

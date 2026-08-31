@@ -106,6 +106,12 @@ class _FakeStorageUploadTransport implements StorageUploadTransport {
   }) async => const Result.ok(null);
 
   @override
+  Future<Result<void>> delete({
+    required String bucketName,
+    required String storagePath,
+  }) async => const Result.ok(null);
+
+  @override
   Future<Result<String>> createSignedUrl({
     required String bucketName,
     required String storagePath,

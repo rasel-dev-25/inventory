@@ -1,3 +1,4 @@
+import '../../core/money/money.dart';
 import 'enums.dart';
 
 /// An investor, per `notes/business_logic.md` §Investor.
@@ -25,6 +26,9 @@ class Investor {
 
   final ProfitPayoutCycle profitPayoutCycle;
 
+  /// Total cash funds directly received from the investor.
+  final Money initialCashInvestment;
+
   /// Free-text contract details the spec explicitly wants preserved
   /// verbatim rather than forced into structured fields — see
   /// business_logic.md's `notes` field on Investor.
@@ -38,6 +42,7 @@ class Investor {
     this.profitSharePercent = 0,
     this.capitalReturnTermDays,
     this.profitPayoutCycle = ProfitPayoutCycle.monthly,
+    this.initialCashInvestment = Money.zeroBdt,
     this.notes,
   });
 
@@ -48,6 +53,7 @@ class Investor {
     double? profitSharePercent,
     int? capitalReturnTermDays,
     ProfitPayoutCycle? profitPayoutCycle,
+    Money? initialCashInvestment,
     String? notes,
   }) {
     return Investor(
@@ -59,6 +65,8 @@ class Investor {
       capitalReturnTermDays:
           capitalReturnTermDays ?? this.capitalReturnTermDays,
       profitPayoutCycle: profitPayoutCycle ?? this.profitPayoutCycle,
+      initialCashInvestment:
+          initialCashInvestment ?? this.initialCashInvestment,
       notes: notes ?? this.notes,
     );
   }

@@ -181,4 +181,49 @@ void main() {
     expect(auditEntries.single.recordId, 'expense-1');
     expect(auditEntries.single.oldValueJson, contains('1500'));
   });
+
+  test('update updates amount, category, description, and adjusts ledger', () async {
+    await useCases.create(
+      Expense(
+        id: 'expense-1',
+        category: ExpenseCategory.dailyOther,
+        amount: Money.fromMinor(100000),
+        date: DateTime.utc(2026, 1, 1),
+        paymentMethod: PaymentMethod.cash,
+        description: 'Old description',
+      ),
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+
+    final updateResult = await useCases.update(
+      Expense(
+        id: 'expense-1',
+        category: ExpenseCategory.monthlyRent,
+        amount: Money.fromMinor(150000),
+        date: DateTime.utc(2026, 1, 1),
+        paymentMethod: PaymentMethod.cash,
+        description: 'New shop rent',
+      ),
+      shopId: defaultShopId,
+      now: DateTime.now().toUtc(),
+    );
+
+    expect(updateResult.isOk, isTrue);
+
+    final updated = await db.expenseDao.getById('expense-1');
+    expect(updated!.category, ExpenseCategory.monthlyRent);
+    expect(updated.amount, Money.fromMinor(150000));
+    expect(updated.description, 'New shop rent');
+
+    // Total net impact in cash ledger should be -150000 (-100000 initial + 100000 reversal - 150000 new)
+    final ledgerEntries = await (db.select(
+      db.cashLedgerEntries,
+    )..where((l) => l.sourceType.equals('expense'))).get();
+    final netCashOut = ledgerEntries.fold(0, (sum, l) => sum + l.amountMinor);
+    expect(netCashOut, -150000);
+
+    final auditEntries = await db.auditLogDao.watchAll(defaultShopId).first;
+    expect(auditEntries.any((a) => a.action == 'update' && a.recordId == 'expense-1'), isTrue);
+  });
 }

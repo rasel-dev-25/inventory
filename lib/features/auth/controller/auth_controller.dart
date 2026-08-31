@@ -3,8 +3,12 @@ import 'dart:async';
 import 'package:get/get.dart';
 
 import '../../../core/utils/app_logger.dart';
+import '../../../data/local/app_database.dart';
+import '../../../data/local/default_shop.dart';
 import '../../../domain/entities/auth_session.dart';
+import '../../../domain/entities/enums.dart';
 import '../../../domain/repositories/auth_repository.dart';
+import '../../sync/controller/sync_controller.dart';
 
 /// What the app should currently show, derived from the session stream —
 /// kept as a single enum (rather than several booleans a screen has to
@@ -62,14 +66,21 @@ class AuthController extends GetxController {
     final initial = _repo.currentSession;
     if (initial != null) {
       AppLogger.i(_tag, 'existing session found userId=${initial.userId}');
-      _handleSessionChange(initial);
+      // Immediately initialize session so offline cold start opens shell in 0ms
+      session.value = initial.copyWith(
+        shopId: defaultShopId,
+        role: ShopMemberRole.owner,
+      );
+      status.value = AuthUiStatus.ready;
+      _tryRestoreCachedSession(initial);
+      _handleSessionChange(initial, isExplicitSignIn: false);
     } else {
       AppLogger.d(_tag, 'no existing session → signedOut');
       status.value = AuthUiStatus.signedOut;
     }
     _sub = _repo.sessionChanges.listen((s) {
       AppLogger.d(_tag, 'sessionChanges stream event userId=${s?.userId}');
-      _handleSessionChange(s);
+      _handleSessionChange(s, isExplicitSignIn: false);
     });
   }
 
@@ -79,64 +90,158 @@ class AuthController extends GetxController {
     super.onClose();
   }
 
-  Future<void> _handleSessionChange(AuthSession? newSession) async {
+  /// Instantly restores the previously verified shop membership from local DB
+  /// so that offline launches and app cold-starts load in 0ms without full-screen loading.
+  Future<void> _tryRestoreCachedSession(AuthSession initial) async {
+    try {
+      if (Get.isRegistered<AppDatabase>()) {
+        final db = Get.find<AppDatabase>();
+        final cachedUserId = await db.appSettingsDao.get('auth_cached_user_id');
+        final cachedShopId = await db.appSettingsDao.get('auth_cached_shop_id');
+        final cachedRoleStr = await db.appSettingsDao.get('auth_cached_role');
+
+        if (cachedUserId == initial.userId &&
+            cachedShopId != null &&
+            cachedShopId.isNotEmpty) {
+          final role = cachedRoleStr == 'owner'
+              ? ShopMemberRole.owner
+              : ShopMemberRole.staff;
+          session.value = initial.copyWith(shopId: cachedShopId, role: role);
+          status.value = AuthUiStatus.ready;
+          AppLogger.i(
+            _tag,
+            'Restored cached shop membership offline: shopId=$cachedShopId, role=$role',
+          );
+        }
+      }
+    } catch (e) {
+      AppLogger.w(_tag, 'Failed to read cached shop membership: $e');
+    }
+  }
+
+  Future<void> _handleSessionChange(
+    AuthSession? newSession, {
+    bool isExplicitSignIn = false,
+  }) async {
     if (newSession == null) {
       _resolvingUserId = null;
       session.value = null;
       status.value = AuthUiStatus.signedOut;
+      await _clearCachedSession();
       return;
     }
-    // Skip duplicate resolution for the same user (e.g. stream fires
-    // immediately after signIn() already started resolving).
+    // Skip duplicate resolution for the same user if already in flight or already ready
     if (_resolvingUserId == newSession.userId &&
-        status.value == AuthUiStatus.loading) {
+        (status.value == AuthUiStatus.loading ||
+            status.value == AuthUiStatus.ready && !isExplicitSignIn)) {
       return;
     }
     _resolvingUserId = newSession.userId;
-    status.value = AuthUiStatus.loading;
+
+    // Only show the loading screen if we are explicitly signing in
+    if (isExplicitSignIn) {
+      status.value = AuthUiStatus.loading;
+    }
     AppLogger.d(_tag, 'resolveShopMembership userId=${newSession.userId}');
 
     try {
       // Timeout so a slow/failed network call never strands the user on
-      // an infinite spinner — fall through to onboarding after 15 s.
+      // an infinite spinner — fall through after 15 s.
       final result = await _repo
           .resolveShopMembership(newSession)
           .timeout(const Duration(seconds: 15));
 
-      result.fold(
-        onOk: (resolved) {
-          AppLogger.i(_tag, 'session resolved  shopId=${resolved.shopId}  role=${resolved.role}  hasShop=${resolved.hasShop}');
-          session.value = resolved;
-          status.value = resolved.hasShop
-              ? AuthUiStatus.ready
-              : AuthUiStatus.needsOnboarding;
-          // Sign-in left isSubmitting=true so the button stayed disabled
-          // while we resolved. Clear it now that we have a final status.
-          isSubmitting.value = false;
-        },
-        onErr: (failure) {
-          // Membership lookup failing (network blip, etc.) shouldn't strand
-          // the user on an infinite spinner — fall back to onboarding.
-          AppLogger.w(_tag, 'resolveShopMembership error: ${failure.message}');
-          session.value = newSession;
+      if (result.isOk) {
+        final resolved = result.valueOrNull!;
+        AppLogger.i(
+          _tag,
+          'session resolved  shopId=${resolved.shopId}  role=${resolved.role}  hasShop=${resolved.hasShop}',
+        );
+        session.value = resolved;
+        if (resolved.hasShop && resolved.shopId != null) {
+          await _persistCachedSession(
+            userId: resolved.userId,
+            shopId: resolved.shopId!,
+            role: resolved.role?.name ?? 'owner',
+          );
+
+          if (isExplicitSignIn && Get.isRegistered<SyncController>()) {
+            try {
+              final syncController = Get.find<SyncController>();
+              await syncController.performInitialSync(resolved.shopId!);
+            } catch (e) {
+              AppLogger.w(_tag, 'Initial sync on login skipped or failed: $e');
+            }
+          }
+          status.value = AuthUiStatus.ready;
+        } else {
           status.value = AuthUiStatus.needsOnboarding;
-          isSubmitting.value = false;
-          errorMessage.value = failure.message;
-        },
-      );
+        }
+        isSubmitting.value = false;
+      } else {
+        final failure = result.failureOrNull!;
+        AppLogger.w(_tag, 'resolveShopMembership network/server error (offline fallback active): ${failure.message}');
+
+        // OFFLINE-FIRST: If server is unreachable, keep user in ready status with local shop
+        if (session.value?.shopId == null) {
+          session.value = newSession.copyWith(
+            shopId: defaultShopId,
+            role: ShopMemberRole.owner,
+          );
+        }
+        status.value = AuthUiStatus.ready;
+        isSubmitting.value = false;
+      }
     } on TimeoutException {
-      // Network too slow — land on onboarding so the user can tap
-      // "Check again" once connectivity recovers.
-      AppLogger.w(_tag, 'resolveShopMembership timed out after 15 s');
-      session.value = newSession;
-      status.value = AuthUiStatus.needsOnboarding;
+      AppLogger.w(_tag, 'resolveShopMembership timed out (offline fallback active)');
+      if (session.value?.shopId == null) {
+        session.value = newSession.copyWith(
+          shopId: defaultShopId,
+          role: ShopMemberRole.owner,
+        );
+      }
+      status.value = AuthUiStatus.ready;
       isSubmitting.value = false;
-      errorMessage.value = 'Connection is slow — tap "Check again" when ready.';
     } catch (e, st) {
       AppLogger.e(_tag, 'resolveShopMembership threw unexpectedly', error: e, stackTrace: st);
-      session.value = newSession;
-      status.value = AuthUiStatus.needsOnboarding;
+      if (session.value?.shopId == null) {
+        session.value = newSession.copyWith(
+          shopId: defaultShopId,
+          role: ShopMemberRole.owner,
+        );
+      }
+      status.value = AuthUiStatus.ready;
       isSubmitting.value = false;
+    }
+  }
+
+  Future<void> _persistCachedSession({
+    required String userId,
+    required String shopId,
+    required String role,
+  }) async {
+    try {
+      if (Get.isRegistered<AppDatabase>()) {
+        final db = Get.find<AppDatabase>();
+        await db.appSettingsDao.upsert('auth_cached_user_id', userId);
+        await db.appSettingsDao.upsert('auth_cached_shop_id', shopId);
+        await db.appSettingsDao.upsert('auth_cached_role', role);
+      }
+    } catch (e) {
+      AppLogger.w(_tag, 'Failed to persist cached shop membership: $e');
+    }
+  }
+
+  Future<void> _clearCachedSession() async {
+    try {
+      if (Get.isRegistered<AppDatabase>()) {
+        final db = Get.find<AppDatabase>();
+        await db.appSettingsDao.remove('auth_cached_user_id');
+        await db.appSettingsDao.remove('auth_cached_shop_id');
+        await db.appSettingsDao.remove('auth_cached_role');
+      }
+    } catch (e) {
+      AppLogger.w(_tag, 'Failed to clear cached shop membership: $e');
     }
   }
 
@@ -148,15 +253,8 @@ class AuthController extends GetxController {
     return result.fold(
       onOk: (returnedSession) {
         AppLogger.i(_tag, 'signIn OK  userId=${returnedSession.userId}');
-        // Immediately kick off membership resolution using the session
-        // we already have from the API response — don't wait for the
-        // onAuthStateChange stream event, which can be delayed by
-        // several seconds on mobile/emulator. The dedup guard in
-        // _handleSessionChange prevents double-resolution when the
-        // stream also fires shortly after.
-        _handleSessionChange(returnedSession);
-        // Keep isSubmitting = true; AuthGate replaces this widget when
-        // status moves to loading/ready/needsOnboarding.
+        // Explicit login: trigger resolution with isExplicitSignIn=true to show full sync loader
+        _handleSessionChange(returnedSession, isExplicitSignIn: true);
         return true;
       },
       onErr: (failure) {

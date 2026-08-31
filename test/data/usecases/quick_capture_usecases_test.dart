@@ -74,6 +74,21 @@ void main() {
       final capture = (await (db.select(db.quickCaptures)).get()).single;
       expect(capture.fileLocalPath, 'quick_captures/photo.jpg');
     });
+
+    test('accepts both a photo path and a quick note together', () async {
+      final result = await useCases.create(
+        type: QuickCaptureType.photoNote,
+        note: 'Bought 5 boxes of pens',
+        fileLocalPath: 'quick_captures/photo.jpg',
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+
+      expect(result.isOk, isTrue, reason: result.failureOrNull?.toString());
+      final domainCapture = (await db.quickCaptureDao.watchAll(defaultShopId).first).single;
+      expect(domainCapture.photoPath, 'quick_captures/photo.jpg');
+      expect(domainCapture.note, 'Bought 5 boxes of pens');
+    });
   });
 
   group('markConverted', () {
@@ -141,6 +156,83 @@ void main() {
         convertedToType: 'expense',
         convertedToId: 'expense-123',
         shopId: defaultShopId,
+      );
+
+      expect(result.isErr, isTrue);
+      expect(result.failureOrNull, isA<NotFoundFailure>());
+    });
+  });
+
+  group('update', () {
+    test('updates note text and enqueues outbox event', () async {
+      await useCases.create(
+        type: QuickCaptureType.photoNote,
+        note: 'Original note',
+        fileLocalPath: 'photos/pic1.jpg',
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+      final captureId = (await (db.select(db.quickCaptures)).get()).single.id;
+
+      final result = await useCases.update(
+        id: captureId,
+        note: 'Updated note text',
+        fileLocalPath: 'photos/pic2.jpg',
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+
+      expect(result.isOk, isTrue);
+      final updated = await db.quickCaptureDao.getById(captureId);
+      expect(updated!.note, 'Updated note text');
+      expect(updated.photoPath, 'photos/pic2.jpg');
+
+      final pending = await db.syncMetadataDao.pendingEntries();
+      final entry = pending.firstWhere(
+        (e) => e.eventType == 'quick_capture_updated',
+      );
+      final upserts = OutboxEvent.decodePayload(entry.payloadJson);
+      expect(upserts.single.table, 'quick_captures');
+    });
+
+    test('rejects updating nonexistent capture', () async {
+      final result = await useCases.update(
+        id: 'missing-id',
+        note: 'Some note',
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+
+      expect(result.isErr, isTrue);
+      expect(result.failureOrNull, isA<NotFoundFailure>());
+    });
+  });
+
+  group('delete', () {
+    test('deletes capture from local database', () async {
+      await useCases.create(
+        type: QuickCaptureType.voiceNote,
+        note: 'To delete',
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+      final captureId = (await (db.select(db.quickCaptures)).get()).single.id;
+
+      final result = await useCases.delete(
+        id: captureId,
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
+      );
+
+      expect(result.isOk, isTrue);
+      expect(await db.quickCaptureDao.getById(captureId), isNull);
+    });
+
+    test('rejects deleting nonexistent capture', () async {
+      final result = await useCases.delete(
+        id: 'missing-id',
+        shopId: defaultShopId,
+        now: DateTime.now().toUtc(),
       );
 
       expect(result.isErr, isTrue);

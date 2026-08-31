@@ -35,10 +35,12 @@ class Product {
   final String? barcode;
   final String? sku;
 
-  /// Only meaningful when [isRentable] is true — see this field's own
-  /// column doc comment in `lib/data/local/tables/products.dart` for why
-  /// it's a plain nullable field rather than restricted to a "Book"
-  /// category check.
+  /// Unit of measurement when buying (e.g. 'pcs', 'kg', 'box', 'litre', etc.)
+  final String unit;
+
+  /// Unit of measurement when selling (e.g. 'pcs', 'gm', 'ml', etc. Defaults to [unit])
+  final String sellUnit;
+
   final int? pageCount;
 
   const Product({
@@ -49,6 +51,8 @@ class Product {
     required this.suggestedSellPrice,
     required this.qty,
     required this.fundSource,
+    this.unit = 'pcs',
+    this.sellUnit = 'pcs',
     this.isRentable = false,
     this.barcode,
     this.sku,
@@ -62,6 +66,8 @@ class Product {
     Money? suggestedSellPrice,
     double? qty,
     FundSource? fundSource,
+    String? unit,
+    String? sellUnit,
     bool? isRentable,
     String? barcode,
     String? sku,
@@ -75,6 +81,8 @@ class Product {
       suggestedSellPrice: suggestedSellPrice ?? this.suggestedSellPrice,
       qty: qty ?? this.qty,
       fundSource: fundSource ?? this.fundSource,
+      unit: unit ?? this.unit,
+      sellUnit: sellUnit ?? this.sellUnit,
       isRentable: isRentable ?? this.isRentable,
       barcode: barcode ?? this.barcode,
       sku: sku ?? this.sku,

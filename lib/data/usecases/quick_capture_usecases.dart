@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:uuid/uuid.dart';
 
 import '../../core/error/failure.dart';
@@ -28,18 +30,28 @@ class QuickCaptureUseCases {
     String? fileLocalPath,
   }) async {
     final capturedPath = fileLocalPath?.trim();
-    if (note.trim().isEmpty && (capturedPath == null || capturedPath.isEmpty)) {
+    final trimmedNote = note.trim();
+    if (trimmedNote.isEmpty && (capturedPath == null || capturedPath.isEmpty)) {
       return const Result.err(
         ValidationFailure('note', 'Write or attach something to capture'),
       );
     }
 
+    final String storedContent;
+    if (capturedPath != null && capturedPath.isNotEmpty) {
+      if (trimmedNote.isNotEmpty) {
+        storedContent = '$capturedPath|$trimmedNote';
+      } else {
+        storedContent = capturedPath;
+      }
+    } else {
+      storedContent = trimmedNote;
+    }
+
     final capture = QuickCapture(
       id: _uuid.v7(),
       type: type,
-      fileLocalPath: capturedPath?.isNotEmpty == true
-          ? capturedPath!
-          : note.trim(),
+      fileLocalPath: storedContent,
       status: QuickCaptureStatus.pending,
       createdAt: now,
     );
@@ -109,6 +121,90 @@ class QuickCaptureUseCases {
       ),
     );
 
+    return const Result.ok(null);
+  }
+
+  Future<Result<void>> update({
+    required String id,
+    required String note,
+    required String shopId,
+    required DateTime now,
+    String? fileLocalPath,
+  }) async {
+    final capture = await db.quickCaptureDao.getById(id);
+    if (capture == null) {
+      return Result.err(NotFoundFailure('quickCapture', id));
+    }
+
+    final capturedPath = fileLocalPath?.trim();
+    final trimmedNote = note.trim();
+    if (trimmedNote.isEmpty && (capturedPath == null || capturedPath.isEmpty)) {
+      return const Result.err(
+        ValidationFailure('note', 'Write or attach something to capture'),
+      );
+    }
+
+    final String storedContent;
+    if (capturedPath != null && capturedPath.isNotEmpty) {
+      if (trimmedNote.isNotEmpty) {
+        storedContent = '$capturedPath|$trimmedNote';
+      } else {
+        storedContent = capturedPath;
+      }
+    } else {
+      storedContent = trimmedNote;
+    }
+
+    await writeAndEnqueue(
+      db: db,
+      eventType: 'quick_capture_updated',
+      upserts: [
+        TableUpsert(
+          table: 'quick_captures',
+          row: {
+            'id': id,
+            'shop_id': shopId,
+            'type': capture.type.name,
+            'file_local_path': storedContent,
+            'status': capture.status.name,
+            if (capture.convertedToType != null)
+              'converted_to_type': capture.convertedToType,
+            if (capture.convertedToId != null)
+              'converted_to_id': capture.convertedToId,
+          },
+        ),
+      ],
+      localWrite: () => db.quickCaptureDao.updateCapture(
+        id: id,
+        fileLocalPath: storedContent,
+        now: now,
+      ),
+    );
+
+    return const Result.ok(null);
+  }
+
+  Future<Result<void>> delete({
+    required String id,
+    required String shopId,
+    required DateTime now,
+  }) async {
+    final capture = await db.quickCaptureDao.getById(id);
+    if (capture == null) {
+      return Result.err(NotFoundFailure('quickCapture', id));
+    }
+
+    final photo = capture.photoPath;
+    if (photo != null) {
+      final file = File(photo);
+      if (file.existsSync()) {
+        try {
+          await file.delete();
+        } catch (_) {}
+      }
+    }
+
+    await db.quickCaptureDao.deleteCapture(id);
     return const Result.ok(null);
   }
 }

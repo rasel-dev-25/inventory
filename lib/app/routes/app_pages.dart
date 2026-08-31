@@ -3,7 +3,7 @@ import 'app_routes.dart';
 import '../../features/auth/view/auth_gate.dart';
 import '../../features/shell/controller/shell_controller.dart';
 import '../../data/local/app_database.dart' show AppDatabase;
-import '../../data/remote/supabase_storage_upload_transport.dart';
+import '../../data/sync/storage_upload_transport.dart';
 import '../../features/catalog/view/catalog_screen.dart';
 import '../../features/catalog/controller/catalog_controller.dart';
 import '../../features/purchase_entry/view/purchase_entry_screen.dart';
@@ -44,6 +44,8 @@ import '../../features/recycle_bin_v2/controller/recycle_bin_controller.dart';
 import '../../features/recycle_bin_v2/view/recycle_bin_screen.dart';
 
 abstract class AppPages {
+  static const initial = AppRoutes.shell;
+
   static final pages = [
     GetPage(
       name: AppRoutes.shell,
@@ -62,7 +64,9 @@ abstract class AppPages {
           () => StockController(
             Get.find<AppDatabase>(),
             pricingSettings: Get.find<PricingSettingsController>(),
-            imageStorage: Get.find<SupabaseStorageUploadTransport>(),
+            imageStorage: Get.isRegistered<StorageUploadTransport>()
+                ? Get.find<StorageUploadTransport>()
+                : null,
           ),
         );
         Get.lazyPut(() => DuesController(Get.find<AppDatabase>()));
@@ -70,7 +74,9 @@ abstract class AppPages {
         Get.lazyPut(
           () => CustomersController(
             Get.find<AppDatabase>(),
-            imageStorage: Get.find<SupabaseStorageUploadTransport>(),
+            imageStorage: Get.isRegistered<StorageUploadTransport>()
+                ? Get.find<StorageUploadTransport>()
+                : null,
           ),
         );
       }),
@@ -88,7 +94,9 @@ abstract class AppPages {
           () => CatalogController(
             Get.find<AppDatabase>(),
             Get.find<PricingSettingsController>(),
-            imageStorage: Get.find<SupabaseStorageUploadTransport>(),
+            imageStorage: Get.isRegistered<StorageUploadTransport>()
+                ? Get.find<StorageUploadTransport>()
+                : null,
           ),
         );
       }),
@@ -129,7 +137,14 @@ abstract class AppPages {
       name: AppRoutes.orderV2,
       page: () => const OrderScreen(),
       binding: BindingsBuilder(() {
-        Get.lazyPut(() => OrderController(Get.find<AppDatabase>()));
+        Get.lazyPut(
+          () => OrderController(
+            Get.find<AppDatabase>(),
+            imageStorage: Get.isRegistered<StorageUploadTransport>()
+                ? Get.find<StorageUploadTransport>()
+                : null,
+          ),
+        );
       }),
     ),
     GetPage(
@@ -139,7 +154,9 @@ abstract class AppPages {
         Get.lazyPut(
           () => FixedAssetController(
             Get.find<AppDatabase>(),
-            imageStorage: Get.find<SupabaseStorageUploadTransport>(),
+            imageStorage: Get.isRegistered<StorageUploadTransport>()
+                ? Get.find<StorageUploadTransport>()
+                : null,
           ),
         );
       }),

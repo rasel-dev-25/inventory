@@ -8,6 +8,7 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/money/money.dart';
 import '../../../core/platform/capabilities.dart';
 import '../../../core/utils/image_compressor.dart';
 import '../../../data/local/app_database.dart';
@@ -15,12 +16,16 @@ import '../../../data/local/default_shop.dart';
 import '../../../data/sync/storage_upload_transport.dart';
 import '../../../data/usecases/customer_image_usecases.dart';
 import '../../../data/usecases/customer_usecases.dart';
+import '../../../data/usecases/pay_due_usecase.dart';
 import '../../../domain/entities/customer.dart';
 import '../../../domain/entities/due.dart';
+import '../../../domain/entities/due_payment.dart';
+import '../../../domain/entities/enums.dart';
 import '../../../domain/entities/order.dart';
 import '../../../domain/entities/product.dart';
 import '../../../domain/entities/rent_transaction.dart';
 import '../../../domain/entities/sale.dart';
+import '../../../domain/services/due_lifecycle.dart';
 
 /// Backs the Customers screen — list/create/edit/soft-delete plus the
 /// flagged (suspicion/blocked) filter view from `notes/business_logic.md`
@@ -35,18 +40,22 @@ class CustomersController extends GetxController {
 
   late final CustomerUseCases _useCases = CustomerUseCases(db);
   late final CustomerImageUseCases _imageUseCases = CustomerImageUseCases(db);
+  late final PayDueUseCase _payDueUseCase = PayDueUseCase(db);
   final _imagePicker = ImagePicker();
 
   final customers = <Customer>[].obs;
   final customerImages = <CustomerImageRow>[].obs;
   final sales = <Sale>[].obs;
   final dues = <Due>[].obs;
+  final duePayments = <DuePayment>[].obs;
   final rentals = <RentTransaction>[].obs;
   final orders = <Order>[].obs;
   final products = <Product>[].obs;
   final signedImageUrls = <String, String>{}.obs;
   final searchQuery = ''.obs;
-  final showFlaggedOnly = false.obs;
+  final showBuyersOnly = false.obs;
+  final showWithDuesOnly = false.obs;
+  final showWithOrdersOnly = false.obs;
   final errorMessage = RxnString();
 
   final List<StreamSubscription<Object?>> _subscriptions = [];
@@ -72,6 +81,9 @@ class CustomersController extends GetxController {
       db.dueDao.watchAll(defaultShopId).listen(dues.assignAll),
     );
     _subscriptions.add(
+      db.dueDao.watchAllPayments().listen(duePayments.assignAll),
+    );
+    _subscriptions.add(
       db.rentDao.watchAll(defaultShopId).listen(rentals.assignAll),
     );
     _subscriptions.add(
@@ -90,19 +102,63 @@ class CustomersController extends GetxController {
     super.onClose();
   }
 
-  /// Applies the search query (name/contact, case-insensitive) and the
-  /// flagged-only toggle together — a customer must satisfy both to show,
-  /// same combinable-filter approach `InventoryController`'s filter bar
-  /// uses.
+  int outstandingDueFor(String customerId) {
+    return dues.where((d) => d.customerId == customerId).fold(
+      0,
+      (sum, due) =>
+          sum + (due.originalAmount.minorUnits - due.paidAmount.minorUnits),
+    );
+  }
+
+  Money totalPurchasedFor(String customerId) {
+    return sales
+        .where((s) => s.customerId == customerId)
+        .fold(Money.zero(), (sum, s) => sum + (s.actualSellPrice * s.qty));
+  }
+
+  int purchasesCountFor(String customerId) {
+    return sales.where((s) => s.customerId == customerId).length;
+  }
+
+  int ordersCountFor(String customerId) {
+    return orders.where((o) => o.customerId == customerId).length;
+  }
+
+  int pendingOrdersCountFor(String customerId) {
+    return orders
+        .where((o) =>
+            o.customerId == customerId && o.status == OrderStatus.pending)
+        .length;
+  }
+
+  int get totalCustomersCount => customers.length;
+  int get buyersCount =>
+      customers.where((c) => totalPurchasedFor(c.id).isPositive || purchasesCountFor(c.id) > 0).length;
+  int get withDuesCustomersCount =>
+      customers.where((c) => outstandingDueFor(c.id) > 0).length;
+  int get withOrdersCustomersCount =>
+      customers.where((c) => ordersCountFor(c.id) > 0).length;
+
+  /// Applies the search query (name/contact/address, case-insensitive) and the
+  /// filter toggles together.
   List<Customer> get visibleCustomers {
     final query = searchQuery.value.trim().toLowerCase();
     return customers.where((c) {
-      if (showFlaggedOnly.value && !c.suspicionFlag && !c.isBlocked) {
+      if (showBuyersOnly.value &&
+          totalPurchasedFor(c.id) <= Money.zero() &&
+          purchasesCountFor(c.id) == 0) {
+        return false;
+      }
+      if (showWithDuesOnly.value && outstandingDueFor(c.id) <= 0) {
+        return false;
+      }
+      if (showWithOrdersOnly.value && ordersCountFor(c.id) == 0) {
         return false;
       }
       if (query.isEmpty) return true;
       return c.name.toLowerCase().contains(query) ||
-          (c.contact?.toLowerCase().contains(query) ?? false);
+          (c.contact?.toLowerCase().contains(query) ?? false) ||
+          (c.address?.toLowerCase().contains(query) ?? false);
     }).toList();
   }
 
@@ -194,6 +250,13 @@ class CustomersController extends GetxController {
   Future<bool> deleteCustomer(String id) async {
     errorMessage.value = null;
     try {
+      final imageRow = primaryImageFor(id);
+      if (imageRow != null) {
+        await _imageUseCases.delete(
+          imageId: imageRow.id,
+          storage: imageStorage,
+        );
+      }
       await _useCases.softDelete(
         id,
         shopId: defaultShopId,
@@ -204,6 +267,13 @@ class CustomersController extends GetxController {
       errorMessage.value = e.toString();
       return false;
     }
+  }
+
+  Future<void> deleteCustomerImage(String imageId) async {
+    await _imageUseCases.delete(
+      imageId: imageId,
+      storage: imageStorage,
+    );
   }
 
   CustomerImageRow? primaryImageFor(String customerId) {
@@ -220,9 +290,107 @@ class CustomersController extends GetxController {
       dues.where((due) => due.customerId == customerId).toList()
         ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
+  List<DuePayment> paymentsForDue(String dueId) {
+    final list = duePayments.where((p) => p.dueId == dueId).toList();
+    list.sort((a, b) => b.date.compareTo(a.date));
+    return list;
+  }
+
+  List<DuePayment> paymentsForCustomer(String customerId) {
+    final customerDueIds = dues
+        .where((d) => d.customerId == customerId)
+        .map((d) => d.id)
+        .toSet();
+    final list = duePayments
+        .where((p) => customerDueIds.contains(p.dueId))
+        .toList();
+    list.sort((a, b) => b.date.compareTo(a.date));
+    return list;
+  }
+
+  Money totalCollectedForCustomer(String customerId) {
+    return paymentsForCustomer(customerId).fold(
+      Money.zero(),
+      (acc, p) => acc + p.amount,
+    );
+  }
+
+  Future<bool> payCustomerDue({
+    required String dueId,
+    required Money paymentAmount,
+    required PaymentMethod paymentMethod,
+  }) async {
+    errorMessage.value = null;
+    final result = await _payDueUseCase.call(
+      dueId: dueId,
+      paymentAmount: paymentAmount,
+      paymentMethod: paymentMethod,
+      shopId: defaultShopId,
+      date: DateTime.now(),
+      now: DateTime.now().toUtc(),
+    );
+    return result.fold(
+      onOk: (_) => true,
+      onErr: (f) {
+        errorMessage.value = f.message;
+        return false;
+      },
+    );
+  }
+
+  Future<bool> payCustomerBalance({
+    required String customerId,
+    required Money paymentAmount,
+    required PaymentMethod paymentMethod,
+  }) async {
+    errorMessage.value = null;
+    final openDues = dues
+        .where((d) => d.customerId == customerId && d.status != DueStatus.paid)
+        .toList()
+      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+    if (openDues.isEmpty) {
+      errorMessage.value = 'No outstanding dues for this customer';
+      return false;
+    }
+
+    var remainingToPay = paymentAmount;
+    final now = DateTime.now().toUtc();
+    final today = DateTime.now();
+
+    for (final due in openDues) {
+      if (remainingToPay <= Money.zero()) break;
+      final dueRemaining = remainingBalance(due);
+      final payThis = remainingToPay <= dueRemaining ? remainingToPay : dueRemaining;
+
+      final result = await _payDueUseCase.call(
+        dueId: due.id,
+        paymentAmount: payThis,
+        paymentMethod: paymentMethod,
+        shopId: defaultShopId,
+        date: today,
+        now: now,
+      );
+
+      if (result.isErr) {
+        errorMessage.value = result.failureOrNull?.message;
+        return false;
+      }
+      remainingToPay = remainingToPay - payThis;
+    }
+    return true;
+  }
+
   List<RentTransaction> rentalsFor(String customerId) =>
       rentals.where((rent) => rent.customerId == customerId).toList()
         ..sort((a, b) => b.startDate.compareTo(a.startDate));
+
+  int activeRentalsCountFor(String customerId) =>
+      rentals
+          .where((r) =>
+              r.customerId == customerId &&
+              (r.status == RentStatus.active || r.status == RentStatus.overdue))
+          .length;
 
   List<Order> ordersFor(String customerId) =>
       orders.where((order) => order.customerId == customerId).toList()

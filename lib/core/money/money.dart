@@ -58,6 +58,9 @@ class Money implements Comparable<Money> {
 
   const Money._(this.minorUnits, this.currency);
 
+  /// Constant zero BDT value.
+  static const zeroBdt = Money._(0, Currency.bdt);
+
   /// Constructs a [Money] directly from a minor-unit integer (paisa).
   /// This is the primary, exact constructor — prefer it over [Money.fromMajor]
   /// wherever the source value is already known in minor units (e.g. a

@@ -72,6 +72,7 @@ class BackupService {
   /// with SQLite foreign-key enforcement on).
   List<_TableSpec> get _tables => [
     _spec('categories', db.categories, CategoryRow.fromJson, (r) => r.toJson()),
+    _spec('units', db.units, UnitRow.fromJson, (r) => r.toJson()),
     _spec(
       'app_settings',
       db.appSettings,
@@ -79,6 +80,12 @@ class BackupService {
       (r) => r.toJson(),
     ),
     _spec('customers', db.customers, CustomerRow.fromJson, (r) => r.toJson()),
+    _spec(
+      'customer_images',
+      db.customerImages,
+      CustomerImageRow.fromJson,
+      (r) => r.toJson(),
+    ),
     _spec('investors', db.investors, InvestorRow.fromJson, (r) => r.toJson()),
     _spec('products', db.products, ProductRow.fromJson, (r) => r.toJson()),
     _spec(
@@ -136,6 +143,12 @@ class BackupService {
       'fixed_assets',
       db.fixedAssets,
       FixedAssetRow.fromJson,
+      (r) => r.toJson(),
+    ),
+    _spec(
+      'fixed_asset_images',
+      db.fixedAssetImages,
+      FixedAssetImageRow.fromJson,
       (r) => r.toJson(),
     ),
     _spec(

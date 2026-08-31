@@ -41,13 +41,17 @@ class StorageUsageController extends GetxController {
 
     try {
       final localStats = await _localService.fetchLocalMetrics();
+      final cloudinaryStats = await _localService.fetchCloudinaryMetrics();
 
-      CloudStorageStats cloudStats = const CloudStorageStats(
-        totalBytes: 0,
-        quotaBytes: 1073741824, // 1 GB default
-        productImages: BucketStorageStats(bytes: 0, count: 0),
-        customerImages: BucketStorageStats(bytes: 0, count: 0),
-        fixedAssetImages: BucketStorageStats(bytes: 0, count: 0),
+      // Cloudinary 25 GB Free Tier Storage Quota (26,843,545,600 bytes)
+      const cloudinaryQuotaBytes = 25 * 1024 * 1024 * 1024;
+
+      CloudStorageStats cloudStats = CloudStorageStats(
+        totalBytes: cloudinaryStats.totalBytes,
+        quotaBytes: cloudinaryQuotaBytes,
+        productImages: cloudinaryStats.productImages,
+        customerImages: cloudinaryStats.customerImages,
+        fixedAssetImages: cloudinaryStats.fixedAssetImages,
       );
 
       DatabaseStorageStats dbStats = const DatabaseStorageStats(
@@ -66,8 +70,17 @@ class StorageUsageController extends GetxController {
         final result = await _remoteService.fetchRemoteMetrics();
         result.fold(
           onOk: (metrics) {
-            cloudStats = metrics.cloud;
             dbStats = metrics.database;
+            // Use remote storage bytes if local image metadata is still syncing
+            if (metrics.cloud.totalBytes > cloudStats.totalBytes) {
+              cloudStats = CloudStorageStats(
+                totalBytes: metrics.cloud.totalBytes,
+                quotaBytes: cloudinaryQuotaBytes,
+                productImages: metrics.cloud.productImages,
+                customerImages: metrics.cloud.customerImages,
+                fixedAssetImages: metrics.cloud.fixedAssetImages,
+              );
+            }
           },
           onErr: (failure) {
             AppLogger.w(
@@ -105,8 +118,8 @@ class StorageUsageController extends GetxController {
       ShopStorageUsage.formatBytes(storageUsage.value?.cloud.totalBytes ?? 0);
 
   String get formattedCloudQuota =>
-      ShopStorageUsage.formatBytes(storageUsage.value?.cloud.quotaBytes ?? 1073741824);
+      ShopStorageUsage.formatBytes(storageUsage.value?.cloud.quotaBytes ?? (25 * 1024 * 1024 * 1024));
 
   String get formattedCloudRemaining =>
-      ShopStorageUsage.formatBytes(storageUsage.value?.cloud.remainingBytes ?? 1073741824);
+      ShopStorageUsage.formatBytes(storageUsage.value?.cloud.remainingBytes ?? (25 * 1024 * 1024 * 1024));
 }

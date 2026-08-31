@@ -54,4 +54,8 @@ class FixedAssetImageDao extends DatabaseAccessor<AppDatabase>
       ),
     );
   }
+
+  Future<void> deleteImage(String id) {
+    return (delete(fixedAssetImages)..where((image) => image.id.equals(id))).go();
+  }
 }

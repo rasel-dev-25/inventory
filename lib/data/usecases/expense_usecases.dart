@@ -93,6 +93,125 @@ class ExpenseUseCases {
     return const Result.ok(null);
   }
 
+  /// Updates an expense, safely adjusting its cash ledger entry if the amount
+  /// or payment method changed, and recording an audit log event.
+  Future<Result<void>> update(
+    Expense updated, {
+    required String shopId,
+    required DateTime now,
+  }) async {
+    if (!updated.amount.isPositive) {
+      return const Result.err(
+        ValidationFailure('amount', 'Expense amount must be positive'),
+      );
+    }
+
+    final existing = await db.expenseDao.getById(updated.id);
+    if (existing == null) {
+      return Result.err(
+        NotFoundFailure('expenses', updated.id),
+      );
+    }
+
+    final dateIso = updated.date.toUtc().toIso8601String();
+    final upserts = <TableUpsert>[
+      TableUpsert(
+        table: 'expenses',
+        row: {
+          'id': updated.id,
+          'shop_id': shopId,
+          'category': updated.category.name,
+          'amount_minor': updated.amount.minorUnits,
+          'date': dateIso,
+          'description': updated.description,
+          'payment_method': updated.paymentMethod.name,
+        },
+      ),
+    ];
+
+    final hasFinancialChange = existing.amount != updated.amount ||
+        existing.paymentMethod != updated.paymentMethod;
+
+    final reversal = hasFinancialChange
+        ? await buildCashLedgerReversal(
+            db: db,
+            shopId: shopId,
+            sourceType: 'expense',
+            sourceId: updated.id,
+            date: updated.date,
+            now: now,
+          )
+        : null;
+
+    final newLedgerId = _uuid.v7();
+    if (hasFinancialChange) {
+      upserts.addAll(reversal!.upserts);
+      upserts.add(
+        TableUpsert(
+          table: 'cash_ledger_entries',
+          row: {
+            'id': newLedgerId,
+            'shop_id': shopId,
+            'amount_minor': -updated.amount.minorUnits,
+            'payment_method': updated.paymentMethod.name,
+            'source_type': 'expense',
+            'source_id': updated.id,
+            'date': dateIso,
+          },
+        ),
+      );
+    }
+
+    await writeAndEnqueue(
+      db: db,
+      eventType: 'expense_updated',
+      upserts: upserts,
+      localWrite: () async {
+        await db.expenseDao.updateExpense(updated, now: now);
+        if (hasFinancialChange) {
+          await reversal!.localWrite();
+          await db.ledgerDao.recordCashLedgerEntry(
+            id: newLedgerId,
+            shopId: shopId,
+            amountMinor: -updated.amount.minorUnits,
+            paymentMethod: updated.paymentMethod,
+            sourceType: 'expense',
+            sourceId: updated.id,
+            date: updated.date,
+            now: now,
+          );
+        }
+      },
+    );
+
+    await recordAuditLog(
+      db: db,
+      shopId: shopId,
+      action: 'update',
+      changedTableName: 'expenses',
+      recordId: updated.id,
+      oldValueJson: jsonEncode({
+        'id': existing.id,
+        'category': existing.category.name,
+        'amount_minor': existing.amount.minorUnits,
+        'date': existing.date.toUtc().toIso8601String(),
+        'description': existing.description,
+        'payment_method': existing.paymentMethod.name,
+      }),
+      newValueJson: jsonEncode({
+        'id': updated.id,
+        'category': updated.category.name,
+        'amount_minor': updated.amount.minorUnits,
+        'date': dateIso,
+        'description': updated.description,
+        'payment_method': updated.paymentMethod.name,
+      }),
+      now: now,
+    );
+
+    return const Result.ok(null);
+  }
+
   /// Soft-deletes the expense *and* reverses its cash-ledger entry (a new,
   /// negated row — see `ledger_reversal.dart`'s own doc comment for why
   /// this is a new row, never an edit of the original). This closes the

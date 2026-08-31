@@ -70,6 +70,22 @@ class ExpenseDao extends DatabaseAccessor<AppDatabase> with _$ExpenseDaoMixin {
     );
   }
 
+  Future<void> updateExpense(
+    domain.Expense expense, {
+    required DateTime now,
+  }) {
+    return (update(expenses)..where((e) => e.id.equals(expense.id))).write(
+      ExpensesCompanion(
+        category: Value(expense.category),
+        amountMinor: Value(expense.amount.minorUnits),
+        date: Value(expense.date),
+        description: Value(expense.description),
+        paymentMethod: Value(expense.paymentMethod),
+        updatedAt: Value(now),
+      ),
+    );
+  }
+
   /// Only hides the expense from every read (`watchAll`/`getById`) — does
   /// **not** touch `CashLedgerEntries`. `ExpenseUseCases.softDelete` pairs
   /// this with a ledger reversal in the same transaction; calling this

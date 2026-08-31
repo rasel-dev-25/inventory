@@ -174,6 +174,8 @@ class ProductUseCases {
       'qty': product.qty,
       'fund_source_type': product.fundSource.type.name,
       'fund_source_investor_id': product.fundSource.investorId,
+      'unit': product.unit,
+      'sell_unit': product.sellUnit,
       'is_rentable': product.isRentable,
       'barcode': product.barcode,
       'sku': product.sku,

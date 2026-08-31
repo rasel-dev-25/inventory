@@ -16,6 +16,7 @@ import '../../../data/local/default_shop.dart';
 import '../../../data/sync/storage_upload_transport.dart';
 import '../../../data/usecases/fixed_asset_image_usecases.dart';
 import '../../../data/usecases/fixed_asset_usecases.dart';
+import '../../../domain/entities/enums.dart';
 import '../../../domain/entities/fixed_asset.dart';
 import '../../../domain/entities/product.dart';
 
@@ -72,6 +73,24 @@ class FixedAssetController extends GetxController {
     }
     super.onClose();
   }
+
+  int get totalCount => assets.length;
+  Money get totalValue =>
+      assets.fold(Money.zeroBdt, (sum, a) => sum + a.value);
+
+  int get directPurchaseCount => assets
+      .where((a) => a.sourceType == FixedAssetSource.shopCashPurchase)
+      .length;
+  Money get directPurchaseValue => assets
+      .where((a) => a.sourceType == FixedAssetSource.shopCashPurchase)
+      .fold(Money.zeroBdt, (sum, a) => sum + a.value);
+
+  int get convertedCount => assets
+      .where((a) => a.sourceType == FixedAssetSource.convertedFromStock)
+      .length;
+  Money get convertedValue => assets
+      .where((a) => a.sourceType == FixedAssetSource.convertedFromStock)
+      .fold(Money.zeroBdt, (sum, a) => sum + a.value);
 
   Product? productById(String id) {
     for (final p in products) {
@@ -152,6 +171,13 @@ class FixedAssetController extends GetxController {
   /// today, same as an expense.
   Future<bool> deleteAsset(String id) async {
     errorMessage.value = null;
+    final imageRow = primaryImageFor(id);
+    if (imageRow != null) {
+      await _imageUseCases.delete(
+        imageId: imageRow.id,
+        storage: imageStorage,
+      );
+    }
     final result = await _useCases.delete(
       id: id,
       shopId: defaultShopId,

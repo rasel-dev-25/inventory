@@ -25,6 +25,8 @@ extension _ProductRowMapping on ProductRow {
       fundSource: fundSourceType == FundSourceType.shop
           ? FundSource.shop()
           : FundSource.investor(fundSourceInvestorId!),
+      unit: unit,
+      sellUnit: sellUnit,
       isRentable: isRentable,
       barcode: barcode,
       sku: sku,
@@ -174,6 +176,8 @@ class ProductDao extends DatabaseAccessor<AppDatabase> with _$ProductDaoMixin {
       qty: Value(product.qty),
       fundSourceType: product.fundSource.type,
       fundSourceInvestorId: Value(product.fundSource.investorId),
+      unit: Value(product.unit),
+      sellUnit: Value(product.sellUnit),
       isRentable: Value(product.isRentable),
       barcode: Value(product.barcode),
       sku: Value(product.sku),

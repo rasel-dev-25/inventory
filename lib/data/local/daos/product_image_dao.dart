@@ -57,4 +57,8 @@ class ProductImageDao extends DatabaseAccessor<AppDatabase>
       ),
     );
   }
+
+  Future<void> deleteImage(String id) {
+    return (delete(productImages)..where((image) => image.id.equals(id))).go();
+  }
 }

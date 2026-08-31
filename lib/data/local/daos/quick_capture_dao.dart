@@ -80,4 +80,21 @@ class QuickCaptureDao extends DatabaseAccessor<AppDatabase>
       ),
     );
   }
+
+  Future<void> updateCapture({
+    required String id,
+    required String fileLocalPath,
+    required DateTime now,
+  }) {
+    return (update(quickCaptures)..where((c) => c.id.equals(id))).write(
+      QuickCapturesCompanion(
+        fileLocalPath: Value(fileLocalPath),
+        syncedAt: Value(now),
+      ),
+    );
+  }
+
+  Future<void> deleteCapture(String id) {
+    return (delete(quickCaptures)..where((c) => c.id.equals(id))).go();
+  }
 }
